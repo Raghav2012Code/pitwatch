@@ -40,11 +40,16 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 | M5  | Overlays                                                                                | next   |
 | M6  | Panels, picking, measure, profile, epoch slider                                         |        |
 | M7  | Polish                                                                                  |        |
-| M8  | README with Mermaid diagram, Vercel/Netlify config                                      |        |
+| M8  | README with Mermaid diagram, Vercel/Netlify config (deploy live since 2026-10-18)       |        |
 
 ## Update log
 
 Newest first.
+
+### 2026-10-18: deployed on Vercel
+
+- Live at https://pitwatch-3d.vercel.app (team `abivan100-stacks-projects`, project `pitwatch-3d`). `vercel.json` pins the Vite build (`npm run build` -> `dist`). The GitHub repo is connected, so pushes to `main` redeploy. Manual: `npx vercel deploy --prod --scope abivan100-stacks-projects` (the local CLI is logged in; the Vercel MCP connection is read-only for project creation and returned 403).
+- README: live link at the top, a Deploy section, and updated home and roadmap text. `.vercel/` is gitignored.
 
 ### 2026-10-18: home story on the live 3D model
 
