@@ -22,7 +22,7 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 ## Design
 
-- Monitor layout: full-screen 3D canvas under a sky gradient; a `ViewOffset` shifts the projection so the model centres in `.stage` (the area the side cards leave free, click-through except its controls). Left "Map" card (layers, key, exaggeration), right details card (tabs), camera presets + compass top-right, scale bar top-left, timeline pill bottom-centre. Soft `.card` surfaces (8 px radius, shadow); strata stripes only in the top-bar rule and the home page.
+- Monitor layout: full-screen 3D canvas on a survey-paper backdrop (`--color-backdrop`, faint `<Relief />` contours, soft vignette; fog uses the same colour); a `ViewOffset` shifts the projection so the model centres in `.stage` (the area the side cards leave free, click-through except its controls). Left "Map" card (layers, key, exaggeration), right details card (tabs), camera presets + compass top-right, scale bar top-left, timeline pill bottom-centre. Soft `.card` surfaces (8 px radius, shadow); strata stripes only in the top-bar rule and the home page.
 - Each fact appears once: mine name in the top bar, survey dates in the timeline and the Surveys section, nothing duplicated in map overlays.
 - Home page is a scroll story on a pinned map (`#/`), monitor at `#/monitor`. Topographic look: limestone paper, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity only (never status).
 - Type: Archivo variable; `.cond` (font-stretch 72%) for headings and big figures. JetBrains Mono for coordinates and dates.
@@ -45,6 +45,11 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-18: larger model, survey-paper backdrop
+
+- Camera presets moved in (oblique about 28% closer, top and pit closer too) so the terrain block fills the map area.
+- Sky gradient replaced by a survey-paper backdrop: `--color-backdrop`, lighter under the model, soft vignette at the edges, faint decorative contours (`<Relief />` from `schematic.tsx`) behind the canvas. Fog reads `--color-backdrop`. Removed `--color-sky`, `--color-sky-2`, `--color-horizon`, `--color-ground`.
 
 ### 2026-10-18: M4 compliance engine
 

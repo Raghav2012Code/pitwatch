@@ -26,11 +26,8 @@
   --color-contour: #9c6a3c;
 
   /* Sky behind the 3D model: cool haze above, warm horizon where fog meets it. */
-  /* Map backdrop: outback daylight sky, dusty haze at the horizon, plain below. */
-  --color-sky: #a9c3d6;
-  --color-sky-2: #cddbe3;
-  --color-horizon: #eee4d2;
-  --color-ground: #d6c9b2;
+  /* Map backdrop: survey paper the terrain block sits on (also the fog colour). */
+  --color-backdrop: #e8e4d9;
 
   /* Severity: each level also has its own glyph shape. */
   --color-ok: #2f7d4a;
@@ -241,20 +238,14 @@ body {
   /* ---------- Viewport: map sheet ---------- */
 
   .viewport {
-    background:
-      /* Warm glow where the sun sits (north-west, matching the scene light). */
-      radial-gradient(
-        ellipse 60% 45% at 18% 8%,
-        color-mix(in srgb, var(--color-horizon) 70%, transparent),
-        transparent 70%
-      ),
-      linear-gradient(
-        to bottom,
-        var(--color-sky) 0%,
-        var(--color-sky-2) 30%,
-        var(--color-horizon) 52%,
-        var(--color-ground) 100%
-      );
+    /* The block sits on a sheet of survey paper: lighter under the model, a soft edge
+       vignette, faint contours of the surrounding country (see <Relief />). */
+    background: radial-gradient(
+      ellipse 70% 65% at 50% 52%,
+      color-mix(in srgb, var(--color-panel) 85%, var(--color-backdrop)) 0%,
+      var(--color-backdrop) 62%,
+      color-mix(in srgb, var(--color-backdrop) 92%, var(--color-ink)) 100%
+    );
   }
 
   .contour {

@@ -22,9 +22,9 @@ export interface Pose {
 export function presetPose(kind: ViewPreset | 'intro', pit: Vec2, floorY: number): Pose {
   const t: V3 = [pit.x, floorY * 0.5, pit.y]
   const off: Record<ViewPreset | 'intro', V3> = {
-    oblique: [820, 2150, 2650],
-    top: [0, 3700, 1],
-    pit: [420, 700, 880],
+    oblique: [600, 1560, 1930],
+    top: [0, 3050, 1],
+    pit: [360, 600, 760],
     intro: [0, 4700, 1400],
   }
   const o = off[kind]

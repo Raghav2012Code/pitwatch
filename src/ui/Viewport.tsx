@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { useTerrain } from '../state/terrain'
+import { Relief } from './schematic'
 import { Timeline } from './Timeline'
 import { ScaleBar, SceneStatus, ViewControls } from './viewport/MapHud'
 import { SceneErrorBoundary } from './viewport/SceneErrorBoundary'
@@ -8,8 +9,8 @@ import { SceneErrorBoundary } from './viewport/SceneErrorBoundary'
 const TerrainScene = lazy(() => import('../scene/TerrainScene'))
 
 /**
- * The map: a full-height 3D view under a sky that fills the whole area, so the model
- * appears edge to edge. The stage is the part not covered by the side panels; the
+ * The map: a full-height 3D view on a sheet of survey paper that fills the whole area, so
+ * the model appears edge to edge. The stage is the part not covered by the side panels; the
  * canvas and map controls sit inside it.
  */
 export function Viewport() {
@@ -19,6 +20,7 @@ export function Viewport() {
 
   return (
     <main aria-label="3D mine view" className="viewport absolute inset-0">
+      <Relief className="opacity-45" />
       <div
         className="scene-wrap absolute inset-0"
         role="img"
