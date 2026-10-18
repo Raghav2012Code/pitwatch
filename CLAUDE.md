@@ -46,6 +46,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-18: random pit outline and daylight sky
+
+- Pit outline is no longer hand-drawn: `randomOutline(PIT_SEED, box)` in the scenario builds a seeded blob (random-amplitude, random-phase harmonics 2, 3, 4, 5, 7) stretched to fill the pit box. Same seed, same outline; change `PIT_SEED` for another pit. Baseline is the same outline with the west wall pulled in and the north/south walls drawn in slightly.
+- Ramp stops following the wall where a deep offset would fold across a narrow part of the pit, then finishes with a straight drop to the floor centre (steepened only if needed to land on the floor).
+- Map backdrop is a daylight sky: soft blue overhead (`--color-sky`, `--color-sky-2`), warm dusty haze at the horizon (`--color-horizon`, also the fog colour), plain-coloured ground below (`--color-ground`), and a faint sun glow at the top-left where the scene light comes from.
+
 ### 2026-10-18: elevation tint that reads
 
 - New tint ramp in `palette.ts`: slate blue (pit floor), teal, sage, straw, ochre, rust (ridge). Cool lows, warm highs, muted.

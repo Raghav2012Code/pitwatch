@@ -6,6 +6,7 @@ import type {
   PitZone,
   Polygon,
 } from '../../domain/types'
+import { mulberry32 } from '../rng'
 import { MINE_INFO } from './mine'
 
 /*
@@ -52,55 +53,62 @@ export interface PitStage {
 
 const pts = (xy: readonly [number, number][]): Polygon => xy.map(([x, y]) => ({ x, y }))
 
-/** Main pit at the baseline survey: a kidney shape following the orebody, 135 m deep. */
-export const BASELINE_PIT: PitStage = {
-  floorRL: 287,
-  outline: pts([
-    [930, 815],
-    [1050, 812],
-    [1165, 835],
-    [1255, 895],
-    [1300, 985],
-    [1292, 1070],
-    [1240, 1135],
-    [1145, 1165],
-    [1060, 1185],
-    [990, 1225],
-    [900, 1238],
-    [810, 1215],
-    [750, 1160],
-    [722, 1080],
-    [728, 995],
-    [770, 915],
-    [840, 850],
-  ]),
+/**
+ * Random pit outline from a seed: a closed blob with a few low-frequency bulges (the way
+ * a pit follows an irregular orebody), stretched to fill `box`. Same seed, same outline.
+ */
+export function randomOutline(
+  seed: number,
+  box: { x0: number; x1: number; y0: number; y1: number },
+  points = 24,
+): Polygon {
+  const rand = mulberry32(seed)
+  const terms = [2, 3, 4, 5, 7].map((k) => ({
+    k,
+    amp: (0.1 + 0.14 * rand()) / k ** 0.7,
+    phase: rand() * 2 * Math.PI,
+  }))
+  const raw = Array.from({ length: points }, (_, i) => {
+    const theta = (i / points) * 2 * Math.PI
+    const r = 1 + terms.reduce((sum, t) => sum + t.amp * Math.sin(t.k * theta + t.phase), 0)
+    return { x: r * Math.cos(theta), y: r * Math.sin(theta) }
+  })
+  const xs = raw.map((p) => p.x)
+  const ys = raw.map((p) => p.y)
+  const [minX, maxX, minY, maxY] = [
+    Math.min(...xs),
+    Math.max(...xs),
+    Math.min(...ys),
+    Math.max(...ys),
+  ]
+  return raw.map((p) => ({
+    x: box.x0 + ((p.x - minX) / (maxX - minX)) * (box.x1 - box.x0),
+    y: box.y0 + ((p.y - minY) / (maxY - minY)) * (box.y1 - box.y0),
+  }))
 }
 
+/** Seed for the pit outline, separate from the terrain noise. */
+export const PIT_SEED = SEED + 101
+
 /**
- * Main pit now. Legitimate expansion: the west wall pushed back about 75 m and the
- * floor one bench deeper (150 m), 2 m above the approved floor.
+ * Main pit now: random outline (anticlockwise) inside the lease, 150 m deep, floor 2 m
+ * above the approved floor. The east wall stops at x = 1320, clear of the lease buffer.
  */
 export const CURRENT_PIT: PitStage = {
   floorRL: 272,
-  outline: pts([
-    [900, 795],
-    [1040, 790],
-    [1170, 815],
-    [1270, 880],
-    [1322, 975],
-    [1315, 1075],
-    [1255, 1150],
-    [1150, 1180],
-    [1060, 1205],
-    [985, 1250],
-    [880, 1268],
-    [770, 1245],
-    [690, 1185],
-    [648, 1095],
-    [655, 990],
-    [705, 900],
-    [790, 830],
-  ]),
+  outline: randomOutline(PIT_SEED, { x0: 640, x1: 1320, y0: 790, y1: 1270 }),
+}
+
+/**
+ * Main pit at the baseline survey: the same pit before its west wall was pushed back
+ * (about 75 m at the far west) and before the last bench was mined.
+ */
+export const BASELINE_PIT: PitStage = {
+  floorRL: 287,
+  outline: CURRENT_PIT.outline.map((p) => ({
+    x: p.x < 960 ? p.x + (960 - p.x) * 0.23 : p.x,
+    y: 1030 + (p.y - 1030) * 0.94,
+  })),
 }
 
 export const PIT_ZONE: PitZone = {

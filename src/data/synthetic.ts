@@ -1,6 +1,6 @@
 import type { GridSpec, Polygon, Vec2 } from '../domain/types'
 import { cellCenter, indexOf } from '../geo/grid'
-import { distanceToBoundary, distanceToSegment, pointInPolygon } from '../geo/polygon'
+import { centroidOf, distanceToBoundary, distanceToSegment, pointInPolygon } from '../geo/polygon'
 import {
   BASELINE_DUMP,
   BASELINE_PIT,
@@ -149,8 +149,29 @@ function buildRamp(rim: Polygon, floorRL: number): Ramp {
     const len = Math.hypot(tx, ty) || 1
     const inset = insetFor(d) + RAMP.width / 2
     const p = { x: a.x - (ty / len) * inset, y: a.y + (tx / len) * inset }
+    // Where the pit narrows, a deep offset folds back across the middle; end the ramp there.
+    if (distanceToBoundary(p, rim) < inset * 0.75) break
     const last = points[points.length - 1]
     if (last) d = Math.min(maxDepth, d + Math.hypot(p.x - last.x, p.y - last.y) * RAMP.grade)
+    points.push(p)
+    depth.push(d)
+  }
+  // If the wall ran out first, finish with a straight drop towards the middle of the
+  // floor, steepened if needed so it lands on the floor.
+  const target = centroidOf(rim)
+  const end = points[points.length - 1]
+  const run = Math.hypot(target.x - end.x, target.y - end.y) || 1
+  const finalGrade = Math.max(RAMP.grade, (maxDepth - d) / run)
+  for (let guard = 0; d < maxDepth && guard < 200; guard++) {
+    const last = points[points.length - 1]
+    const left = Math.hypot(target.x - last.x, target.y - last.y)
+    if (left < 1) break
+    const step = Math.min(10, left)
+    const p = {
+      x: last.x + ((target.x - last.x) / left) * step,
+      y: last.y + ((target.y - last.y) / left) * step,
+    }
+    d = Math.min(maxDepth, d + step * finalGrade)
     points.push(p)
     depth.push(d)
   }

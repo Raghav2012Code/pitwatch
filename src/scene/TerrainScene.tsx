@@ -9,7 +9,7 @@ import { ViewOffset } from './ViewOffset'
 
 /** Horizon colour behind the model; fog fades distant terrain into it. */
 const horizon = () =>
-  getComputedStyle(document.documentElement).getPropertyValue('--color-horizon').trim() || '#e8e3d8'
+  getComputedStyle(document.documentElement).getPropertyValue('--color-horizon').trim() || '#eee4d2'
 
 /**
  * The 3D view: current survey surface on a block, lit from the north-west (the
