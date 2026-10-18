@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from 'react'
+import { useRef, type JSX, type KeyboardEvent } from 'react'
 import { useAppStore, type PanelTab } from '../state/store'
 import { AboutDataPanel } from './panels/AboutDataPanel'
 import { FindingsPanel } from './panels/FindingsPanel'
@@ -12,7 +12,7 @@ const TABS: { id: PanelTab; label: string }[] = [
   { id: 'about', label: 'About data' },
 ]
 
-const CONTENT: Record<PanelTab, () => React.JSX.Element> = {
+const CONTENT: Record<PanelTab, () => JSX.Element> = {
   overview: OverviewPanel,
   findings: FindingsPanel,
   inspector: InspectorPanel,
@@ -39,9 +39,9 @@ export function SidePanel() {
     <aside
       id="side-panel"
       aria-label="Details"
-      className={`${drawerOpen ? 'flex' : 'hidden'} absolute inset-y-0 right-0 z-20 w-[360px] max-w-full flex-col border-l border-line bg-panel shadow-[-12px_0_32px_rgb(0_0_0/0.45)] lg:static lg:flex lg:shadow-none`}
+      className={`${drawerOpen ? 'flex' : 'hidden'} glass hud-panel absolute top-3 right-3 bottom-3 z-20 w-[min(360px,calc(100%-24px))] flex-col lg:flex`}
     >
-      <div role="tablist" aria-label="Details sections" className="flex border-b border-line px-2">
+      <div role="tablist" aria-label="Details sections" className="tabs">
         {TABS.map((tab, i) => {
           const selected = tab.id === activeTab
           return (
@@ -68,9 +68,9 @@ export function SidePanel() {
         role="tabpanel"
         id="details-tabpanel"
         aria-labelledby={`tab-${activeTab}`}
-        className="flex-1 overflow-y-auto"
+        className="min-h-0 flex-1 overflow-y-auto"
       >
-        <Content />
+        <Content key={activeTab} />
       </div>
     </aside>
   )

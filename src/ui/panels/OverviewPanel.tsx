@@ -1,11 +1,29 @@
 import { MINE_INFO, SURVEY_EPOCHS } from '../../data/fixtures/mine'
-import { formatDate, formatLat, formatLon } from '../format'
-import { EmptyNote, Row, Section } from './parts'
+import { daysBetween, formatDate, formatLat, formatLon } from '../format'
+import { Kpi, Row, Section } from './parts'
 
 export function OverviewPanel() {
   const m = MINE_INFO
+  const [baseline, current] = SURVEY_EPOCHS
+  const interval = baseline && current ? daysBetween(baseline.date, current.date) : null
+
   return (
     <>
+      <div className="grid grid-cols-2 gap-2 p-3">
+        <Kpi label="Findings" value={null} note="Rule engine has not run yet" />
+        <Kpi label="Max pit depth" value={null} note="Needs the terrain surfaces" />
+        <Kpi label="Excavated volume" value={null} note="Needs both surveys compared" />
+        <Kpi
+          label="Survey interval"
+          value={interval === null ? null : String(interval)}
+          unit="days"
+          note="Baseline to current"
+          provenance="derived"
+        />
+      </div>
+
+      <div className="divider" />
+
       <Section title="Mine" provenance={m.provenance}>
         <dl>
           <Row label="Name" value={m.name} />
@@ -19,6 +37,8 @@ export function OverviewPanel() {
         </dl>
       </Section>
 
+      <div className="divider" />
+
       <Section title="Surveys" provenance="simulated">
         <dl>
           {SURVEY_EPOCHS.map((e) => (
@@ -27,20 +47,13 @@ export function OverviewPanel() {
               label={e.label}
               value={
                 <>
-                  <span className="font-mono text-[12.5px]">{formatDate(e.date)}</span>
+                  <span className="font-mono text-[12px]">{formatDate(e.date)}</span>
                   <span className="block text-[12px] text-ink-dim">{e.method}</span>
                 </>
               }
             />
           ))}
         </dl>
-      </Section>
-
-      <Section title="Pit and compliance">
-        <EmptyNote>
-          Pit depth, excavated volume and compliance status appear here after the compliance engine
-          compares the two surveys.
-        </EmptyNote>
       </Section>
     </>
   )

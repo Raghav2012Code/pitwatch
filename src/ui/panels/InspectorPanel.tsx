@@ -2,19 +2,28 @@ import { FindingIcon, MeasureIcon, PickIcon } from '../icons'
 import { Section } from './parts'
 
 const WAYS = [
-  { Icon: PickIcon, text: 'Click the terrain to read its position and elevation.' },
-  { Icon: FindingIcon, text: 'Select a finding to see why it was flagged.' },
-  { Icon: MeasureIcon, text: 'Measure between two points to get distances and a profile.' },
+  {
+    Icon: PickIcon,
+    title: 'Inspect a point',
+    text: 'Click the terrain to read position and elevation.',
+  },
+  { Icon: FindingIcon, title: 'Open a finding', text: 'See exactly why an area was flagged.' },
+  { Icon: MeasureIcon, title: 'Measure a line', text: 'Get distances and an elevation profile.' },
 ]
 
 export function InspectorPanel() {
   return (
     <Section title="Nothing selected">
-      <ul className="space-y-3">
-        {WAYS.map(({ Icon, text }) => (
-          <li key={text} className="flex gap-3 text-[13px] leading-5 text-ink-dim">
-            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-ink-faint" />
-            {text}
+      <ul className="space-y-2">
+        {WAYS.map(({ Icon, title, text }) => (
+          <li key={title} className="hint-row">
+            <span className="hint-icon">
+              <Icon className="h-[18px] w-[18px]" />
+            </span>
+            <div>
+              <div className="text-[13px] font-medium text-ink">{title}</div>
+              <div className="text-[12.5px] leading-5 text-ink-dim">{text}</div>
+            </div>
           </li>
         ))}
       </ul>

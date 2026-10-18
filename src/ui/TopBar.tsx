@@ -1,66 +1,58 @@
-import type { ReactNode } from 'react'
 import { MINE_INFO, SURVEY_EPOCHS } from '../data/fixtures/mine'
 import { useAppStore } from '../state/store'
 import { formatDate } from './format'
-import { PendingGlyph, PitMark } from './icons'
-
-/** One field of the survey-plan style title block. */
-function Cell({
-  label,
-  children,
-  className = '',
-}: {
-  label: string
-  children: ReactNode
-  className?: string
-}) {
-  return (
-    <div className={`flex min-w-0 flex-col justify-center border-l border-line px-4 ${className}`}>
-      <span className="text-[11px] leading-4 text-ink-faint">{label}</span>
-      <span className="truncate text-[13px] leading-5 text-ink">{children}</span>
-    </div>
-  )
-}
+import { PitMark } from './icons'
 
 export function TopBar() {
   const drawerOpen = useAppStore((s) => s.drawerOpen)
   const setDrawerOpen = useAppStore((s) => s.setDrawerOpen)
 
   return (
-    <header className="flex h-14 shrink-0 items-stretch border-b border-line bg-panel">
-      <div className="flex items-center gap-2.5 px-4">
-        <PitMark className="h-6 w-6 text-accent" />
-        <span className="text-[15px] font-semibold tracking-tight">PitWatch</span>
+    <header className="glass-bar relative z-30 flex h-14 shrink-0 items-center gap-5 px-4">
+      <div className="flex items-center gap-3">
+        <span className="brand-mark">
+          <PitMark className="h-5 w-5" />
+        </span>
+        <div className="leading-tight">
+          <div className="text-[15px] font-semibold tracking-tight text-ink">PitWatch</div>
+          <div className="hidden text-[11px] whitespace-nowrap text-ink-faint xl:block">
+            Compliance monitor
+          </div>
+        </div>
       </div>
 
-      <Cell label="Mine">{MINE_INFO.name}</Cell>
-      <Cell label="Operator" className="hidden 2xl:flex">
-        {MINE_INFO.operator}
-      </Cell>
-      {SURVEY_EPOCHS.map((e) => (
-        <Cell key={e.id} label={`${e.label} survey`} className="hidden lg:flex">
-          <span className="font-mono text-[12.5px]">{formatDate(e.date)}</span>
-        </Cell>
-      ))}
+      <div className="hidden h-8 w-px bg-line sm:block" />
 
-      <div className="flex items-center border-l border-line px-4">
+      <div className="min-w-0 leading-tight">
+        <div className="truncate text-[14px] font-medium text-ink">{MINE_INFO.name}</div>
+        <div className="truncate text-[11px] text-ink-faint">
+          {MINE_INFO.mineral}, {MINE_INFO.operator}
+        </div>
+      </div>
+
+      <div className="hidden items-center gap-2 xl:flex">
+        {SURVEY_EPOCHS.map((e) => (
+          <span key={e.id} className="chip">
+            <span className="text-ink-faint">{e.label}</span>
+            <span className="font-mono text-ink">{formatDate(e.date)}</span>
+          </span>
+        ))}
+      </div>
+
+      <div className="ml-auto flex items-center gap-3">
         <span
           className="stamp"
           title="Every terrain value, survey and finding in this app is synthetic. The mine is fictional."
         >
+          <span className="stamp-dot" aria-hidden="true" />
           SIMULATED DATA
         </span>
-      </div>
 
-      <div className="ml-auto flex items-center gap-3 border-l border-line px-4">
-        <div
-          className="flex items-center gap-2 text-[13px] text-ink-dim"
-          role="status"
-          title="Compliance not evaluated"
-        >
-          <PendingGlyph className="h-4 w-4" />
-          <span className="sr-only whitespace-nowrap xl:not-sr-only">Compliance not evaluated</span>
+        <div className="status-light hidden md:flex" role="status">
+          <span className="status-led" aria-hidden="true" />
+          <span className="whitespace-nowrap">Compliance not evaluated</span>
         </div>
+
         <button
           type="button"
           className="btn whitespace-nowrap lg:hidden"
@@ -68,7 +60,7 @@ export function TopBar() {
           aria-controls="side-panel"
           onClick={() => setDrawerOpen(!drawerOpen)}
         >
-          {drawerOpen ? 'Close details' : 'Details'}
+          {drawerOpen ? 'Close' : 'Details'}
         </button>
       </div>
     </header>

@@ -1,37 +1,49 @@
 import { SURVEY_EPOCHS } from '../data/fixtures/mine'
-import { daysBetween, formatDate } from './format'
+import { daysBetween, formatDate, monthTicks } from './format'
 
 export function Timeline() {
   const [baseline, current] = SURVEY_EPOCHS
   if (!baseline || !current) return null
   const days = daysBetween(baseline.date, current.date)
+  const ticks = monthTicks(baseline.date, current.date)
 
   return (
     <footer
       aria-label="Survey timeline"
-      className="flex h-16 shrink-0 items-center gap-6 border-t border-line bg-panel px-5"
+      className="glass hud-panel absolute right-3 bottom-3 left-3 z-10 flex items-center gap-5 px-5 py-3 md:left-[84px] lg:right-[384px] xl:left-[244px]"
     >
-      <span className="text-[13px] text-ink-dim">Surveys</span>
-      <div className="relative flex flex-1 items-center">
-        <div className="absolute inset-x-1.5 top-1/2 h-px -translate-y-1/2 bg-line-strong" />
-        <span className="absolute left-1/2 -translate-x-1/2 bg-panel px-2 font-mono text-[11px] text-ink-faint">
-          {days} days apart
-        </span>
-        {[baseline, current].map((e, i) => (
-          <div
-            key={e.id}
-            className={`relative flex items-center gap-2.5 bg-panel ${
-              i === 1 ? 'ml-auto flex-row-reverse pl-2 text-right' : 'pr-2'
-            }`}
-          >
-            <span className="h-2.5 w-2.5 rotate-45 border border-accent bg-bg" aria-hidden="true" />
-            <div className="leading-4">
-              <div className="text-[12px] text-ink">{e.label}</div>
-              <div className="font-mono text-[11px] text-ink-dim">{formatDate(e.date)}</div>
+      <Epoch label={baseline.label} date={baseline.date} />
+
+      <div className="relative h-10 flex-1" aria-hidden="true">
+        <div className="track absolute inset-x-0 top-4" />
+        {ticks.map((t) => (
+          <div key={t.label} className="absolute top-2.5" style={{ left: `${t.t * 100}%` }}>
+            <div className="mx-auto h-3 w-px bg-line-strong" />
+            <div className="mt-1.5 -translate-x-1/2 font-mono text-[10px] text-ink-faint">
+              {t.label}
             </div>
           </div>
         ))}
       </div>
+
+      <Epoch label={current.label} date={current.date} align="right" />
+
+      <div className="hidden border-l border-line pl-5 text-right leading-tight sm:block">
+        <div className="font-mono text-[18px] font-semibold text-ink">{days}</div>
+        <div className="text-[11px] text-ink-faint">days apart</div>
+      </div>
     </footer>
+  )
+}
+
+function Epoch({ label, date, align }: { label: string; date: string; align?: 'right' }) {
+  return (
+    <div className={`flex items-center gap-2.5 ${align ? 'flex-row-reverse text-right' : ''}`}>
+      <span className="epoch-node" aria-hidden="true" />
+      <div className="leading-tight">
+        <div className="text-[12px] font-medium text-ink">{label}</div>
+        <div className="font-mono text-[11px] text-ink-dim">{formatDate(date)}</div>
+      </div>
+    </div>
   )
 }
