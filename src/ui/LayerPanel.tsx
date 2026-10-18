@@ -53,7 +53,7 @@ export function LayerPanel() {
     <nav
       aria-label="Layers and tools"
       style={{ '--d': '0.15s' } as CSSProperties}
-      className="sheet hud-panel enter-left absolute top-3 left-3 z-10 hidden w-[60px] flex-col md:flex xl:w-[220px]"
+      className="layer-panel sheet hud-panel enter-left absolute top-3 left-3 z-10 hidden w-[60px] flex-col md:flex xl:w-[220px]"
     >
       <div className="panel-head hidden xl:flex">
         <span>Layers</span>

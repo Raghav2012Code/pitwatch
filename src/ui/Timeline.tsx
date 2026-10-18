@@ -13,7 +13,7 @@ export function Timeline() {
   return (
     <footer
       aria-label="Survey timeline"
-      className="sheet hud-panel enter-up absolute right-3 bottom-3 left-3 z-10 flex items-center gap-5 px-5 py-3 md:left-[84px] lg:right-[384px] xl:left-[244px]"
+      className="timeline sheet hud-panel enter-up absolute right-3 bottom-3 left-3 z-10 flex items-center gap-5 px-5 py-3 md:left-[84px] lg:right-[384px] xl:left-[244px]"
     >
       <Epoch label={baseline.label} date={baseline.date} />
 

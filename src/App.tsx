@@ -1,4 +1,6 @@
 import { useEffect } from 'react'
+import { useAppStore } from './state/store'
+import { toggleFullscreen } from './ui/fullscreen'
 import { HomePage } from './ui/HomePage'
 import { LayerPanel } from './ui/LayerPanel'
 import { useRoute } from './ui/route'
@@ -19,8 +21,31 @@ export default function App() {
 
 /** Full-bleed map view with paper panels floating above it. */
 function Monitor() {
+  const layersHidden = useAppStore((s) => s.layersHidden)
+  const detailsHidden = useAppStore((s) => s.detailsHidden)
+
+  // [ and ] collapse the side panels, F toggles full screen. Ignored while typing.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return
+      if ((e.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return
+      const { toggleLayers, toggleDetails } = useAppStore.getState()
+      if (e.key === '[') toggleLayers()
+      else if (e.key === ']') toggleDetails()
+      else if (e.key === 'f' || e.key === 'F') toggleFullscreen()
+      else return
+      e.preventDefault()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   return (
-    <div className="flex h-full flex-col">
+    <div
+      className="monitor flex h-full flex-col"
+      data-layers={layersHidden ? 'hidden' : undefined}
+      data-details={detailsHidden ? 'hidden' : undefined}
+    >
       <TopBar />
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <Viewport />

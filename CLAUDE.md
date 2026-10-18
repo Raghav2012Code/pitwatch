@@ -45,6 +45,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-18: collapsible panels, full screen, shortcuts
+
+- Top bar "View" group: toggle layer panel, toggle details panel (lg+), full screen (only if `document.fullscreenEnabled`). Buttons use `aria-pressed` and `aria-keyshortcuts`.
+- Shortcuts on the monitor: `[` layers, `]` details, `F` full screen; ignored while typing or with modifier keys.
+- Store: `layersHidden`, `detailsHidden`, `toggleLayers`, `toggleDetails` (tested). `.monitor` gets `data-layers` / `data-details`; unlayered CSS slides panels out with `transform` and moves `.stage` / `.timeline` edges so the map grows into the space.
+
 ### 2026-10-18: home sections without cards
 
 - User asked to remove the cards below the map. Permit schedule, noise calculator and resolution panels no longer sit in boxes: no panel backgrounds, borders or shadows; each starts under a 2 px ink rule instead. Raster cells outside the pit are transparent.

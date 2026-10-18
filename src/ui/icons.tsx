@@ -21,6 +21,26 @@ function Svg({ children, ...props }: IconProps) {
   )
 }
 
+export const PanelLeftIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="2.5" y="3.5" width="15" height="13" rx="1.5" />
+    <path d="M7.5 3.5v13" />
+  </Svg>
+)
+
+export const PanelRightIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="2.5" y="3.5" width="15" height="13" rx="1.5" />
+    <path d="M12.5 3.5v13" />
+  </Svg>
+)
+
+export const FullscreenIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 7.5V3h4.5M12.5 3H17v4.5M17 12.5V17h-4.5M7.5 17H3v-4.5" />
+  </Svg>
+)
+
 /** Brand mark: open-pit cross-section with stepped benches. */
 export function PitMark(props: IconProps) {
   return (

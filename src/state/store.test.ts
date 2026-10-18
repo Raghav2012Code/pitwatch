@@ -6,4 +6,13 @@ describe('app store', () => {
     useAppStore.getState().setActiveTab('findings')
     expect(useAppStore.getState().activeTab).toBe('findings')
   })
+
+  it('collapses and restores each side panel independently', () => {
+    const s = useAppStore.getState
+    s().toggleLayers()
+    expect([s().layersHidden, s().detailsHidden]).toEqual([true, false])
+    s().toggleDetails()
+    s().toggleLayers()
+    expect([s().layersHidden, s().detailsHidden]).toEqual([false, true])
+  })
 })

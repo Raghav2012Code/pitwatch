@@ -1191,6 +1191,77 @@ body {
   }
 }
 
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 3px;
+  color: var(--color-ink-faint);
+  border: 1px solid transparent;
+  transition:
+    color 0.2s,
+    background-color 0.2s,
+    border-color 0.2s;
+}
+.icon-btn:hover {
+  color: var(--color-accent);
+  border-color: var(--color-line-strong);
+}
+.icon-btn[aria-pressed='true'] {
+  color: var(--color-ink);
+  background: var(--color-panel-2);
+  border-color: var(--color-line);
+}
+
+/*
+ * Collapsible panels. Unlayered on purpose so these beat the Tailwind position utilities.
+ * Panels slide out with `transform` so they never fight the entrance animations on `translate`.
+ */
+.layer-panel,
+.details-panel {
+  transition:
+    transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 0.3s,
+    visibility 0s;
+}
+.stage,
+.timeline {
+  transition:
+    left 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
+    right 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@media (width >= 48rem) {
+  .monitor[data-layers='hidden'] .layer-panel {
+    transform: translateX(calc(-100% - 16px));
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
+      opacity 0.3s,
+      visibility 0s 0.45s;
+  }
+  .monitor[data-layers='hidden'] .stage,
+  .monitor[data-layers='hidden'] .timeline {
+    left: 12px;
+  }
+}
+@media (width >= 64rem) {
+  .monitor[data-details='hidden'] .details-panel {
+    transform: translateX(calc(100% + 16px));
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
+      opacity 0.3s,
+      visibility 0s 0.45s;
+  }
+  .monitor[data-details='hidden'] .stage,
+  .monitor[data-details='hidden'] .timeline {
+    right: 12px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
