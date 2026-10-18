@@ -15,7 +15,7 @@ export function Section({
   return (
     <section className="px-4 py-4">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h3 className="text-[12px] font-semibold text-ink-dim">{title}</h3>
+        <h3 className="cond text-[15px] font-semibold text-ink">{title}</h3>
         {provenance && <ProvenanceTag value={provenance} />}
       </div>
       {children}

@@ -9,7 +9,7 @@ export function OverviewPanel() {
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-2 p-3">
+      <div className="kpi-grid">
         <Kpi label="Findings" value={null} note="Rule engine has not run yet" />
         <Kpi label="Max pit depth" value={null} note="Needs the terrain surfaces" />
         <Kpi label="Excavated volume" value={null} note="Needs both surveys compared" />

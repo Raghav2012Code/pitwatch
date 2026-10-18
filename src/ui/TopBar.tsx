@@ -8,13 +8,13 @@ export function TopBar() {
   const setDrawerOpen = useAppStore((s) => s.setDrawerOpen)
 
   return (
-    <header className="glass-bar relative z-30 flex h-14 shrink-0 items-center gap-5 px-4">
+    <header className="topbar z-30 flex h-14 shrink-0 items-center gap-5 px-4">
       <div className="flex items-center gap-3">
         <span className="brand-mark">
           <PitMark className="h-5 w-5" />
         </span>
         <div className="leading-tight">
-          <div className="text-[15px] font-semibold tracking-tight text-ink">PitWatch</div>
+          <div className="cond text-[22px] font-bold text-ink">PitWatch</div>
           <div className="hidden text-[11px] whitespace-nowrap text-ink-faint xl:block">
             Compliance monitor
           </div>
@@ -24,7 +24,7 @@ export function TopBar() {
       <div className="hidden h-8 w-px bg-line sm:block" />
 
       <div className="min-w-0 leading-tight">
-        <div className="truncate text-[14px] font-medium text-ink">{MINE_INFO.name}</div>
+        <div className="cond truncate text-[17px] font-semibold text-ink">{MINE_INFO.name}</div>
         <div className="truncate text-[11px] text-ink-faint">
           {MINE_INFO.mineral}, {MINE_INFO.operator}
         </div>

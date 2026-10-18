@@ -52,11 +52,11 @@ export function LayerPanel() {
   return (
     <nav
       aria-label="Layers and tools"
-      className="glass hud-panel absolute top-3 left-3 z-10 hidden w-[60px] flex-col md:flex xl:w-[220px]"
+      className="sheet hud-panel absolute top-3 left-3 z-10 hidden w-[60px] flex-col md:flex xl:w-[220px]"
     >
       <div className="panel-head hidden xl:flex">
         <span>Layers</span>
-        <span className="text-ink-faint">0 of 7</span>
+        <span className="font-stretch-normal text-[12px] font-normal text-ink-faint">0 of 7</span>
       </div>
       <ul role="list" className="flex flex-col gap-0.5 p-1.5">
         {LAYERS.map((item) => (

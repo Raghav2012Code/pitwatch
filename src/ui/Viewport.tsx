@@ -1,103 +1,110 @@
-/** Concentric bench rims for the isometric pit schematic: [radius x, depth offset]. */
-const BENCHES = Array.from({ length: 7 }, (_, i) => ({ rx: 250 - i * 32, dy: i * 17 }))
-const SQUASH = 0.42
+import type { CSSProperties } from 'react'
+import { loop, ticks, toPath, type Pt } from './contours'
+
+/* Everything drawn here is a schematic. Real survey contours replace it in M3. */
+
+/** Backdrop hills and ridges: [cx, cy, rx, ry, rings, phase]. */
+const RELIEF: [number, number, number, number, number, number][] = [
+  [260, 210, 300, 210, 9, 0.4],
+  [1380, 820, 380, 260, 10, 2.2],
+  [1500, 120, 260, 180, 7, 4.1],
+  [120, 900, 240, 170, 6, 1.3],
+]
+
+const backdrop = RELIEF.flatMap(([cx, cy, rx, ry, n, ph]) =>
+  Array.from({ length: n }, (_, i) => {
+    const s = 1 - i / n
+    return {
+      d: toPath(
+        loop(cx + i * 6, cy - i * 4, rx * s, ry * s, [
+          [0.08, 2, ph + i * 0.2],
+          [0.05, 3, ph * 2 - i * 0.15],
+          [0.03, 5, ph + i * 0.3],
+        ]),
+      ),
+      index: i % 5 === 0,
+    }
+  }),
+)
+
+/** Pit benches, rim first. Centre drifts so the pit is asymmetric, as real pits are. */
+const PIT_RINGS = 10
+const pit = Array.from({ length: PIT_RINGS }, (_, i) => {
+  const s = 1 - i / (PIT_RINGS + 0.6)
+  const cx = i * 5
+  const cy = i * 3
+  const pts = loop(cx, cy, 240 * s, 165 * s, [
+    [0.06, 2, 0.8 + i * 0.12],
+    [0.04, 3, 2.1 - i * 0.1],
+    [0.02, 5, 0.3 + i * 0.25],
+  ])
+  return { pts, cx, cy, index: i % 3 === 0 }
+})
+
+/** Haul road: a ramp that follows each bench wall while dropping to the next bench. */
+const road: Pt[] = pit.slice(0, -2).flatMap(({ pts }, i) =>
+  Array.from({ length: 8 }, (_, k) => {
+    const t = k / 8
+    const idx = (Math.round(70 - (i + t) * 9) + 960) % 96
+    const [ax, ay] = pts[idx]!
+    const [bx, by] = pit[i + 1]!.pts[idx]!
+    return [ax + (bx - ax) * t, ay + (by - ay) * t] as Pt
+  }),
+)
+const floor = pit[PIT_RINGS - 1]!
 
 export function Viewport() {
   return (
     <main aria-label="3D mine view" className="viewport absolute inset-0">
-      {/* Stage = the area left visible between the floating panels. */}
-      <div className="stage absolute grid place-items-center">
-        <div className="hud-brackets pointer-events-none absolute inset-0" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
+      <svg
+        className="relief absolute inset-0 h-full w-full"
+        viewBox="0 0 1600 1000"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        {backdrop.map((c, i) => (
+          <path key={i} d={c.d} className={c.index ? 'contour contour-index' : 'contour'} />
+        ))}
+      </svg>
 
-        {/* Static north indicator; becomes the live compass in M3. */}
-        <div className="compass absolute top-4 right-4 hidden md:grid" aria-hidden="true">
-          <span>N</span>
-        </div>
+      {/* Stage = the area left visible between the floating panels, framed like a map sheet. */}
+      <div className="stage neatline absolute grid place-items-center">
+        <NorthArrow />
 
         <figure className="flex flex-col items-center text-center">
-          {/* Schematic only: a generic stepped pit, not this mine's terrain. */}
           <svg
-            viewBox="-280 -60 560 260"
-            className="pit-schematic w-[min(560px,80vw)]"
+            viewBox="-270 -200 560 410"
+            className="pit-plan w-[min(520px,74vw)]"
             aria-hidden="true"
           >
-            <defs>
-              <radialGradient
-                id="pit-glow"
-                cx="0"
-                cy="0"
-                r="1"
-                gradientUnits="userSpaceOnUse"
-                gradientTransform="translate(0 102) scale(160 70)"
-              >
-                <stop offset="0" stopColor="var(--color-accent)" stopOpacity="0.22" />
-                <stop offset="1" stopColor="var(--color-accent)" stopOpacity="0" />
-              </radialGradient>
-              <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0" stopColor="var(--color-accent)" stopOpacity="0" />
-                <stop offset="1" stopColor="var(--color-accent)" stopOpacity="0.35" />
-              </linearGradient>
-            </defs>
-
-            <ellipse cx="0" cy="102" rx="160" ry="70" fill="url(#pit-glow)" />
-
-            {/* Radar sweep across the rim plane. */}
-            <g transform={`scale(1 ${SQUASH})`}>
-              <circle r="270" fill="none" stroke="var(--color-line)" strokeDasharray="2 6" />
-              <g className="sweep">
-                <path d="M0 0 L250 0 A250 250 0 0 0 216.5 -125 Z" fill="url(#sweep)" />
+            {pit.map(({ pts, cx, cy, index }, i) => (
+              <g key={i} style={{ '--i': i } as CSSProperties}>
+                <path
+                  d={toPath(pts)}
+                  pathLength={1}
+                  className={`draw ${index ? 'bench bench-index' : 'bench'}`}
+                />
+                <path d={ticks(pts, cx, cy, 6, index ? 7 : 5)} className="bench-ticks" />
               </g>
-            </g>
-
-            {BENCHES.map((b, i) => (
-              <ellipse
-                key={b.rx}
-                cx="0"
-                cy={b.dy}
-                rx={b.rx}
-                ry={b.rx * SQUASH}
-                fill={
-                  i === BENCHES.length - 1
-                    ? 'color-mix(in srgb, var(--color-accent) 10%, transparent)'
-                    : 'none'
-                }
-                stroke="var(--color-accent)"
-                strokeOpacity={0.85 - i * 0.09}
-                strokeWidth={i === 0 ? 1.4 : 1}
-              />
             ))}
 
+            <path d={toPath(road, false)} className="road-casing" />
+            <path d={toPath(road, false)} className="road" />
+
             {/* Approved floor reference, dashed. */}
-            <ellipse
-              cx="0"
-              cy={BENCHES.length * 17 + 8}
-              rx="70"
-              ry={70 * SQUASH}
-              fill="none"
-              stroke="var(--color-warn)"
-              strokeOpacity="0.7"
-              strokeDasharray="4 4"
-            />
-            <line
-              x1="0"
-              y1="-36"
-              x2="0"
-              y2="170"
-              stroke="var(--color-line-strong)"
-              strokeDasharray="1 5"
-            />
+            <ellipse cx={floor.cx} cy={floor.cy} rx="34" ry="22" className="approved-floor" />
+
+            <text x="0" y="-178" className="plan-label">
+              rim
+            </text>
+            <text x={floor.cx} y={floor.cy + 4} className="plan-label">
+              floor
+            </text>
           </svg>
 
-          <figcaption className="mt-2 max-w-sm">
-            <div className="hud-label">Schematic, not survey data</div>
-            <h2 className="mt-2 text-[17px] font-semibold tracking-tight text-ink">
-              Awaiting terrain model
-            </h2>
+          <figcaption className="mt-3 max-w-sm">
+            <div className="map-note">Schematic, not survey data</div>
+            <h2 className="cond mt-2 text-[22px] font-bold text-ink">Awaiting terrain model</h2>
             <p className="mt-1 text-[13px] leading-5 text-ink-dim">
               The 3D survey surface, lease boundary and findings will render here.
             </p>
@@ -105,5 +112,21 @@ export function Viewport() {
         </figure>
       </div>
     </main>
+  )
+}
+
+function NorthArrow() {
+  return (
+    <svg
+      viewBox="-14 -30 28 52"
+      className="absolute top-5 right-5 hidden h-[52px] w-7 md:block"
+      aria-hidden="true"
+    >
+      <text y="-19" className="north-n">
+        N
+      </text>
+      <path d="M0 -12 L-8 16 L0 10 Z" fill="var(--color-ink)" />
+      <path d="M0 -12 L8 16 L0 10 Z" fill="none" stroke="var(--color-ink)" strokeWidth="1.2" />
+    </svg>
   )
 }

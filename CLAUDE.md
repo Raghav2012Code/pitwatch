@@ -23,7 +23,9 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Design
 
 - Mission-control layout: full-bleed viewport, floating glass panels (layer panel left, side panel right, timeline bottom), HUD corner brackets on `.stage`.
-- Light "daylight survey" palette. All colours are tokens in `@theme`; components use `var(--color-*)` or `color-mix(...)` with them. Never hardcode a hex or rgb in a component.
+- Topographic survey-sheet look: limestone paper base, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity and strata bands only (never status). Contour-line backdrop, double map neatline around the stage, panels are paper `.sheet`s with a strata band (`--strata`) down the left edge.
+- Type: Archivo variable; `.cond` (font-stretch 72%) for headings and big figures. JetBrains Mono for coordinates and dates.
+- All colours are tokens in `@theme`; components use `var(--color-*)` or `color-mix(...)`. Never hardcode a colour in a component.
 - Severity colour always pairs with a glyph shape: warning = triangle, violation = octagon, critical = diamond.
 
 ## Milestones
@@ -42,6 +44,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-18: topo survey-map redesign
+
+- New identity: contour-line backdrop, pit drawn as a top-down contour plan (index contours, depression ticks, haul ramp, dashed approved floor) that draws in once on load; double map neatline; map north arrow.
+- Panels are paper sheets with a strata band; top bar has a rock-layer rule; tabs are underlined; KPIs sit in a ruled legend grid; layer toggles are legend checkboxes; timeline epochs use trig-point symbols.
+- Font: Inter replaced by Archivo (condensed cut for headings). Palette: limestone, slate, haematite, ochre, map-water blue.
+- `src/ui/contours.ts` (+ test) generates the decorative contour loops.
 
 ### 2026-10-18: lighter palette
 
