@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import type { CSSProperties, JSX } from 'react'
 import { loop, ticks, toPath, type Pt } from './contours'
 
 /* Everything drawn here is a schematic. Real survey contours replace it in M3. */
@@ -70,6 +70,7 @@ export function Viewport() {
       {/* Stage = the area left visible between the floating panels, framed like a map sheet. */}
       <div className="stage neatline absolute grid place-items-center">
         <NorthArrow />
+        <Legend />
 
         <figure className="flex flex-col items-center text-center">
           <svg
@@ -128,5 +129,49 @@ function NorthArrow() {
       <path d="M0 -12 L-8 16 L0 10 Z" fill="var(--color-ink)" />
       <path d="M0 -12 L8 16 L0 10 Z" fill="none" stroke="var(--color-ink)" strokeWidth="1.2" />
     </svg>
+  )
+}
+
+const LEGEND: { label: string; sample: JSX.Element }[] = [
+  { label: 'Index contour', sample: <path d="M2 7H34" className="bench bench-index" /> },
+  { label: 'Bench contour', sample: <path d="M2 7H34" className="bench" /> },
+  {
+    label: 'Ticks point downhill',
+    sample: <path d="M2 4H34M8 4V9M18 4V9M28 4V9" className="bench-ticks" />,
+  },
+  {
+    label: 'Haul road',
+    sample: (
+      <>
+        <path d="M2 7H34" className="road-casing" />
+        <path d="M2 7H34" className="road" />
+      </>
+    ),
+  },
+  {
+    label: 'Approved floor',
+    sample: <rect x="3" y="2" width="30" height="10" rx="5" className="approved-floor" />,
+  },
+]
+
+/** Map key for the schematic. */
+function Legend() {
+  return (
+    <section
+      aria-label="Map legend"
+      className="map-legend absolute bottom-5 left-5 hidden xl:block"
+    >
+      <h3 className="cond text-[14px] font-semibold text-ink">Legend</h3>
+      <ul className="mt-1.5 space-y-1">
+        {LEGEND.map(({ label, sample }) => (
+          <li key={label} className="flex items-center gap-2.5 text-[12px] text-ink-dim">
+            <svg viewBox="0 0 36 14" className="h-3.5 w-9 shrink-0" aria-hidden="true">
+              {sample}
+            </svg>
+            {label}
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
