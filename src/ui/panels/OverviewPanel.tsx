@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { MINE_INFO, SURVEY_EPOCHS } from '../../data/fixtures/mine'
+import { MINE } from '../../data/fixtures/scenario'
 import { daysBetween, formatDate, formatLat, formatLon } from '../format'
 import { useCountUp } from '../useCountUp'
 import { Kpi, Row, Section } from './parts'
@@ -37,6 +38,7 @@ export function OverviewPanel() {
             value={`${formatLat(m.originLatLon.lat)}, ${formatLon(m.originLatLon.lon)}`}
             mono
           />
+          <Row label="Survey grid" value={MINE.metadata.grid} />
         </dl>
       </Section>
 

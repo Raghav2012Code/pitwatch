@@ -22,7 +22,7 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 ## Design
 
-- Mission-control layout: full-bleed viewport, floating glass panels (layer panel left, side panel right, timeline bottom), HUD corner brackets on `.stage`.
+- Monitor layout: full-bleed map viewport with floating paper panels (layer panel left, details panel right, timeline bottom), map neatline on `.stage`. Home page is a scroll story on a pinned map (`#/`), monitor at `#/monitor`.
 - Topographic survey-sheet look: limestone paper base, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity and strata bands only (never status). Contour-line backdrop, double map neatline around the stage, panels are paper `.sheet`s with a strata band (`--strata`) down the left edge.
 - Type: Archivo variable; `.cond` (font-stretch 72%) for headings and big figures. JetBrains Mono for coordinates and dates.
 - All colours are tokens in `@theme`; components use `var(--color-*)` or `color-mix(...)`. Never hardcode a colour in a component.
@@ -33,8 +33,8 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 |     | Milestone                                                                               | Status |
 | --- | --------------------------------------------------------------------------------------- | ------ |
 | M1  | App shell, tooling, UI                                                                  | done   |
-| M2  | Domain types, geo utils, seeded synthetic terrain + tests                               | next   |
-| M3  | 3D terrain view                                                                         |        |
+| M2  | Domain types, geo utils, seeded synthetic terrain + tests                               | done   |
+| M3  | 3D terrain view                                                                         | next   |
 | M4  | Compliance engine R1 boundary, R2 depth, R3 dumping (k=2, σ=√(σ1²+σ2²)) + snapshot test |        |
 | M5  | Overlays                                                                                |        |
 | M6  | Panels, picking, measure, profile, epoch slider                                         |        |
@@ -44,6 +44,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-18: M2 domain, geo and synthetic terrain
+
+- `src/domain/types.ts`: full model from the spec: Vec2/Vec3, Polygon, Mine, GridSpec, TerrainSurvey, PitZone, DumpZone, PermittedLimits, ExcavationState, Measurement, ComplianceFinding, async `TerrainProvider` (so a GeoTIFF provider can drop in later).
+- `src/geo/`: `grid.ts` (index/centre/cellAt, bilinear sample, volume), `polygon.ts` (point-in-polygon, shoelace area, distance to outline, centroid), `latlon.ts` (display-only equirectangular local <-> lat/lon; note says use UTM in a real system), `measure.ts`.
+- `src/data/`: `rng.ts` (mulberry32, Box-Muller, lattice hash), `noise.ts` (value noise + fbm), `synthetic.ts` (plateau + stepped pit: 10 m benches, 8 m berms, 6 m face run, flat floor; per-epoch Gaussian survey noise σ = 0.05 m), `SyntheticTerrainProvider.ts` (cached).
+- `src/data/fixtures/scenario.ts`: seed, 257 × 257 grid at 8 m, lease polygon, 20 m buffer, pit zone (approved floor RL 360), dump zone, and the planted changes: legit expansion, east encroachment (R1 violation), sump 6 m below floor (R2 violation), 1.2 m scrape inside the buffer (R1 warning), stray dump outside the zone (R3 warning), dump inside the zone (no finding).
+- Tests (`geo.test.ts`, `data.test.ts`): 30 total passing, including determinism and one check per planted change. Overview shows the survey grid size.
+- For M4: use `src/compliance/uncertainty.ts`; change threshold is `minChange + kσ` (spec). Survey noise max is about 0.3 m, so minChange around 0.5 m keeps noise out.
 
 ### 2026-10-18: collapsible panels, full screen, shortcuts
 
