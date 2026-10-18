@@ -20,14 +20,3 @@ const f = (n: number) => n.toFixed(1)
 export function toPath(pts: Pt[], closed = true) {
   return 'M' + pts.map(([x, y]) => `${f(x)} ${f(y)}`).join('L') + (closed ? 'Z' : '')
 }
-
-/** Short ticks pointing from every `every`-th point toward (cx, cy): the map sign for a depression. */
-export function ticks(pts: Pt[], cx: number, cy: number, every: number, len: number) {
-  let d = ''
-  for (let k = 0; k < pts.length; k += every) {
-    const [x, y] = pts[k]!
-    const h = Math.hypot(cx - x, cy - y) || 1
-    d += `M${f(x)} ${f(y)}L${f(x + ((cx - x) / h) * len)} ${f(y + ((cy - y) / h) * len)}`
-  }
-  return d
-}

@@ -1,41 +1,27 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { SURVEY_EPOCHS } from '../data/fixtures/mine'
-import { loop, ticks, toPath } from './contours'
 import { daysBetween, formatDate, monthTicks } from './format'
 import { PitMark } from './icons'
 import { ProvenanceTag } from './ProvenanceTag'
+import { WorkerTerrainProvider } from '../data/WorkerTerrainProvider'
+import { useTerrain } from '../state/terrain'
+import { countText } from './findings'
 import { MONITOR_HREF } from './route'
 import { NoiseCheck } from './home/NoiseCheck'
 import { PermitSheet } from './home/PermitSheet'
 import { Resolution } from './home/Resolution'
+import { SurveyPlan } from './home/SurveyPlan'
 import { NorthArrow, Relief } from './schematic'
 
 /*
  * The home page is one scroll story told on a pinned map:
  * baseline survey -> current survey -> measured change -> permit check -> monitor.
- * Everything on the map is an illustration, not survey data.
+ * The map is drawn from the simulated surveys and the rule engine's real output.
  */
 
 const [BASELINE, CURRENT] = SURVEY_EPOCHS
 const DAYS = BASELINE && CURRENT ? daysBetween(BASELINE.date, CURRENT.date) : 0
 const MONTHS = BASELINE && CURRENT ? monthTicks(BASELINE.date, CURRENT.date) : []
-
-/* ---------- Map geometry (illustration) ---------- */
-
-const BENCHES = Array.from({ length: 8 }, (_, i) => {
-  const s = 1 - i / 8.6
-  const cx = -40 + i * 4
-  const cy = i * 3
-  const pts = loop(cx, cy, 170 * s, 118 * s, [
-    [0.06, 2, 0.8 + i * 0.12],
-    [0.04, 3, 2.1 - i * 0.1],
-    [0.02, 5, 0.3 + i * 0.25],
-  ])
-  return { d: toPath(pts), ticks: ticks(pts, cx, cy, 6, 5), index: i % 3 === 0 }
-})
-const RIM = BENCHES[0]!.d
-const LEASE = 'M-265 -178 L196 -186 L206 176 L-256 182 Z'
-const OUTSIDE_LEASE = `M-400 -300 H400 V300 H-400 Z ${LEASE}`
 
 const STEPS = [
   'Start',
@@ -49,6 +35,13 @@ const STEPS = [
 export function HomePage() {
   const [step, setStep] = useState(0)
   const rootRef = useRef<HTMLDivElement>(null)
+  const findings = useTerrain((s) => s.findings)
+  const ready = useTerrain((s) => s.status === 'ready')
+
+  // Build the same simulated surveys the monitor uses (once, in a worker).
+  useEffect(() => {
+    void useTerrain.getState().load(new WorkerTerrainProvider())
+  }, [])
 
   // The step whose block crosses a line 65% down the screen drives the map (below the pinned map on phones).
   useEffect(() => {
@@ -109,112 +102,9 @@ export function HomePage() {
         <div className="story-stage" aria-hidden="true">
           <Relief className="opacity-70" />
           <div className="story-frame neatline">
-            <NorthArrow className="absolute top-5 right-5 hidden sm:block" />
+            <NorthArrow className="plan-north absolute top-5 right-5 z-10 hidden sm:block" />
 
-            <svg viewBox="-285 -205 570 410" className="story-map">
-              <defs>
-                <pattern
-                  id="hatch-cut"
-                  width="7"
-                  height="7"
-                  patternUnits="userSpaceOnUse"
-                  patternTransform="rotate(45)"
-                >
-                  <rect width="7" height="7" fill="var(--color-oxide)" fillOpacity="0.14" />
-                  <path
-                    d="M0 0V7"
-                    stroke="var(--color-oxide)"
-                    strokeWidth="2"
-                    strokeOpacity="0.7"
-                  />
-                </pattern>
-                <pattern
-                  id="hatch-breach"
-                  width="6"
-                  height="6"
-                  patternUnits="userSpaceOnUse"
-                  patternTransform="rotate(-45)"
-                >
-                  <rect width="6" height="6" fill="var(--color-violation)" fillOpacity="0.3" />
-                  <path d="M0 0V6" stroke="var(--color-violation)" strokeWidth="2.4" />
-                </pattern>
-                {/* New ground = current rim minus baseline rim. */}
-                <mask
-                  id="cut-mask"
-                  maskUnits="userSpaceOnUse"
-                  x="-400"
-                  y="-300"
-                  width="800"
-                  height="600"
-                >
-                  <g className={`grow ${on(2)}`}>
-                    <path d={RIM} fill="white" />
-                  </g>
-                  <path d={RIM} fill="black" />
-                </mask>
-                <clipPath id="outside-lease">
-                  <path d={OUTSIDE_LEASE} clipRule="evenodd" />
-                </clipPath>
-              </defs>
-
-              {/* Measured change. */}
-              <rect
-                x="-400"
-                y="-300"
-                width="800"
-                height="600"
-                fill="url(#hatch-cut)"
-                mask="url(#cut-mask)"
-                className={`fade ${on(3)}`}
-              />
-
-              {/* The pit: baseline shape, grows to the current survey. */}
-              <g className={`grow ${on(2)}`}>
-                {BENCHES.map((b, i) => (
-                  <g key={i} style={{ '--i': i } as CSSProperties}>
-                    <path
-                      d={b.d}
-                      pathLength={1}
-                      className={`draw ${b.index ? 'bench bench-index' : 'bench'}`}
-                    />
-                    <path d={b.ticks} className="bench-ticks" />
-                  </g>
-                ))}
-              </g>
-
-              {/* Ghost of the baseline rim once the pit has grown. */}
-              <path d={RIM} className={`ghost-rim fade ${on(2)}`} />
-
-              {/* Lease boundary and the part of the cut that crosses it. */}
-              <path d={LEASE} pathLength={1} className={`lease ${on(4)}`} />
-              <rect
-                x="-400"
-                y="-300"
-                width="800"
-                height="600"
-                fill="url(#hatch-breach)"
-                mask="url(#cut-mask)"
-                clipPath="url(#outside-lease)"
-                className={`fade ${on(4)}`}
-              />
-              <g className={`breach-mark ${on(4)}`} transform="translate(262 -12)">
-                <circle r="11" className="ping" />
-                <path
-                  d="M-4.1 -10 H4.1 L10 -4.1 V4.1 L4.1 10 H-4.1 L-10 4.1 V-4.1 Z"
-                  fill="var(--color-panel)"
-                  stroke="var(--color-violation)"
-                  strokeWidth="2"
-                />
-                <path d="M-4 -4 L4 4 M4 -4 L-4 4" stroke="var(--color-violation)" strokeWidth="2" />
-              </g>
-
-              <text x="-40" y="-150" className={`plan-label fade ${on(2)}`}>
-                baseline rim
-              </text>
-              <text x="-180" y="-188" className={`plan-label fade ${on(4)}`}>
-                lease boundary
-              </text>
-            </svg>
+            <SurveyPlan step={step} />
 
             {/* Survey clock: where in time the map is. */}
             <div className="story-clock">
@@ -275,21 +165,25 @@ export function HomePage() {
             label={`${CURRENT?.label} survey, ${CURRENT && formatDate(CURRENT.date)}`}
             title="Then, the ground as it is."
           >
-            The same grid surveyed again {DAYS} days later. The pit has pushed east, and its old rim
-            is left behind as a ghost line.
+            The same grid surveyed again {DAYS} days later. The west wall has been pushed back, a
+            new cut has opened on the east side and the floor is a bench deeper. The old rim stays
+            as a dashed line.
           </Step>
 
           <Step n={3} step={step} label="Measured change" title="Subtract one from the other.">
-            Where the two surfaces differ by more than twice their combined uncertainty, rock was
-            really removed. Anything smaller could be survey noise, so it is ignored.
+            Where the two surfaces differ by more than half a metre plus twice their combined
+            uncertainty, something really changed: rust where rock was removed, blue where material
+            was added. Anything smaller could be survey noise, so it is ignored.
           </Step>
 
           <Step n={4} step={step} label="Permit check" title="Hold it against the permit.">
             PitWatch checks three things: digging outside the lease or its safety buffer, digging
-            below the approved floor, and dumping outside permitted zones. Here the new cut crosses
+            below the approved floor, and dumping outside permitted zones. Here the east cut crosses
             the lease line.
             <span className="mt-4 block text-[13px] text-ink-faint">
-              Illustration. The rule engine is still being built.
+              {ready
+                ? `This is the rule engine's result on the simulated surveys: ${countText(findings).toLowerCase()}.`
+                : 'The rule engine runs as soon as the surveys are built.'}
             </span>
           </Step>
 

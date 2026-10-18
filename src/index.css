@@ -296,22 +296,7 @@ body {
     text-anchor: middle;
     fill: var(--color-ink);
   }
-  .bench {
-    fill: none;
-    stroke: var(--color-contour);
-    stroke-width: 0.9;
-  }
-  .bench-index {
-    stroke: color-mix(in srgb, var(--color-contour) 70%, var(--color-ink));
-    stroke-width: 1.8;
-  }
-  .bench-ticks {
-    fill: none;
-    stroke: var(--color-contour);
-    stroke-width: 0.9;
-    opacity: 0;
-    animation: appear 0.6s ease-out 1.6s forwards;
-  }
+
   .plan-label {
     font-size: 11px;
     font-style: italic;
@@ -322,19 +307,6 @@ body {
     stroke-width: 4px;
   }
 
-  /* One load moment: benches draw in from rim to floor. */
-  .draw {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    animation: draw 1.2s ease-out forwards;
-    animation-delay: calc(var(--i) * 80ms);
-  }
-
-  @keyframes draw {
-    to {
-      stroke-dashoffset: 0;
-    }
-  }
   @keyframes appear {
     to {
       opacity: 1;
@@ -797,13 +769,6 @@ body {
     }
   }
 
-  .story-map {
-    flex: 1;
-    min-height: 0;
-    width: 100%;
-    overflow: visible;
-  }
-
   .story-clock {
     padding: 10px 18px 14px;
     border-top: 1px solid var(--color-line);
@@ -880,16 +845,6 @@ body {
     animation: cue 2.2s ease-in-out infinite;
   }
 
-  /* Pit growth: with view-box, origin 0 0 is the map's user-space (0, 0). */
-  .grow {
-    transform-box: view-box;
-    transform-origin: 0 0;
-    transition: transform 1.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-  }
-  .grow.on {
-    transform: translate(50px, 0) scale(1.25);
-  }
-
   .fade {
     opacity: 0;
     transition: opacity 0.9s ease-out 0.3s;
@@ -900,10 +855,58 @@ body {
 
   .ghost-rim {
     fill: none;
-    stroke: var(--color-ink);
-    stroke-opacity: 0.55;
-    stroke-width: 1.2;
-    stroke-dasharray: 3 4;
+    stroke: var(--color-panel);
+    stroke-opacity: 0.9;
+    stroke-width: 1.6;
+    stroke-dasharray: 4 4;
+  }
+
+  /* Home map drawn from the simulated surveys (SVG units are metres). */
+  .survey-plan .plan-label {
+    font-size: 34px;
+    fill: var(--color-panel);
+    stroke: color-mix(in srgb, var(--color-ink) 70%, transparent);
+    stroke-width: 6px;
+  }
+  .survey-plan .lease {
+    stroke: var(--color-panel);
+    stroke-width: 2.2;
+  }
+  .breach-mark {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .plan-veil {
+    fill: var(--color-ink);
+    opacity: 0.35;
+  }
+  .plan-box {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+  }
+  .plan-box > svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .plan-north {
+    box-sizing: content-box;
+    padding: 6px 8px 4px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--color-panel) 88%, transparent);
+  }
+  .home-corner .stamp {
+    background: var(--color-panel);
+  }
+  .plan-status {
+    margin: auto;
+    font-size: 14px;
+    color: var(--color-ink-faint);
   }
 
   .lease {
@@ -1322,12 +1325,6 @@ body {
     animation: none !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-  .draw {
-    stroke-dashoffset: 0;
-  }
-  .bench-ticks {
-    opacity: 1;
   }
   .res-col {
     opacity: 1;

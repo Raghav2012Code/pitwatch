@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { loop, ticks, toPath } from './contours'
+import { loop, toPath } from './contours'
 
 describe('contours', () => {
   it('builds a closed loop at the given radius when there is no wobble', () => {
@@ -11,9 +11,5 @@ describe('contours', () => {
       [10, 17],
     ])
     expect(toPath(pts)).toBe('M15.0 20.0L10.0 23.0L5.0 20.0L10.0 17.0Z')
-  })
-
-  it('points ticks toward the centre', () => {
-    expect(ticks([[10, 0]], 0, 0, 1, 2)).toBe('M10.0 0.0L8.0 0.0')
   })
 })
