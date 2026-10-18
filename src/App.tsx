@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
+import { SyntheticTerrainProvider } from './data/SyntheticTerrainProvider'
 import { useAppStore } from './state/store'
+import { useTerrain } from './state/terrain'
 import { toggleFullscreen } from './ui/fullscreen'
 import { HomePage } from './ui/HomePage'
 import { LayerPanel } from './ui/LayerPanel'
@@ -24,15 +26,23 @@ function Monitor() {
   const layersHidden = useAppStore((s) => s.layersHidden)
   const detailsHidden = useAppStore((s) => s.detailsHidden)
 
-  // [ and ] collapse the side panels, F toggles full screen. Ignored while typing.
+  // Build the synthetic surveys once, the first time the monitor opens.
+  useEffect(() => {
+    void useTerrain.getState().load(new SyntheticTerrainProvider())
+  }, [])
+
+  // [ and ] collapse the side panels, F toggles full screen, R resets the view.
+  // Ignored while typing.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return
       if ((e.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return
-      const { toggleLayers, toggleDetails } = useAppStore.getState()
+      const { toggleLayers, toggleDetails, requestView } = useAppStore.getState()
       if (e.key === '[') toggleLayers()
       else if (e.key === ']') toggleDetails()
       else if (e.key === 'f' || e.key === 'F') toggleFullscreen()
+      else if ((e.key === 'r' || e.key === 'R') && useTerrain.getState().status === 'ready')
+        requestView('oblique')
       else return
       e.preventDefault()
     }

@@ -269,10 +269,6 @@ body {
     text-anchor: middle;
     fill: var(--color-ink);
   }
-
-  .pit-plan {
-    overflow: visible;
-  }
   .bench {
     fill: none;
     stroke: var(--color-contour);
@@ -288,28 +284,6 @@ body {
     stroke-width: 0.9;
     opacity: 0;
     animation: appear 0.6s ease-out 1.6s forwards;
-  }
-  .road-casing {
-    fill: none;
-    stroke: var(--color-ink-dim);
-    stroke-width: 6;
-    stroke-linejoin: round;
-    opacity: 0;
-    animation: appear 0.6s ease-out 1.9s forwards;
-  }
-  .road {
-    fill: none;
-    stroke: var(--color-panel);
-    stroke-width: 3.5;
-    stroke-linejoin: round;
-    opacity: 0;
-    animation: appear 0.6s ease-out 1.9s forwards;
-  }
-  .approved-floor {
-    fill: color-mix(in srgb, var(--color-ochre) 12%, transparent);
-    stroke: var(--color-ochre);
-    stroke-width: 1.4;
-    stroke-dasharray: 4 3;
   }
   .plan-label {
     font-size: 11px;
@@ -340,108 +314,148 @@ body {
     }
   }
 
-  .map-legend {
-    padding: 10px 12px 11px;
-    background: var(--color-panel);
-    border: 1px solid var(--color-line-strong);
-  }
-  .map-legend .bench-ticks,
-  .map-legend .road,
-  .map-legend .road-casing {
-    opacity: 1;
-    animation: none;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: calc(100% + 12px);
-    padding: 2px 6px;
-    margin-inline: -6px;
-    border-radius: 2px;
-    font-size: 12px;
-    color: var(--color-ink-dim);
-    text-align: left;
+  /* Top-bar view toggles. */
+  .icon-btn {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 3px;
+    color: var(--color-ink-faint);
+    border: 1px solid transparent;
     transition:
+      color 0.2s,
       background-color 0.2s,
-      color 0.2s;
+      border-color 0.2s;
   }
-  .legend-item:hover,
-  .legend-item.on {
+  .icon-btn:hover {
+    color: var(--color-accent);
+    border-color: var(--color-line-strong);
+  }
+  .icon-btn[aria-pressed='true'] {
     color: var(--color-ink);
     background: var(--color-panel-2);
-  }
-  .legend-item[aria-pressed='true'] {
-    box-shadow: inset 2px 0 0 var(--color-accent);
+    border-color: var(--color-line);
   }
 
-  /* Legend picks one feature out; everything else steps back. */
-  .pit-plan [data-f] {
-    transition: opacity 0.35s;
+  /* ---------- Map HUD (over the 3D view) ---------- */
+
+  .scene-wrap {
+    overflow: hidden;
+    background: var(--color-bg-2);
+    cursor: grab;
   }
-  .pit-plan[data-hl] [data-f] {
-    opacity: 0.12;
-  }
-  .pit-plan[data-hl='index'] [data-f='index'],
-  .pit-plan[data-hl='bench'] [data-f='bench'],
-  .pit-plan[data-hl='ticks'] [data-f='ticks'],
-  .pit-plan[data-hl='road'] [data-f='road'],
-  .pit-plan[data-hl='floor'] [data-f='floor'],
-  .pit-plan[data-hl='flight'] [data-f='flight'] {
-    opacity: 1;
+  .scene-wrap:active {
+    cursor: grabbing;
   }
 
-  .flight-lines {
-    fill: none;
-    stroke: var(--color-accent);
-    stroke-opacity: 0.32;
-    stroke-width: 0.9;
-    stroke-dasharray: 2 5;
-  }
-  .drone-trail,
-  .drone {
-    fill: none;
-    stroke: var(--color-accent);
-    stroke-linecap: round;
-    animation: fly 40s linear infinite;
-  }
-  .drone-trail {
-    stroke-width: 2;
-    stroke-opacity: 0.55;
-    stroke-dasharray: 0.018 0.982;
-    --lead: 0;
-  }
-  .drone {
-    stroke-width: 7;
-    stroke-dasharray: 0.0005 0.9995;
-    --lead: -0.0175;
-  }
-  @keyframes fly {
-    from {
-      stroke-dashoffset: calc(1 + var(--lead));
-    }
-    to {
-      stroke-dashoffset: var(--lead);
-    }
-  }
-
-  .title-block {
-    width: 230px;
+  .hud-sheet {
     padding: 10px 12px;
-    background: var(--color-panel);
+    background: color-mix(in srgb, var(--color-panel) 94%, transparent);
     border: 1px solid var(--color-line-strong);
+    box-shadow: 0 8px 22px -14px rgb(40 32 20 / 0.45);
     text-align: left;
   }
+  .hud-shadow {
+    box-shadow: 0 8px 22px -14px rgb(40 32 20 / 0.45);
+  }
 
-  .map-note {
-    display: inline-block;
-    font-size: 12px;
-    font-style: italic;
-    color: var(--color-oxide);
-    padding: 2px 8px;
-    border: 1px solid color-mix(in srgb, var(--color-oxide) 40%, transparent);
+  /* Segmented camera presets. */
+  .seg {
+    display: flex;
     background: var(--color-panel);
+    border: 1px solid var(--color-line-strong);
+  }
+  .seg button {
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    font-stretch: 72%;
+    color: var(--color-ink-dim);
+    transition:
+      color 0.2s,
+      background-color 0.2s;
+  }
+  .seg button + button {
+    border-left: 1px solid var(--color-line);
+  }
+  .seg button:hover {
+    color: var(--color-accent);
+    background: var(--color-panel-2);
+  }
+
+  .compass-btn {
+    width: 46px;
+    height: 46px;
+    padding: 2px;
+    border-radius: 50%;
+    background: var(--color-panel);
+    border: 1px solid var(--color-line-strong);
+    transition: border-color 0.2s;
+  }
+  .compass-btn:hover {
+    border-color: var(--color-accent);
+  }
+  .compass-ring {
+    fill: none;
+    stroke: var(--color-line-strong);
+    stroke-dasharray: 1 3.6;
+  }
+  .compass-north {
+    fill: var(--color-violation);
+  }
+  .compass-south {
+    fill: none;
+    stroke: var(--color-ink-faint);
+    stroke-width: 1;
+  }
+  .compass-n {
+    font-size: 8px;
+    font-weight: 700;
+    text-anchor: middle;
+    fill: var(--color-ink);
+  }
+
+  /* Alternating black and white blocks, like a printed map scale. */
+  .scale-bar {
+    height: 7px;
+    min-width: 20px;
+    border: 1px solid var(--color-ink);
+    background: linear-gradient(
+      to right,
+      var(--color-ink) 0 25%,
+      var(--color-panel) 25% 50%,
+      var(--color-ink) 50% 75%,
+      var(--color-panel) 75% 100%
+    );
+    transition: width 0.25s ease-out;
+  }
+
+  .loading-strata {
+    height: 6px;
+    background: var(--strata);
+    background-size: 100% 100%;
+    mask-image: linear-gradient(to right, transparent, black 30%, black 70%, transparent);
+    mask-size: 200% 100%;
+    animation: strata-slide 1.4s linear infinite;
+  }
+  @keyframes strata-slide {
+    from {
+      mask-position: 200% 0;
+    }
+    to {
+      mask-position: -100% 0;
+    }
+  }
+
+  .kbd {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    line-height: 16px;
+    padding: 0 5px;
+    color: var(--color-ink-faint);
+    border: 1px solid var(--color-line-strong);
+    border-radius: 2px;
   }
 
   /* ---------- Layer panel ---------- */
@@ -460,6 +474,12 @@ body {
     background: var(--color-panel-2);
     color: var(--color-ink);
   }
+  .layer-row.live {
+    color: var(--color-ink);
+  }
+  .layer-row.live:not(.on) {
+    color: var(--color-ink-dim);
+  }
   .layer-row:disabled {
     cursor: not-allowed;
     color: var(--color-ink-faint);
@@ -471,6 +491,13 @@ body {
     height: 13px;
     border-radius: 2px;
     border: 1.5px solid color-mix(in srgb, var(--color-ink) 35%, transparent);
+  }
+  .toggle.on {
+    border-color: var(--color-accent);
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.6l4.5-5' fill='none' stroke='white' stroke-width='1.8'/%3E%3C/svg%3E")
+        center / 11px no-repeat,
+      var(--color-accent);
   }
 
   /* ---------- Side panel ---------- */
@@ -1189,29 +1216,6 @@ body {
       scale: 0 1;
     }
   }
-}
-
-.icon-btn {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 3px;
-  color: var(--color-ink-faint);
-  border: 1px solid transparent;
-  transition:
-    color 0.2s,
-    background-color 0.2s,
-    border-color 0.2s;
-}
-.icon-btn:hover {
-  color: var(--color-accent);
-  border-color: var(--color-line-strong);
-}
-.icon-btn[aria-pressed='true'] {
-  color: var(--color-ink);
-  background: var(--color-panel-2);
-  border-color: var(--color-line);
 }
 
 /*

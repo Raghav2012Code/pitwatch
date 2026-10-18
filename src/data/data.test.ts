@@ -86,12 +86,13 @@ describe('synthetic terrain provider', async () => {
     await expect(provider.getSurvey('nope')).rejects.toThrow('Unknown survey')
   })
 
-  it('cuts a stepped pit with a flat floor at the approved level', () => {
+  it('cuts a stepped pit with a flat floor just above the approved level', () => {
     const floor = sampleBilinear(GRID, current.elevations, {
       x: CURRENT_PIT.cx + 60,
       y: CURRENT_PIT.cy,
     })!
-    expect(floor).toBeCloseTo(PIT_ZONE.approvedFloorElevation, 0)
+    expect(floor).toBeCloseTo(CURRENT_PIT.floorRL, 0)
+    expect(floor).toBeGreaterThan(PIT_ZONE.approvedFloorElevation)
   })
 
   it('leaves far-away ground unchanged apart from survey noise', () => {
@@ -115,7 +116,7 @@ describe('synthetic terrain provider', async () => {
 
     // 3. Sump below the approved floor.
     const sumpZ = current.elevations[indexOf(GRID, 120, 128)]
-    expect(sumpZ).toBeLessThan(PIT_ZONE.approvedFloorElevation - 5)
+    expect(sumpZ).toBeLessThan(PIT_ZONE.approvedFloorElevation - 3)
 
     // 4. Shallow scrape inside the lease, within the safety buffer.
     const scrape = { x: 960, y: 1504 }

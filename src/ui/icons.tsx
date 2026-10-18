@@ -21,6 +21,14 @@ function Svg({ children, ...props }: IconProps) {
   )
 }
 
+export const ContourIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 13c2-4 5-6 8-6s5 2 6 4" />
+    <path d="M6 15.5c1.5-2.5 3.5-4 5.5-4s3.4 1.2 4 2.5" />
+    <path d="M2.5 9.5c2.5-4 6-6 9-6 2.4 0 4.6 1.2 6 3" />
+  </Svg>
+)
+
 export const PanelLeftIcon = (p: IconProps) => (
   <Svg {...p}>
     <rect x="2.5" y="3.5" width="15" height="13" rx="1.5" />

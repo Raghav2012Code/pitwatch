@@ -18,7 +18,7 @@ Then a browser check at 1440, 1100 and 800 px wide (dev server: `npx vite --port
 
 ## Stack
 
-Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/index.css`), Zustand, Vitest. three.js / R3F arrive in M3.
+Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/index.css`), Zustand, Vitest, three 0.186 + @react-three/fiber 9 + drei 10 (scene is lazy-loaded).
 
 ## Design
 
@@ -34,8 +34,8 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 | --- | --------------------------------------------------------------------------------------- | ------ |
 | M1  | App shell, tooling, UI                                                                  | done   |
 | M2  | Domain types, geo utils, seeded synthetic terrain + tests                               | done   |
-| M3  | 3D terrain view                                                                         | next   |
-| M4  | Compliance engine R1 boundary, R2 depth, R3 dumping (k=2, σ=√(σ1²+σ2²)) + snapshot test |        |
+| M3  | 3D terrain view                                                                         | done   |
+| M4  | Compliance engine R1 boundary, R2 depth, R3 dumping (k=2, σ=√(σ1²+σ2²)) + snapshot test | next   |
 | M5  | Overlays                                                                                |        |
 | M6  | Panels, picking, measure, profile, epoch slider                                         |        |
 | M7  | Polish                                                                                  |        |
@@ -44,6 +44,17 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-18: M3 3D terrain and monitor redesign around it
+
+- `src/scene/`: `TerrainScene` (lazy chunk; Canvas `frameloop="demand"`, `flat`, PCF shadows, NW key light, fog into paper colour), `Terrain` (surface + block sides built once per survey; exaggeration is a y-scale), `CameraRig` (drei OrbitControls, damped; animated flights; intro flight from high above into the oblique view; keeps the aim point when exaggeration changes), pure helpers `terrainGeometry.ts` (scene axes: x east, y = RL − 400, z = −north), `palette.ts` (hypsometric ramp shared with the legend, strata bands), `presets.ts` (oblique/top/pit poses, north-up, heading, metres per pixel, scale-bar length), `cameraState.ts` (transient store for HUD).
+- Shaders via `onBeforeCompile`: contour lines in the terrain fragment shader (5 m, bold every 25 m, ~1 px at any zoom using `fwidth`), contour toggle is a uniform; block sides painted with horizontal rock bands by RL.
+- HUD (`src/ui/viewport/MapHud.tsx`): title block, camera presets (Oblique / Top / Pit), compass that turns with the camera (click = face north), elevation legend from the real min/max ± σ, live scale bar at view centre, vertical exaggeration slider 1×–3× (default 1.5×). Loading and error states; `SceneErrorBoundary` catches WebGL failures.
+- Terrain store `src/state/terrain.ts` loads mine/limits/surveys once from the provider (tested, including failure). App store: `layers` (terrain, contours), `exaggeration`, `view` requests. Shortcut `R` resets the view.
+- Layer panel: Terrain and Contours are real switches (`role="switch"`), Reset view works; the rest still name their milestone. Overview KPI "Lowest point" now reads the survey (RL ± σ).
+- Scenario tweak: plateau moved to RL 422 so flat berms and the floor are not on a 5 m contour level (noise made squiggles). Current floor RL 362 (approved 360), sump RL 356.
+- Removed the old schematic pit plan, drone flight lines and schematic legend.
+- Browser-check gotchas: navigating to the same `#/monitor` URL does not reload, use `location.reload()`; the Playwright window is backgrounded so a screenshot can show an older frame, take two. Unlayered CSS beats Tailwind's `hidden`, so keep component classes inside `@layer components`.
 
 ### 2026-10-18: M2 domain, geo and synthetic terrain
 

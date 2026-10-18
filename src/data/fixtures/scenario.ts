@@ -31,8 +31,11 @@ export const LEASE: Polygon = [
 
 export const SAFETY_BUFFER_M = 20
 
-/** Natural ground level the pit is cut from (plateau, RL m). */
-export const PLATEAU_RL = 420
+/**
+ * Natural ground level the pit is cut from (plateau, RL m). Deliberately not a multiple
+ * of the 5 m contour interval, so flat berms and the floor sit between contour levels.
+ */
+export const PLATEAU_RL = 422
 export const BENCH_HEIGHT_M = 10
 export const BERM_WIDTH_M = 8
 /** Horizontal run of one bench face (≈ 59° face angle). */
@@ -47,9 +50,9 @@ export interface PitShape {
   floorRL: number
 }
 
-export const BASELINE_PIT: PitShape = { cx: 1000, cy: 1030, a: 330, b: 250, floorRL: 370 }
-/** Legitimate expansion: wider to the west, north and south, one bench deeper. */
-export const CURRENT_PIT: PitShape = { cx: 980, cy: 1030, a: 360, b: 270, floorRL: 360 }
+export const BASELINE_PIT: PitShape = { cx: 1000, cy: 1030, a: 330, b: 250, floorRL: 372 }
+/** Legitimate expansion: wider to the west, north and south, one bench deeper, 2 m above the approved floor. */
+export const CURRENT_PIT: PitShape = { cx: 980, cy: 1030, a: 360, b: 270, floorRL: 362 }
 
 export const PIT_ZONE: PitZone = {
   id: 'pit-main',

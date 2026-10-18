@@ -1,6 +1,8 @@
-import type { CSSProperties } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 import { MINE_INFO, SURVEY_EPOCHS } from '../../data/fixtures/mine'
 import { MINE } from '../../data/fixtures/scenario'
+import { elevationRange } from '../../scene/terrainGeometry'
+import { useTerrain } from '../../state/terrain'
 import { daysBetween, formatDate, formatLat, formatLon } from '../format'
 import { useCountUp } from '../useCountUp'
 import { Kpi, Row, Section } from './parts'
@@ -10,13 +12,25 @@ export function OverviewPanel() {
   const [baseline, current] = SURVEY_EPOCHS
   const interval = baseline && current ? daysBetween(baseline.date, current.date) : null
   const shown = useCountUp(interval ?? 0, 1100, 300)
+  const survey = useTerrain((s) => s.surveys.current)
+  const lowest = useMemo(() => survey && elevationRange(survey.elevations).min, [survey])
 
   return (
     <>
       <div className="kpi-grid stagger" style={{ '--d': '0.35s' } as CSSProperties}>
-        <Kpi label="Findings" value={null} note="Rule engine has not run yet" />
-        <Kpi label="Max pit depth" value={null} note="Needs the terrain surfaces" />
-        <Kpi label="Excavated volume" value={null} note="Needs both surveys compared" />
+        <Kpi label="Findings" value={null} note="The rule engine arrives in M4" />
+        <Kpi
+          label="Lowest point"
+          value={lowest === undefined ? null : lowest.toFixed(1)}
+          unit="m RL"
+          note={
+            survey
+              ? `± ${survey.verticalUncertainty.toFixed(2)} m (1σ), current survey`
+              : 'Building the terrain model'
+          }
+          provenance={survey ? 'derived' : undefined}
+        />
+        <Kpi label="Excavated volume" value={null} note="Needs change detection (M4)" />
         <Kpi
           label="Survey interval"
           value={interval === null ? null : String(shown)}
