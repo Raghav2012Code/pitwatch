@@ -739,12 +739,12 @@ body {
     }
   }
 
+  /* The model sits straight on the survey paper; only the date bar is a card. */
   .story-frame {
     position: absolute;
     inset: 72px 16px 16px;
     display: flex;
     flex-direction: column;
-    background: color-mix(in srgb, var(--color-panel) 70%, transparent);
   }
   @media (width >= 64rem) {
     .story-frame {
@@ -753,8 +753,13 @@ body {
   }
 
   .story-clock {
+    margin: 0 auto;
+    width: min(100%, 560px);
     padding: 10px 18px 14px;
-    border-top: 1px solid var(--color-line);
+    border-radius: 8px;
+    border: 1px solid var(--color-line);
+    background: color-mix(in srgb, var(--color-panel) 92%, transparent);
+    box-shadow: 0 6px 20px -12px color-mix(in srgb, var(--color-ink) 45%, transparent);
   }
   .clock-marker {
     position: absolute;

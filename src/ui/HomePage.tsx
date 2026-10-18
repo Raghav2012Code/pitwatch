@@ -104,7 +104,7 @@ export function HomePage() {
         {/* ---------- Pinned map ---------- */}
         <div className="story-stage" aria-hidden="true">
           <Relief className="opacity-70" />
-          <div className="story-frame neatline">
+          <div className="story-frame">
             <div className="plan-box">
               {ready ? (
                 <SceneErrorBoundary

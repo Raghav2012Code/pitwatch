@@ -46,6 +46,11 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-18: home model framing
+
+- The home orbit now circles the block centre (not the pit) at about 38° elevation, and its distance is recomputed from the canvas size each frame so the whole 2048 m block, corners included, stays in view at every angle and aspect ratio (`Orbit` in `HomeScene.tsx`).
+- The model sits straight on the survey paper: the boxed neatline frame is gone; the survey date bar is a small floating card under the model.
+
 ### 2026-10-18: deployed on Vercel
 
 - Live at https://pitwatch-3d.vercel.app (team `abivan100-stacks-projects`, project `pitwatch-3d`). `vercel.json` pins the Vite build (`npm run build` -> `dist`). The GitHub repo is connected, so pushes to `main` redeploy. Manual: `npx vercel deploy --prod --scope abivan100-stacks-projects` (the local CLI is logged in; the Vercel MCP connection is read-only for project creation and returned 403).

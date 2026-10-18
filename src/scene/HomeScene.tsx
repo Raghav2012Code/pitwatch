@@ -1,9 +1,8 @@
 import { Line } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
-import type * as THREE from 'three'
+import * as THREE from 'three'
 import type { ComplianceFinding, Polygon, TerrainSurvey } from '../domain/types'
-import { centroidOf } from '../geo/polygon'
 import { sampleBilinear } from '../geo/grid'
 import { useAppStore } from '../state/store'
 import { useTerrain } from '../state/terrain'
@@ -13,7 +12,7 @@ import { BASE_RL, toScene } from './terrainGeometry'
 
 /*
  * The home-page model: the same simulated surveys and engine output as the monitor,
- * slowly turning while the story steps change what it shows:
+ * slowly turning (whole block in frame) while the story steps change what it shows:
  *   0–1 baseline, 2 current, 3 measured change, 4+ findings with lease line and pins.
  * No controls, so scrolling the page is never captured by the canvas.
  */
@@ -88,16 +87,33 @@ function Pin({ f, survey, ex }: { f: ComplianceFinding; survey: TerrainSurvey; e
   )
 }
 
-/** Slow orbit around the pit. */
+/** Camera elevation above the horizon, radians (about 38°). */
+const ELEVATION = 0.66
+/** Half the diagonal of the 2048 m block: the circle its corners sweep while turning. */
+const SWEEP = Math.hypot(1024, 1024)
+/** Block thickness in scene units at 1.5× (ground to the base of the sides). */
+const THICKNESS = 260
+
+/**
+ * Slow orbit around the block centre. The distance is recomputed from the canvas size so
+ * the whole block, corners included, stays in frame at every angle and aspect ratio.
+ */
 function Orbit({ target }: { target: [number, number, number] }) {
   const angle = useRef(0.55)
-  useFrame(({ camera }, dt) => {
+  useFrame(({ camera, size }, dt) => {
     angle.current += dt * 0.045
-    const r = 2050
+    const cam = camera as THREE.PerspectiveCamera
+    const v = THREE.MathUtils.degToRad(cam.fov) / 2
+    const h = Math.atan(Math.tan(v) * (size.width / size.height))
+    const halfW = SWEEP
+    const halfH = SWEEP * Math.sin(ELEVATION) + (THICKNESS / 2) * Math.cos(ELEVATION)
+    // Fit the wider of the two, plus room for the near corners looming larger.
+    const d = Math.max(halfW / Math.tan(h), halfH / Math.tan(v)) + SWEEP * 0.2
+    const flat = d * Math.cos(ELEVATION)
     camera.position.set(
-      target[0] + Math.sin(angle.current) * r,
-      target[1] + 1550,
-      target[2] + Math.cos(angle.current) * r,
+      target[0] + Math.sin(angle.current) * flat,
+      target[1] + d * Math.sin(ELEVATION),
+      target[2] + Math.cos(angle.current) * flat,
     )
     camera.lookAt(target[0], target[1], target[2])
   })
@@ -120,12 +136,11 @@ export default function HomeScene({ step }: { step: number }) {
     () => (current && limits ? leaseLine(current, limits.leaseBoundary, ex) : null),
     [current, limits, ex],
   )
-  const target = useMemo<[number, number, number] | null>(() => {
-    if (!current || !limits) return null
-    const c = centroidOf(limits.pitZones[0].polygon)
-    const [x, , z] = toScene(current.grid, c, 360)
-    return [x, -40 * ex, z]
-  }, [current, limits, ex])
+  // Middle of the block: grid centre, halfway down its visible thickness.
+  const target = useMemo<[number, number, number] | null>(
+    () => (current ? [0, -60 * ex, 0] : null),
+    [current, ex],
+  )
 
   if (!baseline || !current || !target) return null
   const overlay: [number, number] = step >= 4 ? [0, 1] : step === 3 ? [1, 0] : [0, 0]
