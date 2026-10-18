@@ -5,6 +5,9 @@ import { daysBetween, formatDate, monthTicks } from './format'
 import { PitMark } from './icons'
 import { ProvenanceTag } from './ProvenanceTag'
 import { MONITOR_HREF } from './route'
+import { NoiseCheck } from './home/NoiseCheck'
+import { PermitSheet } from './home/PermitSheet'
+import { Resolution } from './home/Resolution'
 import { NorthArrow, Relief } from './schematic'
 
 /*
@@ -60,7 +63,24 @@ export function HomePage() {
       { root, rootMargin: '-65% 0px -35% 0px' },
     )
     root.querySelectorAll('[data-step]').forEach((el) => io.observe(el))
-    return () => io.disconnect()
+
+    // Sections below the story rise into view once.
+    const reveal = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue
+          e.target.classList.add('shown')
+          reveal.unobserve(e.target)
+        }
+      },
+      { root, rootMargin: '0px 0px -15% 0px' },
+    )
+    root.querySelectorAll('.reveal').forEach((el) => reveal.observe(el))
+
+    return () => {
+      io.disconnect()
+      reveal.disconnect()
+    }
   }, [])
 
   const on = (n: number) => (step >= n ? 'on' : '')
@@ -292,17 +312,35 @@ export function HomePage() {
               Open the monitor
             </a>
           </section>
+          {/* Depth gauge: which part of the story the map shows. */}
+          <ol className="story-gauge" aria-hidden="true">
+            {STEPS.map((s, i) => (
+              <li key={s} className={i === step ? 'on' : ''}>
+                {s}
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
 
-      {/* Depth gauge: which part of the story the map shows. */}
-      <ol className="story-gauge" aria-hidden="true">
-        {STEPS.map((s, i) => (
-          <li key={s} className={i === step ? 'on' : ''}>
-            {s}
-          </li>
-        ))}
-      </ol>
+      <PermitSheet />
+      <NoiseCheck />
+      <Resolution />
+
+      <footer className="home-footer">
+        <div className="mx-auto flex max-w-[1200px] flex-wrap items-end justify-between gap-6 px-6 py-14">
+          <div>
+            <div className="cond text-[40px] leading-none font-bold text-ink">PitWatch</div>
+            <p className="mt-3 max-w-[30rem] text-[14px] leading-6 text-ink-dim">
+              A demo. Venthar Ridge, Ardent Ore Works and every survey here are fictional and
+              synthetic. Findings point inspectors at places to look; they do not prove a breach.
+            </p>
+          </div>
+          <a href={MONITOR_HREF} className="btn-primary btn-lg">
+            Open the monitor
+          </a>
+        </div>
+      </footer>
     </div>
   )
 }

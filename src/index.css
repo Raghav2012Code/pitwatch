@@ -646,6 +646,11 @@ body {
   }
   .home-brand {
     left: 20px;
+    padding: 5px 12px 5px 5px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--color-panel) 88%, transparent);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 0 0 1px var(--color-line);
   }
   .home-corner {
     right: 20px;
@@ -834,10 +839,11 @@ body {
     animation: ping 1.8s ease-out infinite;
   }
 
+  /* Sticks to the bottom of the screen only while the story column is in view. */
   .story-gauge {
-    position: fixed;
-    left: 20px;
+    position: sticky;
     bottom: 24px;
+    margin: 0 0 24px -28px;
     z-index: 40;
     display: none;
     flex-direction: column;
@@ -906,6 +912,171 @@ body {
       scale: 2.8;
       opacity: 0;
     }
+  }
+}
+
+/* ---------- Home page: sections after the story ---------- */
+
+@layer components {
+  /* Rise once when scrolled into view. */
+  .reveal {
+    opacity: 0;
+    translate: 0 28px;
+    transition:
+      opacity 0.8s ease-out,
+      translate 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .reveal.shown {
+    opacity: 1;
+    translate: 0 0;
+  }
+  li.reveal:nth-child(2) {
+    transition-delay: 0.12s;
+  }
+  li.reveal:nth-child(3) {
+    transition-delay: 0.24s;
+  }
+
+  /* Permit: a lease document on a darker band. */
+  .permit-band {
+    background: var(--color-bg);
+    border-block: 1px solid var(--color-line-strong);
+  }
+  .permit {
+    position: relative;
+    padding: 28px 32px 12px;
+    background: var(--color-panel);
+    border: 1px solid var(--color-line-strong);
+    box-shadow: 0 30px 60px -40px rgb(40 32 20 / 0.5);
+  }
+  .permit::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 5px;
+    background: var(--strata);
+  }
+  .permit-stamp {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--color-oxide);
+    padding: 3px 8px;
+    border: 1.5px solid var(--color-oxide);
+    rotate: -4deg;
+  }
+  .permit-clause {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 12px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .permit-clause:last-child {
+    border-bottom: 0;
+  }
+  .permit-test {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 10px;
+    margin-top: 12px;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    background: var(--color-panel-2);
+    border-left: 2px solid var(--color-accent);
+  }
+  .permit-test code {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--color-ink);
+  }
+
+  /* Noise check widget. */
+  .noise {
+    padding: 28px;
+    background: var(--color-panel);
+    border: 1px solid var(--color-line-strong);
+  }
+  .range {
+    accent-color: var(--color-accent);
+  }
+  .noise-line {
+    position: relative;
+    height: 44px;
+    border-bottom: 1.5px solid var(--color-ink);
+    background: repeating-linear-gradient(
+      to right,
+      transparent 0 calc(10% - 1px),
+      var(--color-line) calc(10% - 1px) 10%
+    );
+  }
+  .noise-band {
+    position: absolute;
+    inset: 0 auto 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    overflow: hidden;
+    font-size: 11.5px;
+    font-style: italic;
+    white-space: nowrap;
+    color: var(--color-ink-dim);
+    background: repeating-linear-gradient(
+      -45deg,
+      color-mix(in srgb, var(--color-ink) 9%, transparent) 0 4px,
+      transparent 4px 8px
+    );
+    border-right: 1.5px dashed var(--color-ink-dim);
+    transition: width 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .noise-marker {
+    position: absolute;
+    bottom: -8px;
+    width: 16px;
+    height: 16px;
+    translate: -50% 0;
+    rotate: 45deg;
+    background: var(--color-ink-dim);
+    border: 2px solid var(--color-panel);
+    transition:
+      left 0.45s cubic-bezier(0.2, 0.7, 0.2, 1),
+      background-color 0.3s;
+  }
+  .noise-marker.real {
+    background: var(--color-violation);
+  }
+
+  /* Resolution panels: columns sweep in left to right once shown. */
+  .res-panel {
+    overflow: hidden;
+    background: var(--color-panel);
+    border: 1px solid var(--color-line-strong);
+  }
+  .res-col {
+    opacity: 0;
+  }
+  .res-panel.shown .res-col {
+    animation: col-in 0.35s ease-out both;
+    animation-delay: calc(0.3s + var(--c) * 40ms);
+  }
+  @keyframes col-in {
+    to {
+      opacity: 1;
+    }
+  }
+
+  .home-footer {
+    border-top: 5px solid transparent;
+    border-image: linear-gradient(
+        to bottom,
+        var(--color-oxide) 0 40%,
+        var(--color-ochre) 40% 60%,
+        #77736b 60% 100%
+      )
+      1;
   }
 }
 
@@ -1045,6 +1216,9 @@ body {
   .bench-ticks,
   .road,
   .road-casing {
+    opacity: 1;
+  }
+  .res-col {
     opacity: 1;
   }
 }
