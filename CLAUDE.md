@@ -46,6 +46,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-18: elevation tint that reads
+
+- New tint ramp in `palette.ts`: slate blue (pit floor), teal, sage, straw, ochre, rust (ridge). Cool lows, warm highs, muted.
+- `elevationScale` (`terrainGeometry.ts`): ramp position is half linear, half by rank (histogram equalised) so the plateau, where most cells are, gets its own colours instead of one flat sand tone. `at(t)` inverts it for the key.
+- With the tint on, the shader keeps the photo's light/dark detail at about a third strength (roads, creek, scrub stay faintly visible).
+- Key shows five real elevations along the ramp plus a one-line note on the spread.
+
 ### 2026-10-18: realistic pit shape and landscape
 
 - Pits are hand-drawn outlines (`PitStage` in the scenario: rim polygon + floor RL), rounded with Chaikin corner cutting (`roundOutline`). Benches follow the outline by distance inside the rim, so the pit is a kidney shape, not an ellipse. `preparePit` adds a bounding box and the ramp; `pitsOf(epoch)` lists the stages per survey.

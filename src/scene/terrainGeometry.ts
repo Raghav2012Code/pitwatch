@@ -42,6 +42,58 @@ export function elevationRange(values: Float32Array) {
   return { min, max }
 }
 
+/**
+ * Maps elevation to a position on the tint ramp. Half linear, half by rank (histogram
+ * equalised): a purely linear ramp spends most of its colours on the pit and leaves the
+ * plateau, where most of the ground is, one flat colour.
+ */
+export interface ElevationScale {
+  min: number
+  max: number
+  /** Ramp position 0–1 for an elevation. */
+  t(z: number): number
+  /** Elevation at ramp position t (inverse of `t`). */
+  at(t: number): number
+}
+
+export function elevationScale(values: Float32Array): ElevationScale {
+  const sorted = Float32Array.from(values).sort()
+  const n = sorted.length
+  const min = sorted[0]
+  const max = sorted[n - 1]
+  const span = max - min || 1
+  const KNOTS = 128
+  const knots = Array.from(
+    { length: KNOTS + 1 },
+    (_, k) => sorted[Math.round((k / KNOTS) * (n - 1))],
+  )
+  const rank = (z: number) => {
+    if (z <= min) return 0
+    if (z >= max) return 1
+    let lo = 0
+    let hi = KNOTS
+    while (hi - lo > 1) {
+      const mid = (lo + hi) >> 1
+      if (knots[mid] <= z) lo = mid
+      else hi = mid
+    }
+    const gap = knots[hi] - knots[lo]
+    return (lo + (gap > 0 ? (z - knots[lo]) / gap : 0)) / KNOTS
+  }
+  const t = (z: number) => 0.5 * Math.min(1, Math.max(0, (z - min) / span)) + 0.5 * rank(z)
+  const at = (target: number) => {
+    let lo = min
+    let hi = max
+    for (let k = 0; k < 40; k++) {
+      const mid = (lo + hi) / 2
+      if (t(mid) < target) lo = mid
+      else hi = mid
+    }
+    return (lo + hi) / 2
+  }
+  return { min, max, t, at }
+}
+
 export interface TerrainArrays {
   positions: Float32Array
   colors: Float32Array
@@ -54,13 +106,12 @@ export interface TerrainArrays {
 export function buildTerrainArrays(
   g: GridSpec,
   elevations: Float32Array,
-  range = elevationRange(elevations),
+  scale = elevationScale(elevations),
 ): TerrainArrays {
   const n = g.cols * g.rows
   const positions = new Float32Array(n * 3)
   const colors = new Float32Array(n * 3)
   const uvs = new Float32Array(n * 2)
-  const span = range.max - range.min || 1
   const c = gridCentre(g)
 
   for (let row = 0; row < g.rows; row++) {
@@ -70,7 +121,7 @@ export function buildTerrainArrays(
       positions[i * 3] = g.originXY.x + col * g.cellSize - c.x
       positions[i * 3 + 1] = rl - BASE_RL
       positions[i * 3 + 2] = -(g.originXY.y + row * g.cellSize - c.y)
-      const rgb = rampAt((rl - range.min) / span)
+      const rgb = rampAt(scale.t(rl))
       colors[i * 3] = srgbToLinear(rgb[0])
       colors[i * 3 + 1] = srgbToLinear(rgb[1])
       colors[i * 3 + 2] = srgbToLinear(rgb[2])

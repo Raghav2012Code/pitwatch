@@ -43,7 +43,12 @@ function makeSurfaceMaterial(map: THREE.Texture | null) {
         .replace(
           '#include <map_fragment>',
           `#ifdef USE_MAP
-  diffuseColor *= mix(texture2D(map, vMapUv), vec4(1.0), uTint);
+  // With the tint on, keep the photo's light and dark detail (tracks, scrub, rock) at
+  // reduced strength, so the tint reads as a survey layer over real ground.
+  vec4 photo = texture2D(map, vMapUv);
+  float luma = dot(photo.rgb, vec3(0.2126, 0.7152, 0.0722));
+  vec3 detail = vec3(clamp(mix(1.0, luma / 0.22, 0.35), 0.75, 1.2));
+  diffuseColor.rgb *= mix(photo.rgb, detail, uTint);
 #endif`,
         )
         .replace(

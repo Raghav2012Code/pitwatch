@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { GridSpec } from '../domain/types'
-import { hexToRgb, rampAt, rampGradient, srgbToLinear } from './palette'
+import { hexToRgb, RAMP, rampAt, rampGradient, srgbToLinear } from './palette'
 import { headingOf, metresPerPixel, northUp, presetPose, scaleBar } from './presets'
 import {
   BASE_RL,
   buildSkirtArrays,
   buildTerrainArrays,
   elevationRange,
+  elevationScale,
   fromScene,
   SKIRT_RL,
   toScene,
@@ -17,11 +18,11 @@ const elev = Float32Array.from([400, 410, 420, 430, 440, 450])
 
 describe('palette', () => {
   it('interpolates the ramp and clamps at the ends', () => {
-    expect(rampAt(0)).toEqual(hexToRgb('#6e4a3a'))
+    expect(rampAt(0)).toEqual(hexToRgb(RAMP[0][1]))
     expect(rampAt(-1)).toEqual(rampAt(0))
-    expect(rampAt(2)).toEqual(hexToRgb('#c4c8a2'))
-    const mid = rampAt(0.1)
-    const [a, b] = [hexToRgb('#6e4a3a'), hexToRgb('#946446')]
+    expect(rampAt(2)).toEqual(hexToRgb(RAMP[RAMP.length - 1][1]))
+    const mid = rampAt(RAMP[1][0] / 2)
+    const [a, b] = [hexToRgb(RAMP[0][1]), hexToRgb(RAMP[1][1])]
     expect(mid[0]).toBeCloseTo((a[0] + b[0]) / 2)
   })
 
@@ -32,7 +33,7 @@ describe('palette', () => {
   })
 
   it('builds a CSS gradient from the same stops', () => {
-    expect(rampGradient()).toMatch(/^linear-gradient\(to right, #6e4a3a 0%, .* #c4c8a2 100%\)$/)
+    expect(rampGradient()).toMatch(/^linear-gradient\(to right, #2f4b66 0%, .* #8f4f3e 100%\)$/)
   })
 })
 
@@ -66,7 +67,20 @@ describe('terrain geometry', () => {
 
   it('tints the lowest cell with the bottom of the ramp', () => {
     const { colors } = buildTerrainArrays(grid, elev)
-    expect(colors[0]).toBeCloseTo(srgbToLinear(hexToRgb('#6e4a3a')[0]))
+    expect(colors[0]).toBeCloseTo(srgbToLinear(hexToRgb(RAMP[0][1])[0]))
+  })
+
+  it('spreads tint colours by rank so crowded heights get more of the ramp', () => {
+    // Most cells at 420–430 (a plateau), a few deep ones: the plateau must not be one colour.
+    const values = Float32Array.from([
+      ...Array.from({ length: 90 }, (_, i) => 420 + i / 9),
+      ...Array.from({ length: 10 }, (_, i) => 300 + i * 10),
+    ])
+    const s = elevationScale(values)
+    expect(s.t(s.min)).toBe(0)
+    expect(s.t(s.max)).toBe(1)
+    expect(s.t(430) - s.t(420)).toBeGreaterThan(0.4) // a linear ramp gives 0.08
+    for (const t of [0.1, 0.5, 0.9]) expect(s.t(s.at(t))).toBeCloseTo(t, 3)
   })
 
   it('drops the block sides from every edge cell to the skirt level', () => {

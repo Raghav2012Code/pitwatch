@@ -3,14 +3,19 @@
  * and the UI legend builds its gradient from the same stops so the two always match.
  */
 
-/** Hypsometric tint, low to high: pit floor browns up to pale limestone and sage plateau. */
+/**
+ * Elevation tint, low to high, in the order survey software uses (cool lows, warm highs)
+ * but muted so it sits with the rest of the page: slate blue pit floor, teal and sage
+ * benches, straw plateau, ochre and rust on the ridge.
+ */
 export const RAMP: readonly (readonly [t: number, hex: string])[] = [
-  [0, '#6e4a3a'],
-  [0.2, '#946446'],
-  [0.42, '#b5875a'],
-  [0.62, '#d2b98f'],
-  [0.82, '#dcd6c0'],
-  [1, '#c4c8a2'],
+  [0, '#2f4b66'],
+  [0.18, '#3b7480'],
+  [0.36, '#6f9a74'],
+  [0.54, '#b9b874'],
+  [0.72, '#d8a862'],
+  [0.88, '#bf7550'],
+  [1, '#8f4f3e'],
 ]
 
 /**

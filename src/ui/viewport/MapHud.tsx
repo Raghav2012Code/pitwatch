@@ -3,7 +3,7 @@ import { SURFACE_KEY } from '../../data/orthophoto'
 import { useCameraState } from '../../scene/cameraState'
 import { rampGradient } from '../../scene/palette'
 import { scaleBar, type ViewPreset } from '../../scene/presets'
-import { elevationRange } from '../../scene/terrainGeometry'
+import { elevationScale } from '../../scene/terrainGeometry'
 import { EXAGGERATION, useAppStore } from '../../state/store'
 import { useTerrain } from '../../state/terrain'
 
@@ -62,12 +62,15 @@ export function ViewControls() {
 }
 
 /** Key for whichever colouring is on: the aerial image's surfaces or the elevation ramp. */
+/** Ramp positions labelled in the key. */
+const KEY_TICKS = [0, 0.25, 0.5, 0.75, 1]
+
 export function MapKey() {
   const survey = useTerrain((s) => s.surveys.current)
   const tintOn = useAppStore((s) => s.layers.tint)
   const contours = useAppStore((s) => s.layers.contours)
-  const range = useMemo(() => survey && elevationRange(survey.elevations), [survey])
-  if (!survey || !range) return null
+  const scale = useMemo(() => survey && elevationScale(survey.elevations), [survey])
+  if (!survey || !scale) return null
   const tint = tintOn || !survey.orthophoto
 
   return (
@@ -76,10 +79,14 @@ export function MapKey() {
         <>
           <div className="h-2 rounded-[1px]" style={{ background: rampGradient() }} />
           <div className="mt-1 flex justify-between font-mono text-[11px] text-ink-dim">
-            <span>{range.min.toFixed(0)} m</span>
-            <span>RL</span>
-            <span>{range.max.toFixed(0)} m</span>
+            {KEY_TICKS.map((t) => (
+              <span key={t}>{scale.at(t).toFixed(0)}</span>
+            ))}
           </div>
+          <p className="mt-1.5 text-[11.5px] leading-4 text-ink-faint">
+            Elevation, m RL. Colours are spread by how much ground lies at each height, so the
+            plateau shows its relief too.
+          </p>
         </>
       ) : (
         <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5">
