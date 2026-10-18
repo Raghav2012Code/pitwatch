@@ -29,7 +29,8 @@ export const SURFACE = {
   rockOchre: [166, 118, 68],
   berm: [166, 136, 106],
   floor: [122, 100, 82],
-  wet: [80, 66, 58],
+  water: [78, 96, 90],
+  shadow: [56, 54, 40],
   waste: [166, 152, 136],
   freshCut: [172, 110, 74],
   creekSand: [196, 170, 132],
@@ -177,10 +178,10 @@ export function buildOrthophoto(
           set(SURFACE.road)
           toward(SURFACE.cleared, 0.25 * grain)
         } else if (s < 14) {
-          // Flat: berms are dusty, the floor is muddy, the sump is wet.
+          // Flat: berms are dusty, the floor is muddy, the sump holds murky water.
           if (z < pit.floorRL - 1) {
-            set(SURFACE.wet)
-            toward(SURFACE.floor, 0.3 * grain)
+            set(SURFACE.water)
+            toward(SURFACE.floor, 0.15 * grain)
           } else if (z < pit.floorRL + 0.8) {
             set(SURFACE.floor)
             toward(SURFACE.berm, 0.25 * grain)
@@ -208,7 +209,9 @@ export function buildOrthophoto(
           toward(SURFACE.soil, 0.35 * grain)
         } else if (toRoad < 8) {
           set(SURFACE.road)
-          toward(SURFACE.cleared, 0.25 * grain + (toRoad > 6 ? 0.35 : 0))
+          toward(SURFACE.cleared, 0.25 * grain)
+          // Windrows: graded spoil heaped along both road edges.
+          if (toRoad > 5.5) toward(SURFACE.soil, 0.45)
         } else {
           // Vegetation density from large-scale noise. Scrub dominates; soil shows through
           // in thin patches; scattered tree crowns (2–3 px) where it is greener.
@@ -219,8 +222,12 @@ export function buildOrthophoto(
           set(SURFACE.soil)
           toward(SURFACE.grass, smooth(-0.62, -0.3, v))
           toward(SURFACE.scrub, smooth(-0.15, 0.3, v) * 0.85)
-          if (crowns > 0.74 - 0.12 * smooth(-0.2, 0.4, v) - 0.2 * riparian) {
+          const crownAt = 0.74 - 0.12 * smooth(-0.2, 0.4, v) - 0.2 * riparian
+          if (crowns > crownAt) {
             toward(SURFACE.trees, 0.75)
+          } else if (valueNoise((px - 2.6) / 3.2, (py + 2.6) / 3.2, seed + 47) > crownAt) {
+            // Shadow of a crown to the north-west (the sun's side), cast south-east.
+            toward(SURFACE.shadow, 0.5)
           }
           // Steeper natural slopes shed soil and show it.
           toward(SURFACE.soil, smooth(8, 18, s) * 0.4)

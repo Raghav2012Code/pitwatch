@@ -13,6 +13,7 @@ import {
   PLATEAU_RL,
   RAMP,
   RIDGE,
+  SEED,
   type PitStage,
 } from './fixtures/scenario'
 import { fbm } from './noise'
@@ -241,8 +242,10 @@ export function pitSurface(p: Vec2, pit: Pit): number {
   const b = pit.box
   if (p.x < b.x0 || p.x > b.x1 || p.y < b.y0 || p.y > b.y1) return Infinity
   if (!pointInPolygon(p, pit.rim)) return Infinity
-  const inside = distanceToBoundary(p, pit.rim)
-  const benches = Math.max(pit.floorRL, PLATEAU_RL - benchDepth(inside))
+  // Blasting leaves crests and toes ragged: a few metres of wander, none at the rim itself.
+  const edge = distanceToBoundary(p, pit.rim)
+  const inside = edge + 2.4 * fbm(p.x / 28, p.y / 28, SEED + 91, 2) * Math.min(1, edge / 12)
+  const benches = Math.max(pit.floorRL, PLATEAU_RL - benchDepth(Math.max(0, inside)))
   if (!pit.ramp) return benches
 
   // The ramp is a road cut and filled across the benches, with short batters each side.

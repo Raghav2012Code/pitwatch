@@ -4,7 +4,7 @@
 
 ## Working rules
 
-- After every feature: run the checks below, add an entry to **Update log**, commit (Conventional Commits), push to `origin/main`, then ask the user before starting the next feature.
+- After every feature: run the checks below, add an entry to **Update log**, commit (Conventional Commits, no Co-Authored-By or other Claude attribution), push to `origin/main`, then ask the user before starting the next feature.
 - UI must stay honest: SIMULATED DATA badge, provenance tag on values (measured | derived | simulated | unverified), ± uncertainty, no hardcoded alerts, no dead buttons. Unbuilt controls are disabled with a tooltip naming the milestone that enables them.
 - `src/domain`, `src/data`, `src/geo`, `src/compliance` are pure TypeScript. ESLint blocks react, three, @react-three/* and zustand imports there.
 
@@ -45,6 +45,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-18: realism pass
+
+- Bench crests and toes are ragged (blast damage): a few metres of noise on the distance inside the rim, none at the rim itself.
+- Aerial image: tree crowns cast short shadows south-east (sun from the north-west), the sump holds murky water, haul roads have darker windrows along both edges.
+- Commit rule: no Co-Authored-By or other Claude attribution (user request).
 
 ### 2026-10-18: random pit outline and daylight sky
 
