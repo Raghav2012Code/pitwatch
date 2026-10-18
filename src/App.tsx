@@ -1,11 +1,24 @@
+import { useEffect } from 'react'
+import { HomePage } from './ui/HomePage'
 import { LayerPanel } from './ui/LayerPanel'
+import { useRoute } from './ui/route'
 import { SidePanel } from './ui/SidePanel'
 import { Timeline } from './ui/Timeline'
 import { TopBar } from './ui/TopBar'
 import { Viewport } from './ui/Viewport'
 
-/** Full-bleed 3D view with glass HUD panels floating above it. */
 export default function App() {
+  const route = useRoute()
+
+  useEffect(() => {
+    document.title = route === 'home' ? 'PitWatch 3D' : 'Monitor – PitWatch 3D'
+  }, [route])
+
+  return route === 'home' ? <HomePage /> : <Monitor />
+}
+
+/** Full-bleed map view with paper panels floating above it. */
+function Monitor() {
   return (
     <div className="flex h-full flex-col">
       <TopBar />

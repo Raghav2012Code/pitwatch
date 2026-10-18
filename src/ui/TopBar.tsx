@@ -2,6 +2,7 @@ import { MINE_INFO, SURVEY_EPOCHS } from '../data/fixtures/mine'
 import { useAppStore } from '../state/store'
 import { formatDate } from './format'
 import { PitMark } from './icons'
+import { HOME_HREF } from './route'
 
 export function TopBar() {
   const drawerOpen = useAppStore((s) => s.drawerOpen)
@@ -9,7 +10,7 @@ export function TopBar() {
 
   return (
     <header className="topbar z-30 flex h-14 shrink-0 items-center gap-5 px-4">
-      <div className="flex items-center gap-3">
+      <a href={HOME_HREF} className="flex items-center gap-3" aria-label="PitWatch home">
         <span className="brand-mark">
           <PitMark className="h-5 w-5" />
         </span>
@@ -19,7 +20,7 @@ export function TopBar() {
             Compliance monitor
           </div>
         </div>
-      </div>
+      </a>
 
       <div className="hidden h-8 w-px bg-line sm:block" />
 
