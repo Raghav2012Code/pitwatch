@@ -942,19 +942,11 @@ body {
     background: var(--color-bg);
     border-block: 1px solid var(--color-line-strong);
   }
+  /* Open document: no box, just rules between clauses. */
   .permit {
     position: relative;
-    padding: 28px 32px 12px;
-    background: var(--color-panel);
-    border: 1px solid var(--color-line-strong);
-    box-shadow: 0 30px 60px -40px rgb(40 32 20 / 0.5);
-  }
-  .permit::before {
-    content: '';
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 5px;
-    background: var(--strata);
+    border-top: 2px solid var(--color-ink);
+    padding-top: 18px;
   }
   .permit-stamp {
     font-family: var(--font-mono);
@@ -995,9 +987,7 @@ body {
 
   /* Noise check widget. */
   .noise {
-    padding: 28px;
-    background: var(--color-panel);
-    border: 1px solid var(--color-line-strong);
+    padding-top: 8px;
   }
   .range {
     accent-color: var(--color-accent);
@@ -1051,9 +1041,8 @@ body {
 
   /* Resolution panels: columns sweep in left to right once shown. */
   .res-panel {
-    overflow: hidden;
-    background: var(--color-panel);
-    border: 1px solid var(--color-line-strong);
+    border-top: 2px solid var(--color-ink);
+    padding-top: 16px;
   }
   .res-col {
     opacity: 0;

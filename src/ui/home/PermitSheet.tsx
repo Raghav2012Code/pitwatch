@@ -38,7 +38,7 @@ export function PermitSheet() {
           </div>
 
           <article className="permit reveal" aria-label="Lease conditions">
-            <header className="flex items-baseline justify-between gap-4 border-b border-line-strong pb-4">
+            <header className="flex items-baseline justify-between gap-4 border-b border-line pb-4">
               <div>
                 <div className="cond text-[22px] font-bold text-ink">Schedule of conditions</div>
                 <div className="text-[13px] text-ink-faint">Venthar Ridge mining lease</div>

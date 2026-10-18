@@ -19,7 +19,7 @@ const benchAt = (x: number, y: number) => {
 
 const shade = (b: number) =>
   b === 0
-    ? 'var(--color-panel)'
+    ? 'transparent'
     : `color-mix(in srgb, var(--color-contour) ${12 + b * 11}%, var(--color-panel))`
 
 /** One column of square cells per entry, so columns can sweep in one after another. */
@@ -105,14 +105,14 @@ export function Resolution() {
                           cy={H / 2}
                           rx={RX * s}
                           ry={RY * s}
-                          fill={b === 0 ? 'var(--color-panel)' : shade(b)}
+                          fill={b === 0 ? 'transparent' : shade(b)}
                           stroke="var(--color-contour)"
                           strokeWidth={b === 0 ? 0 : 1.5}
                         />
                       )
                     })}
               </svg>
-              <div className="p-5">
+              <div className="pt-4">
                 <div className="flex items-baseline justify-between gap-3">
                   <h3 className="cond text-[20px] font-semibold text-ink">{p.title}</h3>
                   <span className="font-mono text-[12px] text-oxide">{p.cell}</span>

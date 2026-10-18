@@ -45,6 +45,10 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-18: home sections without cards
+
+- User asked to remove the cards below the map. Permit schedule, noise calculator and resolution panels no longer sit in boxes: no panel backgrounds, borders or shadows; each starts under a 2 px ink rule instead. Raster cells outside the pit are transparent.
+
 ### 2026-10-18: more home-page content
 
 - Three sections after the scroll story, each rising into view once (`.reveal` + IntersectionObserver in `HomePage`):
