@@ -46,6 +46,10 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-18: README
+
+- Replaced the Vite template README: what PitWatch is and is not, data honesty, the rules table and the scenario's expected findings, run/test/build commands, a Mermaid architecture diagram, folder map, stack and roadmap. M8 will add deployment instructions. No branch: docs change on `main` like the rest.
+
 ### 2026-10-18: home map from the real simulated surveys
 
 - The drawn schematic pit on the home page is gone. `src/ui/home/SurveyPlan.tsx` draws the story map from the same data the monitor uses: baseline and current aerial images (canvas -> data URL, rows flipped so north is up), the measured change (rust = excavated, blue = filled, one pixel per grid cell), the baseline rim, the lease boundary, the R1 violation cells in red and a marker for every engine finding. SVG units are local metres with y flipped.
