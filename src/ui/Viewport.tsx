@@ -1,20 +1,20 @@
-import type { JSX } from 'react'
+import type { CSSProperties, JSX } from 'react'
 import { NorthArrow, PitPlan, Relief } from './schematic'
 
 export function Viewport() {
   return (
     <main aria-label="3D mine view" className="viewport absolute inset-0">
-      <Relief />
+      <Relief className="fade-in" />
 
       {/* Stage = the area left visible between the floating panels, framed like a map sheet. */}
-      <div className="stage neatline absolute grid place-items-center">
+      <div className="stage neatline frame-in absolute grid place-items-center">
         <NorthArrow className="absolute top-5 right-5 hidden md:block" />
         <Legend />
 
         <figure className="flex flex-col items-center text-center">
           <PitPlan className="w-[min(520px,74vw)]" />
 
-          <figcaption className="mt-3 max-w-sm">
+          <figcaption className="enter-up mt-3 max-w-sm" style={{ '--d': '0.9s' } as CSSProperties}>
             <div className="map-note">Schematic, not survey data</div>
             <h2 className="cond mt-2 text-[22px] font-bold text-ink">Awaiting terrain model</h2>
             <p className="mt-1 text-[13px] leading-5 text-ink-dim">
@@ -54,7 +54,8 @@ function Legend() {
   return (
     <section
       aria-label="Map legend"
-      className="map-legend absolute bottom-5 left-5 hidden xl:block"
+      className="map-legend enter-up absolute bottom-5 left-5 hidden xl:block"
+      style={{ '--d': '1.1s' } as CSSProperties}
     >
       <h3 className="cond text-[14px] font-semibold text-ink">Legend</h3>
       <ul className="mt-1.5 space-y-1">

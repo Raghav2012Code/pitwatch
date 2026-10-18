@@ -9,7 +9,7 @@ export function TopBar() {
   const setDrawerOpen = useAppStore((s) => s.setDrawerOpen)
 
   return (
-    <header className="topbar z-30 flex h-14 shrink-0 items-center gap-5 px-4">
+    <header className="topbar enter-down z-30 flex h-14 shrink-0 items-center gap-5 px-4">
       <a href={HOME_HREF} className="flex items-center gap-3" aria-label="PitWatch home">
         <span className="brand-mark">
           <PitMark className="h-5 w-5" />

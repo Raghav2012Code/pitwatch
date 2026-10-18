@@ -827,6 +827,128 @@ body {
   }
 }
 
+/* ---------- Monitor entrance: one choreographed open ---------- */
+
+@layer components {
+  .enter-down,
+  .enter-left,
+  .enter-right,
+  .enter-up,
+  .frame-in,
+  .fade-in,
+  .stagger > *,
+  .tab-in {
+    animation-duration: 0.7s;
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+    animation-fill-mode: both;
+    animation-delay: var(--d, 0s);
+  }
+  .enter-down {
+    animation-name: enter-down;
+  }
+  .enter-left {
+    animation-name: enter-left;
+  }
+  .enter-right {
+    animation-name: enter-right;
+    --d: 0.25s;
+  }
+  .enter-up {
+    animation-name: enter-up;
+  }
+  footer.enter-up {
+    --d: 0.35s;
+  }
+  .frame-in {
+    animation-name: frame-in;
+    animation-duration: 1s;
+    --d: 0.1s;
+  }
+  .fade-in {
+    animation-name: fade-in;
+    animation-duration: 1.6s;
+  }
+
+  /* Children rise one after another. */
+  .stagger > * {
+    animation-name: enter-up;
+    animation-duration: 0.5s;
+    animation-delay: calc(var(--d, 0.3s) + var(--i, 0) * 45ms);
+  }
+  .stagger > :nth-child(2) {
+    --i: 1;
+  }
+  .stagger > :nth-child(3) {
+    --i: 2;
+  }
+  .stagger > :nth-child(4) {
+    --i: 3;
+  }
+
+  /* Tab content answers the click with a short slide. */
+  .tab-in {
+    animation-name: tab-in;
+    animation-duration: 0.35s;
+    animation-delay: 0s;
+  }
+
+  .track-draw {
+    transform-origin: left;
+    animation: track-draw 1.2s cubic-bezier(0.5, 0, 0.2, 1) 0.6s both;
+  }
+  .tick-pop {
+    animation: fade-in 0.4s ease-out both;
+    animation-delay: calc(0.6s + var(--t) * 1.2s);
+  }
+
+  @keyframes enter-down {
+    from {
+      opacity: 0;
+      translate: 0 -100%;
+    }
+  }
+  @keyframes enter-left {
+    from {
+      opacity: 0;
+      translate: -28px 0;
+    }
+  }
+  @keyframes enter-right {
+    from {
+      opacity: 0;
+      translate: 28px 0;
+    }
+  }
+  @keyframes enter-up {
+    from {
+      opacity: 0;
+      translate: 0 14px;
+    }
+  }
+  @keyframes frame-in {
+    from {
+      opacity: 0;
+      scale: 0.985;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes tab-in {
+    from {
+      opacity: 0;
+      translate: 0 6px;
+    }
+  }
+  @keyframes track-draw {
+    from {
+      scale: 0 1;
+    }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

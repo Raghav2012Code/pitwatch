@@ -1,23 +1,30 @@
+import type { CSSProperties } from 'react'
 import { SURVEY_EPOCHS } from '../data/fixtures/mine'
 import { daysBetween, formatDate, monthTicks } from './format'
+import { useCountUp } from './useCountUp'
 
 export function Timeline() {
   const [baseline, current] = SURVEY_EPOCHS
+  const days = baseline && current ? daysBetween(baseline.date, current.date) : 0
+  const shownDays = useCountUp(days, 1400, 500)
   if (!baseline || !current) return null
-  const days = daysBetween(baseline.date, current.date)
   const ticks = monthTicks(baseline.date, current.date)
 
   return (
     <footer
       aria-label="Survey timeline"
-      className="sheet hud-panel absolute right-3 bottom-3 left-3 z-10 flex items-center gap-5 px-5 py-3 md:left-[84px] lg:right-[384px] xl:left-[244px]"
+      className="sheet hud-panel enter-up absolute right-3 bottom-3 left-3 z-10 flex items-center gap-5 px-5 py-3 md:left-[84px] lg:right-[384px] xl:left-[244px]"
     >
       <Epoch label={baseline.label} date={baseline.date} />
 
       <div className="relative h-10 flex-1" aria-hidden="true">
-        <div className="track absolute inset-x-0 top-4" />
+        <div className="track track-draw absolute inset-x-0 top-4" />
         {ticks.map((t) => (
-          <div key={t.label} className="absolute top-2.5" style={{ left: `${t.t * 100}%` }}>
+          <div
+            key={t.label}
+            className="tick-pop absolute top-2.5"
+            style={{ left: `${t.t * 100}%`, '--t': t.t } as CSSProperties}
+          >
             <div className="mx-auto h-3 w-px bg-line-strong" />
             <div className="mt-1.5 -translate-x-1/2 font-mono text-[10px] text-ink-faint">
               {t.label}
@@ -29,7 +36,7 @@ export function Timeline() {
       <Epoch label={current.label} date={current.date} align="right" />
 
       <div className="hidden border-l border-line pl-5 text-right leading-tight sm:block">
-        <div className="cond text-[26px] leading-none font-bold text-ink">{days}</div>
+        <div className="cond text-[26px] leading-none font-bold text-ink">{shownDays}</div>
         <div className="text-[11px] text-ink-faint">days apart</div>
       </div>
     </footer>
