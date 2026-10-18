@@ -352,6 +352,88 @@ body {
     animation: none;
   }
 
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: calc(100% + 12px);
+    padding: 2px 6px;
+    margin-inline: -6px;
+    border-radius: 2px;
+    font-size: 12px;
+    color: var(--color-ink-dim);
+    text-align: left;
+    transition:
+      background-color 0.2s,
+      color 0.2s;
+  }
+  .legend-item:hover,
+  .legend-item.on {
+    color: var(--color-ink);
+    background: var(--color-panel-2);
+  }
+  .legend-item[aria-pressed='true'] {
+    box-shadow: inset 2px 0 0 var(--color-accent);
+  }
+
+  /* Legend picks one feature out; everything else steps back. */
+  .pit-plan [data-f] {
+    transition: opacity 0.35s;
+  }
+  .pit-plan[data-hl] [data-f] {
+    opacity: 0.12;
+  }
+  .pit-plan[data-hl='index'] [data-f='index'],
+  .pit-plan[data-hl='bench'] [data-f='bench'],
+  .pit-plan[data-hl='ticks'] [data-f='ticks'],
+  .pit-plan[data-hl='road'] [data-f='road'],
+  .pit-plan[data-hl='floor'] [data-f='floor'],
+  .pit-plan[data-hl='flight'] [data-f='flight'] {
+    opacity: 1;
+  }
+
+  .flight-lines {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-opacity: 0.32;
+    stroke-width: 0.9;
+    stroke-dasharray: 2 5;
+  }
+  .drone-trail,
+  .drone {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-linecap: round;
+    animation: fly 40s linear infinite;
+  }
+  .drone-trail {
+    stroke-width: 2;
+    stroke-opacity: 0.55;
+    stroke-dasharray: 0.018 0.982;
+    --lead: 0;
+  }
+  .drone {
+    stroke-width: 7;
+    stroke-dasharray: 0.0005 0.9995;
+    --lead: -0.0175;
+  }
+  @keyframes fly {
+    from {
+      stroke-dashoffset: calc(1 + var(--lead));
+    }
+    to {
+      stroke-dashoffset: var(--lead);
+    }
+  }
+
+  .title-block {
+    width: 230px;
+    padding: 10px 12px;
+    background: var(--color-panel);
+    border: 1px solid var(--color-line-strong);
+    text-align: left;
+  }
+
   .map-note {
     display: inline-block;
     font-size: 12px;

@@ -69,26 +69,71 @@ export function Relief({ className = '' }: { className?: string }) {
   )
 }
 
-/** Top-down contour plan of a generic stepped pit. Draws in once on mount. */
-export function PitPlan({ className = '' }: { className?: string }) {
+export type PlanFeature = 'index' | 'bench' | 'ticks' | 'road' | 'floor' | 'flight'
+
+/** Serpentine drone flight lines over the pit, the way a photogrammetry survey is flown. */
+const FLIGHT_PATH =
+  'M-250 -180' +
+  Array.from(
+    { length: 11 },
+    (_, k) => (k % 2 ? 'H-250' : 'H260') + (k < 10 ? `V${-144 + k * 36}` : ''),
+  ).join('')
+
+/**
+ * Top-down contour plan of a generic stepped pit. Draws in once on mount.
+ * `highlight` dims every feature except the named one (driven by the legend).
+ */
+export function PitPlan({
+  className = '',
+  highlight,
+  flight = false,
+}: {
+  className?: string
+  highlight?: PlanFeature
+  flight?: boolean
+}) {
   return (
-    <svg viewBox="-270 -200 560 410" className={`pit-plan ${className}`} aria-hidden="true">
+    <svg
+      viewBox="-270 -200 560 410"
+      className={`pit-plan ${className}`}
+      data-hl={highlight}
+      aria-hidden="true"
+    >
+      {flight && (
+        <g data-f="flight">
+          <path d={FLIGHT_PATH} className="flight-lines" />
+          <path d={FLIGHT_PATH} pathLength={1} className="drone-trail" />
+          <path d={FLIGHT_PATH} pathLength={1} className="drone" />
+        </g>
+      )}
       {pit.map(({ pts, cx, cy, index }, i) => (
         <g key={i} style={{ '--i': i } as CSSProperties}>
           <path
             d={toPath(pts)}
             pathLength={1}
             className={`draw ${index ? 'bench bench-index' : 'bench'}`}
+            data-f={index ? 'index' : 'bench'}
           />
-          <path d={ticks(pts, cx, cy, 6, index ? 7 : 5)} className="bench-ticks" />
+          <g data-f="ticks">
+            <path d={ticks(pts, cx, cy, 6, index ? 7 : 5)} className="bench-ticks" />
+          </g>
         </g>
       ))}
 
-      <path d={toPath(road, false)} className="road-casing" />
-      <path d={toPath(road, false)} className="road" />
+      <g data-f="road">
+        <path d={toPath(road, false)} className="road-casing" />
+        <path d={toPath(road, false)} className="road" />
+      </g>
 
       {/* Approved floor reference, dashed. */}
-      <ellipse cx={floor.cx} cy={floor.cy} rx="34" ry="22" className="approved-floor" />
+      <ellipse
+        cx={floor.cx}
+        cy={floor.cy}
+        rx="34"
+        ry="22"
+        className="approved-floor"
+        data-f="floor"
+      />
 
       <text x="0" y="-178" className="plan-label">
         rim
