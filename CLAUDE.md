@@ -46,6 +46,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-18: realistic pit shape and landscape
+
+- Pits are hand-drawn outlines (`PitStage` in the scenario: rim polygon + floor RL), rounded with Chaikin corner cutting (`roundOutline`). Benches follow the outline by distance inside the rim, so the pit is a kidney shape, not an ellipse. `preparePit` adds a bounding box and the ramp; `pitsOf(epoch)` lists the stages per survey.
+- Proportions of a real pit: 15 m benches, 8 m berms, 9 m face run (59° faces, 41° overall wall). Current pit 150 m deep (floor RL 272, approved 270, sump 266); baseline floor RL 287. Block sides go down to RL 235.
+- Haul ramp (`RAMP`, 30 m wide, 10% grade) leaves the rim where the haul road arrives and spirals down along the wall (more than one lap if needed) until the floor; cut-and-fill across the benches with short batters. The aerial image paints it as a pale road.
+- Encroachment is now a benched pushback of the east wall that runs past the lease edge (was a rectangular slot).
+- Landscape: Venthar Ridge rises about 40 m to the north (`RIDGE`), a meandering dry creek in the east (`CREEK`) with a sandy bed and trees crowding its banks. Waste dump footprint is lobed, not round.
+- Tests: pit stays inside the lease and clear of the buffer, encroachment crosses the lease, pit is elongated, ramp starts at the haul road, reaches the floor and keeps its grade.
+
 ### 2026-10-18: monitor layout redesign
 
 - Map fills the screen: canvas moved out of the framed stage to `inset-0`; `src/scene/ViewOffset.tsx` uses `camera.setViewOffset` + ResizeObserver so the model centres in `.stage` and glides as panels open/close. No neatline frame or contour backdrop on the monitor.

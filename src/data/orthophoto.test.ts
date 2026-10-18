@@ -1,16 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import {
-  BERM_WIDTH_M,
-  CURRENT_PIT,
-  FACE_RUN_M,
-  GRID,
-  PLATEAU_RL,
-  RAMP,
-  ROADS,
-  SEED,
-} from './fixtures/scenario'
+import { CURRENT_PIT, GRID, PLATEAU_RL, RAMP, ROADS, SEED } from './fixtures/scenario'
 import { buildOrthophoto } from './orthophoto'
-import { buildSurface, insidePit, naturalField, pitSurface, rimRadius } from './synthetic'
+import { buildSurface, insidePit, naturalField, pitSurface, pitsOf } from './synthetic'
 
 const SIZE = 257 // one pixel per grid cell keeps the test fast
 const natural = naturalField(GRID, SEED)
@@ -39,7 +30,7 @@ describe('simulated orthophoto', () => {
   })
 
   it('shows the pit as bare ground, redder than it is green', () => {
-    const [r, g] = pixel(CURRENT_PIT.cx + 150, CURRENT_PIT.cy)
+    const [r, g] = pixel(1130, 1030)
     expect(r).toBeGreaterThan(g)
   })
 
@@ -54,23 +45,28 @@ describe('simulated orthophoto', () => {
 })
 
 describe('haul ramp', () => {
-  it('cuts a flat shelf across the benches, deeper as it turns', () => {
-    const at = (turn: number, inset: number) => {
-      const theta = RAMP.startAngle + turn
-      const dir = { x: Math.cos(theta), y: Math.sin(theta) }
-      const probe = { x: CURRENT_PIT.cx + dir.x * 10, y: CURRENT_PIT.cy + dir.y * 10 }
-      const rim = rimRadius(probe, CURRENT_PIT)
-      const r = rim - inset
-      return { x: CURRENT_PIT.cx + dir.x * r, y: CURRENT_PIT.cy + dir.y * r }
+  const pit = pitsOf('current')[0]
+  const ramp = pit.ramp!
+
+  it('leaves the rim where the haul road arrives and reaches the floor', () => {
+    expect(ramp.depth[0]).toBe(0)
+    expect(ramp.depth[ramp.depth.length - 1]).toBeCloseTo(PLATEAU_RL - CURRENT_PIT.floorRL)
+    expect(
+      Math.hypot(ramp.points[0].x - RAMP.start.x, ramp.points[0].y - RAMP.start.y),
+    ).toBeLessThan(80)
+  })
+
+  it('is a road at its own level across the benches, descending at the design grade', () => {
+    const k = Math.floor(ramp.points.length / 2)
+    expect(insidePit(ramp.points[k], pit)).toBeGreaterThan(0)
+    expect(pitSurface(ramp.points[k], pit)).toBeCloseTo(PLATEAU_RL - ramp.depth[k], 0)
+    let run = 0
+    for (let j = 1; j <= k; j++) {
+      run += Math.hypot(
+        ramp.points[j].x - ramp.points[j - 1].x,
+        ramp.points[j].y - ramp.points[j - 1].y,
+      )
     }
-    // Near the start the ramp is at rim level; further round it is lower.
-    const start = pitSurface(at(0.02, 8), CURRENT_PIT)
-    expect(start).toBeGreaterThan(PLATEAU_RL - 3)
-    const p = at(0.6, 0)
-    const rim = rimRadius(p, CURRENT_PIT)
-    const depth = 0.6 * rim * 0.85 * RAMP.grade
-    const onRamp = at(0.6, (depth * (BERM_WIDTH_M + FACE_RUN_M)) / 10 + RAMP.width / 2)
-    expect(insidePit(onRamp, CURRENT_PIT)).toBeGreaterThan(0)
-    expect(pitSurface(onRamp, CURRENT_PIT)).toBeCloseTo(PLATEAU_RL - depth, 0)
+    expect(ramp.depth[k] / run).toBeCloseTo(RAMP.grade, 2)
   })
 })

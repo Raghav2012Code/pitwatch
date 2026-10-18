@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { cellAt, indexOf, sampleBilinear } from '../geo/grid'
 import { distanceToBoundary, pointInPolygon } from '../geo/polygon'
 import {
+  BENCH_HEIGHT_M,
   BERM_WIDTH_M,
   CHANGES,
+  BASELINE_PIT,
   CURRENT_PIT,
   DUMP_ZONE,
   FACE_RUN_M,
@@ -14,8 +16,10 @@ import {
 } from './fixtures/scenario'
 import { fbm, valueNoise } from './noise'
 import { gaussian, mulberry32 } from './rng'
-import { benchDepth, rimRadius } from './synthetic'
+import { benchDepth, insidePit, pitsOf, preparePit } from './synthetic'
 import { SyntheticTerrainProvider } from './SyntheticTerrainProvider'
+
+const PLANTED_ENCROACHMENT = CHANGES.encroachment
 
 describe('rng', () => {
   it('repeats the same sequence for the same seed', () => {
@@ -53,10 +57,11 @@ describe('bench profile', () => {
   it('drops one bench per face and stays flat along each berm', () => {
     const step = BERM_WIDTH_M + FACE_RUN_M
     expect(benchDepth(0)).toBe(0)
-    expect(benchDepth(FACE_RUN_M / 2)).toBe(5) // halfway down the first face
-    expect(benchDepth(FACE_RUN_M)).toBe(10) // top of the first berm
-    expect(benchDepth(step - 1)).toBe(10) // still on the berm
-    expect(benchDepth(step + FACE_RUN_M)).toBe(20)
+    const h = BENCH_HEIGHT_M
+    expect(benchDepth(FACE_RUN_M / 2)).toBe(h / 2) // halfway down the first face
+    expect(benchDepth(FACE_RUN_M)).toBe(h) // top of the first berm
+    expect(benchDepth(step - 1)).toBe(h) // still on the berm
+    expect(benchDepth(step + FACE_RUN_M)).toBe(2 * h)
   })
 })
 
@@ -90,10 +95,7 @@ describe('synthetic terrain provider', async () => {
   })
 
   it('cuts a stepped pit with a flat floor just above the approved level', () => {
-    const floor = sampleBilinear(GRID, current.elevations, {
-      x: CURRENT_PIT.cx + 60,
-      y: CURRENT_PIT.cy,
-    })!
+    const floor = sampleBilinear(GRID, current.elevations, { x: 1000, y: 1030 })!
     expect(floor).toBeCloseTo(CURRENT_PIT.floorRL, 0)
     expect(floor).toBeGreaterThan(PIT_ZONE.approvedFloorElevation)
   })
@@ -110,8 +112,10 @@ describe('synthetic terrain provider', async () => {
 
   it('plants each scenario change where the rules will look for it', () => {
     // 1. Legitimate expansion inside the lease: ground lowered west of the old rim.
-    const westRim = rimRadius({ x: 0, y: CURRENT_PIT.cy }, CURRENT_PIT)
-    expect(dh(CURRENT_PIT.cx - westRim + 12, CURRENT_PIT.cy)).toBeLessThan(-5)
+    const west = { x: 680, y: 1080 }
+    expect(insidePit(west, preparePit(CURRENT_PIT))).toBeGreaterThan(0)
+    expect(insidePit(west, preparePit(BASELINE_PIT))).toBeLessThan(0)
+    expect(dh(west.x, west.y)).toBeLessThan(-5)
 
     // 2. Encroachment: deep cut outside the east lease edge.
     const out = { x: 1420, y: 1030 }
@@ -133,5 +137,28 @@ describe('synthetic terrain provider', async () => {
     expect(pointInPolygon(stray, DUMP_ZONE.polygon)).toBe(false)
     expect(dh(stray.x, stray.y)).toBeGreaterThan(3)
     expect(dh(CHANGES.zoneDump.cx, CHANGES.zoneDump.cy)).toBeGreaterThan(3)
+  })
+})
+
+describe('pit layout', () => {
+  it('keeps every approved stage inside the lease and clear of the buffer', () => {
+    const approved = pitsOf('current').filter((p) => p.floorRL !== PLANTED_ENCROACHMENT.floorRL)
+    expect(approved).toHaveLength(1)
+    for (const pit of approved) {
+      for (const v of pit.rim) {
+        expect(pointInPolygon(v, LEASE)).toBe(true)
+        expect(distanceToBoundary(v, LEASE)).toBeGreaterThan(SAFETY_BUFFER_M + 10)
+      }
+    }
+  })
+
+  it('runs the encroachment lobe across the lease edge', () => {
+    const rim = preparePit(PLANTED_ENCROACHMENT).rim
+    expect(rim.some((v) => !pointInPolygon(v, LEASE))).toBe(true)
+  })
+
+  it('is not round: the current pit is much longer than it is wide', () => {
+    const { box } = pitsOf('current')[0]
+    expect((box.x1 - box.x0) / (box.y1 - box.y0)).toBeGreaterThan(1.3)
   })
 })

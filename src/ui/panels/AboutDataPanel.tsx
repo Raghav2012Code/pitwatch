@@ -9,7 +9,7 @@ const SOURCES = [
   {
     name: 'Global elevation models',
     fit: 2,
-    text: 'Copernicus GLO-30 and SRTM give terrain height on a grid of about 30 m. Vertical error is several metres, far too coarse for 10 m benches or small changes.',
+    text: 'Copernicus GLO-30 and SRTM give terrain height on a grid of about 30 m. Vertical error is several metres, far too coarse for 15 m benches or small changes.',
   },
   {
     name: 'Drone, LiDAR or DGPS surveys',

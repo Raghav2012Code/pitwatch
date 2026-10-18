@@ -13,7 +13,7 @@ import { rampAt, srgbToLinear } from './palette'
 /** Elevation that maps to scene y = 0. Keeps vertex numbers small. */
 export const BASE_RL = 400
 /** Bottom of the block diagram sides. */
-export const SKIRT_RL = 335
+export const SKIRT_RL = 235
 
 export const gridCentre = (g: GridSpec): Vec2 => {
   const e = extent(g)

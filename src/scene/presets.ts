@@ -24,7 +24,7 @@ export function presetPose(kind: ViewPreset | 'intro', pit: Vec2, floorY: number
   const off: Record<ViewPreset | 'intro', V3> = {
     oblique: [820, 2150, 2650],
     top: [0, 3700, 1],
-    pit: [300, 520, 700],
+    pit: [420, 700, 880],
     intro: [0, 4700, 1400],
   }
   const o = off[kind]

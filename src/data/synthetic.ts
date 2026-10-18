@@ -1,16 +1,19 @@
-import type { GridSpec, Vec2 } from '../domain/types'
+import type { GridSpec, Polygon, Vec2 } from '../domain/types'
 import { cellCenter, indexOf } from '../geo/grid'
+import { distanceToBoundary, distanceToSegment, pointInPolygon } from '../geo/polygon'
 import {
   BASELINE_DUMP,
   BASELINE_PIT,
   BENCH_HEIGHT_M,
   BERM_WIDTH_M,
   CHANGES,
+  CREEK,
   CURRENT_PIT,
   FACE_RUN_M,
   PLATEAU_RL,
   RAMP,
-  type PitShape,
+  RIDGE,
+  type PitStage,
 } from './fixtures/scenario'
 import { fbm } from './noise'
 import { gaussian, mulberry32 } from './rng'
@@ -20,20 +23,53 @@ import { gaussian, mulberry32 } from './rng'
  * Nothing here is real survey data.
  */
 
+/** Rough centre of the pit workings; natural relief is calmed near it. */
+const PIT_CENTRE = { x: 985, y: 1035 }
+
+function distanceToLine(p: Vec2, line: readonly (readonly [number, number])[]): number {
+  let d = Infinity
+  for (let k = 1; k < line.length; k++) {
+    const [ax, ay] = line[k - 1]
+    const [bx, by] = line[k]
+    d = Math.min(d, distanceToSegment(p, { x: ax, y: ay }, { x: bx, y: by }))
+  }
+  return d
+}
+
+/** Distance to the dry creek bed. Warped so the channel meanders instead of running straight. */
+export function creekDistance(p: Vec2, seed: number): number {
+  const q = {
+    x: p.x + 55 * fbm(p.x / 260 + 7.7, p.y / 260, seed + 61, 3),
+    y: p.y + 55 * fbm(p.x / 260, p.y / 260 - 5.1, seed + 67, 3),
+  }
+  return distanceToLine(q, CREEK)
+}
+
 /**
- * Plateau with natural-looking relief: domain-warped hills (so slopes wander instead of
- * forming round blobs), soft ridgelines and small-scale roughness. Relief fades near the
- * pit so the rim sits close to PLATEAU_RL.
+ * Natural ground: domain-warped hills (slopes wander instead of forming round blobs),
+ * Venthar Ridge rising to the north, a dry creek in the east,
+ * and small-scale roughness. Relief from the hills fades near the pit so the rim sits
+ * close to PLATEAU_RL.
  */
 export function naturalGround(p: Vec2, seed: number): number {
   const wx = p.x / 1000 + 0.6 * fbm(p.x / 800 + 3.1, p.y / 800 - 1.7, seed + 11, 3)
   const wy = p.y / 1000 + 0.6 * fbm(p.x / 800 - 4.3, p.y / 800 + 2.9, seed + 13, 3)
-  const broad = fbm(wx, wy, seed, 5) * 30
-  const ridge = (1 - Math.abs(fbm(p.x / 450, p.y / 450, seed + 21, 4))) ** 2 * 9 - 4
+  const broad = fbm(wx, wy, seed, 5) * 24
+  const crest = (1 - Math.abs(fbm(p.x / 450, p.y / 450, seed + 21, 4))) ** 2 * 8 - 4
+  const toPit = Math.hypot(p.x - PIT_CENTRE.x, p.y - PIT_CENTRE.y)
+  const calm = Math.min(1, Math.max(0, (toPit - 380) / 420)) ** 2
+
+  // The ridge: its height varies along the crest.
+  const q = { x: p.x + 70 * fbm(p.x / 500, p.y / 500 + 9.3, seed + 71, 3), y: p.y }
+  const toRidge = distanceToLine(q, RIDGE)
+  const crestHeight = 34 + 14 * fbm(p.x / 600, 4.2, seed + 73, 3)
+  const ridge = crestHeight * Math.exp(-((toRidge / 260) ** 2))
+
+  // Dry creek: a shallow channel with soft banks.
+  const creek = -3.5 * (1 - smoothstep(6, 30, creekDistance(p, seed)))
+
   const fine = fbm(p.x / 90, p.y / 90, seed + 7, 3) * 1.2
-  const toPit = Math.hypot(p.x - BASELINE_PIT.cx, p.y - BASELINE_PIT.cy)
-  const calm = Math.min(1, Math.max(0, (toPit - 380) / 420))
-  return PLATEAU_RL + (broad + ridge) * calm * calm + fine
+  return PLATEAU_RL + (broad + crest) * calm + ridge + creek + fine
 }
 
 /** Depth below the rim for a point `s` metres inside it: stepped benches with berms. */
@@ -46,52 +82,154 @@ export function benchDepth(s: number): number {
   )
 }
 
-/**
- * Irregularity of the pit outline as a fraction of radius, by direction. Phases are
- * chosen so the east wall stays well clear of the lease buffer.
- */
-export const rimWobble = (theta: number) =>
+/** Small wobble by direction, roughens dump footprints. */
+const wobble = (theta: number) =>
   0.03 * Math.sin(3 * theta - 2.2) +
   0.02 * Math.sin(5 * theta - 0.5) +
   0.012 * Math.sin(8 * theta + 1.3)
 
-/** Distance from the pit centre to its rim in the direction of `p`. */
-export function rimRadius(p: Vec2, pit: PitShape): number {
-  const dx = p.x - pit.cx
-  const dy = p.y - pit.cy
-  const r = Math.hypot(dx, dy)
-  const ellipse = r === 0 ? Math.min(pit.a, pit.b) : 1 / Math.hypot(dx / r / pit.a, dy / r / pit.b)
-  return ellipse * (1 + rimWobble(Math.atan2(dy, dx)))
+/** Chaikin corner cutting: rounds a closed outline the way a rim is blasted back. */
+export function roundOutline(poly: Polygon, passes = 3): Polygon {
+  let out = poly
+  for (let k = 0; k < passes; k++) {
+    out = out.flatMap((a, i) => {
+      const b = out[(i + 1) % out.length]
+      return [
+        { x: 0.75 * a.x + 0.25 * b.x, y: 0.75 * a.y + 0.25 * b.y },
+        { x: 0.25 * a.x + 0.75 * b.x, y: 0.25 * a.y + 0.75 * b.y },
+      ]
+    })
+  }
+  return out
 }
 
-/** Metres inside the rim (negative outside). */
-export const insidePit = (p: Vec2, pit: PitShape) =>
-  rimRadius(p, pit) - Math.hypot(p.x - pit.cx, p.y - pit.cy)
+/** Haul ramp centreline with the depth below the rim at each point. */
+export interface Ramp {
+  points: Vec2[]
+  depth: number[]
+}
+
+/** A pit stage ready to sample: rounded rim, bounding box, optional ramp. */
+export interface Pit {
+  rim: Polygon
+  floorRL: number
+  box: { x0: number; x1: number; y0: number; y1: number }
+  ramp?: Ramp
+}
+
+/** Horizontal distance a bench profile needs to reach `depth` (overall slope). */
+const insetFor = (depth: number) => (depth * (BERM_WIDTH_M + FACE_RUN_M)) / BENCH_HEIGHT_M
 
 /**
- * Depth of the haul ramp where it crosses the direction of `p`, or null once the ramp
- * has reached the floor. The ramp drops `grade` metres per metre travelled.
+ * Walk the rim anticlockwise from the point nearest RAMP.start, keeping the ramp as far
+ * inside the wall as its depth requires, until it reaches the floor.
  */
-function rampDepth(p: Vec2, pit: PitShape, rim: number): number | null {
-  const theta = Math.atan2(p.y - pit.cy, p.x - pit.cx)
-  const turned = (((theta - RAMP.startAngle) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)
-  const depth = turned * rim * 0.85 * RAMP.grade
-  return depth <= PLATEAU_RL - pit.floorRL ? depth : null
+function buildRamp(rim: Polygon, floorRL: number): Ramp {
+  const n = rim.length
+  let k0 = 0
+  for (let k = 1; k < n; k++) {
+    if (
+      Math.hypot(rim[k].x - RAMP.start.x, rim[k].y - RAMP.start.y) <
+      Math.hypot(rim[k0].x - RAMP.start.x, rim[k0].y - RAMP.start.y)
+    )
+      k0 = k
+  }
+  const maxDepth = PLATEAU_RL - floorRL
+  const points: Vec2[] = []
+  const depth: number[] = []
+  let d = 0
+  // A deep pit needs more than one lap; each lap sits further in than the last.
+  for (let j = 0; j < 3 * n && d < maxDepth; j++) {
+    const prev = rim[(k0 + j - 1 + n) % n]
+    const a = rim[(k0 + j) % n]
+    const next = rim[(k0 + j + 1) % n]
+    // Anticlockwise outline: the inside is to the left of the direction of travel.
+    const tx = next.x - prev.x
+    const ty = next.y - prev.y
+    const len = Math.hypot(tx, ty) || 1
+    const inset = insetFor(d) + RAMP.width / 2
+    const p = { x: a.x - (ty / len) * inset, y: a.y + (tx / len) * inset }
+    const last = points[points.length - 1]
+    if (last) d = Math.min(maxDepth, d + Math.hypot(p.x - last.x, p.y - last.y) * RAMP.grade)
+    points.push(p)
+    depth.push(d)
+  }
+  return { points, depth }
 }
 
-/** Ground level inside a pit, or Infinity where the point is outside the rim. */
-export function pitSurface(p: Vec2, pit: PitShape): number {
-  const rim = rimRadius(p, pit)
-  const inside = rim - Math.hypot(p.x - pit.cx, p.y - pit.cy)
-  if (inside <= 0) return Infinity
-
-  // The ramp is a flat shelf cut across the benches, about as far in as its depth needs.
-  const ramp = rampDepth(p, pit, rim)
-  if (ramp !== null) {
-    const centre = (ramp * (BERM_WIDTH_M + FACE_RUN_M)) / BENCH_HEIGHT_M + RAMP.width / 2
-    if (Math.abs(inside - centre) < RAMP.width / 2) return Math.max(pit.floorRL, PLATEAU_RL - ramp)
+export function preparePit(stage: PitStage, withRamp = false): Pit {
+  const rim = roundOutline(stage.outline)
+  const xs = rim.map((p) => p.x)
+  const ys = rim.map((p) => p.y)
+  return {
+    rim,
+    floorRL: stage.floorRL,
+    box: {
+      x0: Math.min(...xs),
+      x1: Math.max(...xs),
+      y0: Math.min(...ys),
+      y1: Math.max(...ys),
+    },
+    ramp: withRamp ? buildRamp(rim, stage.floorRL) : undefined,
   }
-  return Math.max(pit.floorRL, PLATEAU_RL - benchDepth(inside))
+}
+
+const PITS = {
+  baseline: [preparePit(BASELINE_PIT, true)],
+  current: [preparePit(CURRENT_PIT, true)],
+  encroachment: preparePit(CHANGES.encroachment),
+}
+
+/** Pit stages present in each survey (the encroachment is a separate planted change). */
+export const pitsOf = (epoch: 'baseline' | 'current'): readonly Pit[] =>
+  epoch === 'baseline' ? PITS.baseline : [...PITS.current, PITS.encroachment]
+
+/** Metres inside the rim (negative outside, -Infinity well outside the bounding box). */
+export function insidePit(p: Vec2, pit: Pit): number {
+  const b = pit.box
+  if (p.x < b.x0 - 200 || p.x > b.x1 + 200 || p.y < b.y0 - 200 || p.y > b.y1 + 200) {
+    return -Infinity
+  }
+  const d = distanceToBoundary(p, pit.rim)
+  return pointInPolygon(p, pit.rim) ? d : -d
+}
+
+/** Nearest point on the ramp centreline: distance to it and the ramp depth there. */
+function nearestOnRamp(p: Vec2, ramp: Ramp): { dist: number; depth: number } {
+  let best = { dist: Infinity, depth: 0 }
+  const { points, depth } = ramp
+  for (let k = 1; k < points.length; k++) {
+    const a = points[k - 1]
+    const b = points[k]
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    const len2 = dx * dx + dy * dy || 1
+    const t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2))
+    const dist = Math.hypot(p.x - a.x - t * dx, p.y - a.y - t * dy)
+    if (dist < best.dist) best = { dist, depth: depth[k - 1] + (depth[k] - depth[k - 1]) * t }
+  }
+  return best
+}
+
+/** Distance to the haul ramp centreline (Infinity for a stage without one). */
+export const rampDistance = (p: Vec2, pit: Pit) =>
+  pit.ramp ? nearestOnRamp(p, pit.ramp).dist : Infinity
+
+/** Ground level inside a pit, or Infinity where the point is outside the rim. */
+export function pitSurface(p: Vec2, pit: Pit): number {
+  const b = pit.box
+  if (p.x < b.x0 || p.x > b.x1 || p.y < b.y0 || p.y > b.y1) return Infinity
+  if (!pointInPolygon(p, pit.rim)) return Infinity
+  const inside = distanceToBoundary(p, pit.rim)
+  const benches = Math.max(pit.floorRL, PLATEAU_RL - benchDepth(inside))
+  if (!pit.ramp) return benches
+
+  // The ramp is a road cut and filled across the benches, with short batters each side.
+  const r = nearestOnRamp(p, pit.ramp)
+  const half = RAMP.width / 2
+  if (r.dist >= half + 6) return benches
+  const road = Math.max(pit.floorRL, PLATEAU_RL - r.depth)
+  return benches + (road - benches) * (1 - smoothstep(half, half + 6, r.dist))
 }
 
 const inBox = (p: Vec2, b: { x0: number; x1: number; y0: number; y1: number }) =>
@@ -113,7 +251,9 @@ const smoothstep = (a: number, b: number, x: number) => {
 /** Flat-topped waste dump with a berm part way down its batter and an irregular footprint. */
 export function terracedDump(p: Vec2, m: Heap): number {
   const theta = Math.atan2(p.y - m.cy, p.x - m.cx)
-  const d = Math.hypot(p.x - m.cx, p.y - m.cy) / (m.r * (1 + 0.6 * rimWobble(theta + 1)))
+  // Lobed footprint: dumps grow by tipping along a few fronts, so they are never round.
+  const lobes = 0.16 * Math.sin(2 * theta + 0.7) + 0.1 * Math.sin(3 * theta - 1.2)
+  const d = Math.hypot(p.x - m.cx, p.y - m.cy) / (m.r * (1 + lobes + wobble(theta + 1)))
   const upper = 1 - smoothstep(0.48, 0.66, d)
   const lower = 1 - smoothstep(0.76, 1, d)
   return m.height * (0.5 * upper + 0.5 * lower)
@@ -143,13 +283,11 @@ export function trueSurface(
   seed: number,
   ground = naturalGround(p, seed),
 ): number {
-  if (epoch === 'baseline') {
-    return Math.min(ground, pitSurface(p, BASELINE_PIT)) + terracedDump(p, BASELINE_DUMP)
-  }
+  let z = ground
+  for (const pit of pitsOf(epoch)) z = Math.min(z, pitSurface(p, pit))
+  if (epoch === 'baseline') return z + terracedDump(p, BASELINE_DUMP)
 
   const c = CHANGES
-  let z = Math.min(ground, pitSurface(p, CURRENT_PIT))
-  if (inBox(p, c.encroachment)) z = Math.min(z, ground - c.encroachment.depth)
   if (Math.hypot(p.x - c.sump.cx, p.y - c.sump.cy) <= c.sump.r) {
     z = Math.min(z, CURRENT_PIT.floorRL - c.sump.depthBelowFloor)
   }

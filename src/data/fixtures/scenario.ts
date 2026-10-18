@@ -36,23 +36,72 @@ export const SAFETY_BUFFER_M = 20
  * of the 5 m contour interval, so flat berms and the floor sit between contour levels.
  */
 export const PLATEAU_RL = 422
-export const BENCH_HEIGHT_M = 10
-export const BERM_WIDTH_M = 10
-/** Horizontal run of one bench face (≈ 55° face angle). */
-export const FACE_RUN_M = 7
+export const BENCH_HEIGHT_M = 15
+export const BERM_WIDTH_M = 8
+/** Horizontal run of one bench face (≈ 59° face angle; overall wall ≈ 41°). */
+export const FACE_RUN_M = 9
 
-export interface PitShape {
-  cx: number
-  cy: number
-  /** Semi-axes of the rim ellipse, metres. */
-  a: number
-  b: number
+/**
+ * One pit stage: a rim outline (anticlockwise, rounded off before use) and a flat floor.
+ * Benches step down from the rim parallel to the outline until they reach the floor.
+ */
+export interface PitStage {
+  outline: Polygon
   floorRL: number
 }
 
-export const BASELINE_PIT: PitShape = { cx: 1000, cy: 1030, a: 330, b: 250, floorRL: 372 }
-/** Legitimate expansion: wider to the west, north and south, one bench deeper, 2 m above the approved floor. */
-export const CURRENT_PIT: PitShape = { cx: 980, cy: 1030, a: 360, b: 270, floorRL: 362 }
+const pts = (xy: readonly [number, number][]): Polygon => xy.map(([x, y]) => ({ x, y }))
+
+/** Main pit at the baseline survey: a kidney shape following the orebody, 135 m deep. */
+export const BASELINE_PIT: PitStage = {
+  floorRL: 287,
+  outline: pts([
+    [930, 815],
+    [1050, 812],
+    [1165, 835],
+    [1255, 895],
+    [1300, 985],
+    [1292, 1070],
+    [1240, 1135],
+    [1145, 1165],
+    [1060, 1185],
+    [990, 1225],
+    [900, 1238],
+    [810, 1215],
+    [750, 1160],
+    [722, 1080],
+    [728, 995],
+    [770, 915],
+    [840, 850],
+  ]),
+}
+
+/**
+ * Main pit now. Legitimate expansion: the west wall pushed back about 75 m and the
+ * floor one bench deeper (150 m), 2 m above the approved floor.
+ */
+export const CURRENT_PIT: PitStage = {
+  floorRL: 272,
+  outline: pts([
+    [900, 795],
+    [1040, 790],
+    [1170, 815],
+    [1270, 880],
+    [1322, 975],
+    [1315, 1075],
+    [1255, 1150],
+    [1150, 1180],
+    [1060, 1205],
+    [985, 1250],
+    [880, 1268],
+    [770, 1245],
+    [690, 1185],
+    [648, 1095],
+    [655, 990],
+    [705, 900],
+    [790, 830],
+  ]),
+}
 
 export const PIT_ZONE: PitZone = {
   id: 'pit-main',
@@ -62,7 +111,7 @@ export const PIT_ZONE: PitZone = {
     { x: 1370, y: 1360 },
     { x: 560, y: 1360 },
   ],
-  approvedFloorElevation: 360,
+  approvedFloorElevation: 270,
 }
 
 export const DUMP_ZONE: DumpZone = {
@@ -84,7 +133,20 @@ export const DUMP_ZONE: DumpZone = {
  *   zoneDump      no finding: waste placed inside the dump zone.
  */
 export const CHANGES = {
-  encroachment: { x0: 1300, x1: 1440, y0: 985, y1: 1075, depth: 12 },
+  /** Pushback of the east wall, benched down into the pit, that runs past the lease edge (x ≈ 1382 here). */
+  encroachment: {
+    floorRL: 332,
+    outline: pts([
+      [1240, 900],
+      [1330, 905],
+      [1410, 950],
+      [1448, 1030],
+      [1415, 1110],
+      [1330, 1150],
+      [1240, 1140],
+      [1200, 1020],
+    ]),
+  } satisfies PitStage,
   sump: { cx: 960, cy: 1020, r: 22, depthBelowFloor: 6 },
   bufferScrape: { x0: 900, x1: 1010, y0: 1500, y1: 1510, depth: 1.2 },
   /** A cluster of truck-tipped heaps around (cx, cy). */
@@ -96,8 +158,29 @@ export const CHANGES = {
 /** Terraced waste dump that already exists in the baseline survey, inside the dump zone. */
 export const BASELINE_DUMP = { cx: 530, cy: 505, r: 85, height: 5 } as const
 
-/** Haul ramp spiralling down the pit wall: starts on the south rim, turns anticlockwise. */
-export const RAMP = { startAngle: -Math.PI / 2, grade: 0.1, width: 22 } as const
+/**
+ * Haul ramp in the main pit: leaves the rim at the point nearest `start` (where the
+ * haul road arrives) and runs anticlockwise down the wall at `grade` until the floor.
+ */
+export const RAMP = { start: { x: 980, y: 760 }, grade: 0.1, width: 30 } as const
+
+/** Crest line of Venthar Ridge, north of the lease (local metres). */
+export const RIDGE: readonly [number, number][] = [
+  [-150, 1640],
+  [400, 1790],
+  [900, 1860],
+  [1400, 1800],
+  [2200, 1910],
+]
+
+/** Dry creek bed east of the lease, draining south. */
+export const CREEK: readonly [number, number][] = [
+  [2200, 1200],
+  [1850, 930],
+  [1735, 640],
+  [1770, 320],
+  [1690, -150],
+]
 
 /**
  * Haul roads on the plateau (local metres). They only appear in the simulated aerial
@@ -105,6 +188,7 @@ export const RAMP = { startAngle: -Math.PI / 2, grade: 0.1, width: 22 } as const
  */
 export const ROADS: readonly (readonly [number, number][])[] = [
   [
+    [980, 790],
     [985, 745],
     [1010, 640],
     [880, 560],
