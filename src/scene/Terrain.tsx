@@ -1,9 +1,9 @@
-import { useThree } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import type { Orthophoto, TerrainSurvey } from '../domain/types'
 import { useAppStore } from '../state/store'
-import { CONTOUR_INK, SOIL_PROFILE } from './palette'
+import { CONTOUR_INK, OVERLAY, SOIL_PROFILE } from './palette'
 import { BASE_RL, buildSkirtArrays, buildTerrainArrays } from './terrainGeometry'
 
 /* Shared uniforms: layer switches are uniform changes, not shader recompiles. */
@@ -17,8 +17,17 @@ const surfaceUniforms = {
 }
 
 const ELEVATION_VARYING = {
-  head: 'varying float vElev;\nuniform float uBase;\n',
-  body: '#include <begin_vertex>\n  vElev = position.y + uBase;',
+  head: 'varying float vElev;\nuniform float uBase;\nattribute float aChange;\nattribute vec3 aFinding;\nvarying float vChange;\nvarying vec3 vFinding;\n',
+  body: '#include <begin_vertex>\n  vElev = position.y + uBase;\n  vChange = aChange;\n  vFinding = aFinding;',
+}
+
+/**
+ * Per-cell overlay marks, one value per grid cell. `change`: −1 excavated, +1 filled.
+ * `finding`: one-hot [warning, violation, critical] per cell (3 values per cell).
+ */
+export interface TerrainMarks {
+  change: Float32Array
+  finding: Float32Array
 }
 
 /**
@@ -32,13 +41,25 @@ function makeSurfaceMaterial(map: THREE.Texture | null) {
     roughness: 0.96,
     metalness: 0,
   })
+  // Per-material: x = change-map strength, y = findings strength (0–1, animated).
+  const overlay = { value: new THREE.Vector2(0, 0) }
+  m.userData.overlay = overlay
+  const color = (hex: string) => ({ value: new THREE.Color(hex) })
   m.onBeforeCompile = (shader) => {
-    Object.assign(shader.uniforms, surfaceUniforms)
+    Object.assign(shader.uniforms, surfaceUniforms, {
+      uOverlay: overlay,
+      uCut: color(OVERLAY.cut),
+      uFill: color(OVERLAY.fill),
+      uWarn: color(OVERLAY.warning),
+      uViol: color(OVERLAY.violation),
+      uCrit: color(OVERLAY.critical),
+    })
     shader.vertexShader =
       ELEVATION_VARYING.head +
       shader.vertexShader.replace('#include <begin_vertex>', ELEVATION_VARYING.body)
     shader.fragmentShader =
       'varying float vElev;\nuniform float uInterval;\nuniform float uContours;\nuniform float uTint;\nuniform vec3 uInk;\n' +
+      'varying float vChange;\nvarying vec3 vFinding;\nuniform vec2 uOverlay;\nuniform vec3 uCut;\nuniform vec3 uFill;\nuniform vec3 uWarn;\nuniform vec3 uViol;\nuniform vec3 uCrit;\n' +
       shader.fragmentShader
         .replace(
           '#include <map_fragment>',
@@ -61,7 +82,19 @@ function makeSurfaceMaterial(map: THREE.Texture | null) {
   float minor = 1.0 - smoothstep(0.0, 1.0, abs(fract(f - 0.5) - 0.5) / max(fwidth(f), 1e-4));
   float g = vElev / (uInterval * 5.0);
   float major = 1.0 - smoothstep(0.0, 1.6, abs(fract(g - 0.5) - 0.5) / max(fwidth(g), 1e-4));
-  diffuseColor.rgb = mix(diffuseColor.rgb, uInk, uContours * max(minor * 0.22, major * 0.45));`,
+  diffuseColor.rgb = mix(diffuseColor.rgb, uInk, uContours * max(minor * 0.22, major * 0.45));
+
+  // Overlays: unchanged ground dims so the marked cells stand out.
+  float cutW = clamp(-vChange, 0.0, 1.0);
+  float fillW = clamp(vChange, 0.0, 1.0);
+  float changed = cutW + fillW;
+  vec3 changeCol = (cutW * uCut + fillW * uFill) / max(changed, 1e-3);
+  diffuseColor.rgb *= 1.0 - 0.35 * uOverlay.x * (1.0 - changed);
+  diffuseColor.rgb = mix(diffuseColor.rgb, changeCol, 0.82 * uOverlay.x * changed);
+  float flagged = clamp(vFinding.x + vFinding.y + vFinding.z, 0.0, 1.0);
+  vec3 findCol = (vFinding.x * uWarn + vFinding.y * uViol + vFinding.z * uCrit) / max(flagged, 1e-3);
+  diffuseColor.rgb *= 1.0 - 0.35 * uOverlay.y * (1.0 - flagged);
+  diffuseColor.rgb = mix(diffuseColor.rgb, findCol, 0.88 * uOverlay.y * flagged);`,
         )
   }
   m.customProgramCacheKey = () => `terrain-surface-${map ? 'map' : 'tint'}`
@@ -138,8 +171,20 @@ function geometryFrom(
   return g
 }
 
-/** Terrain surface plus block sides. Built once per survey; exaggeration is a y-scale. */
-export function Terrain({ survey }: { survey: TerrainSurvey }) {
+/**
+ * Terrain surface plus block sides. Built once per survey; exaggeration is a y-scale.
+ * Optional `marks` with `overlay` = [change, findings] strengths (0–1) colour cells on the
+ * surface; strengths ease towards their targets.
+ */
+export function Terrain({
+  survey,
+  marks,
+  overlay = [0, 0],
+}: {
+  survey: TerrainSurvey
+  marks?: TerrainMarks
+  overlay?: readonly [number, number]
+}) {
   const exaggeration = useAppStore((s) => s.exaggeration)
   const layers = useAppStore((s) => s.layers)
   const invalidate = useThree((s) => s.invalidate)
@@ -148,11 +193,17 @@ export function Terrain({ survey }: { survey: TerrainSurvey }) {
   const geometry = useMemo(() => {
     const t = buildTerrainArrays(survey.grid, survey.elevations)
     const s = buildSkirtArrays(survey.grid, survey.elevations)
+    const n = survey.grid.cols * survey.grid.rows
     return {
-      surface: geometryFrom(t.positions, t.index, { color: [t.colors, 3], uv: [t.uvs, 2] }),
+      surface: geometryFrom(t.positions, t.index, {
+        color: [t.colors, 3],
+        uv: [t.uvs, 2],
+        aChange: [marks?.change ?? new Float32Array(n), 1],
+        aFinding: [marks?.finding ?? new Float32Array(n * 3), 3],
+      }),
       skirt: geometryFrom(s.positions, s.index, { aTop: [s.tops, 1] }),
     }
-  }, [survey])
+  }, [survey, marks])
 
   const texture = useMemo(
     () => (survey.orthophoto ? orthoTexture(survey.orthophoto, maxAnisotropy) : null),
@@ -186,6 +237,18 @@ export function Terrain({ survey }: { survey: TerrainSurvey }) {
     surfaceUniforms.uTint.value = tint ? 1 : 0
     invalidate()
   }, [layers.contours, tint, invalidate])
+
+  // Ease overlay strengths towards their targets (about 0.6 s).
+  const [targetChange, targetFindings] = overlay
+  useFrame((_, dt) => {
+    const u = (materials.surface.userData.overlay as { value: THREE.Vector2 }).value
+    const k = Math.min(1, dt * 5)
+    const dx = targetChange - u.x
+    const dy = targetFindings - u.y
+    if (Math.abs(dx) < 1e-3 && Math.abs(dy) < 1e-3) return
+    u.set(u.x + dx * k, u.y + dy * k)
+    invalidate()
+  })
 
   return (
     <group scale={[1, exaggeration, 1]} visible={layers.terrain}>

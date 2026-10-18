@@ -29,6 +29,18 @@ export const SOIL_PROFILE = {
   bedrock: '#6f6a63',
 } as const
 
+/**
+ * Overlay colours on the terrain: cut and fill for the change map, and the finding tones
+ * (same hues as the --color-warn / --color-violation / --color-critical tokens).
+ */
+export const OVERLAY = {
+  cut: '#b5482a',
+  fill: '#2a6fb0',
+  warning: '#c98a12',
+  violation: '#c0262d',
+  critical: '#8c3bb0',
+} as const
+
 /** Contour line colour. */
 export const CONTOUR_INK = '#3b2a20'
 

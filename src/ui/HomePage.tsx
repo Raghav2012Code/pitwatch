@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { SURVEY_EPOCHS } from '../data/fixtures/mine'
 import { daysBetween, formatDate, monthTicks } from './format'
 import { PitMark } from './icons'
@@ -10,14 +10,17 @@ import { MONITOR_HREF } from './route'
 import { NoiseCheck } from './home/NoiseCheck'
 import { PermitSheet } from './home/PermitSheet'
 import { Resolution } from './home/Resolution'
-import { SurveyPlan } from './home/SurveyPlan'
-import { NorthArrow, Relief } from './schematic'
+import { SceneErrorBoundary } from './viewport/SceneErrorBoundary'
+import { Relief } from './schematic'
 
 /*
  * The home page is one scroll story told on a pinned map:
  * baseline survey -> current survey -> measured change -> permit check -> monitor.
- * The map is drawn from the simulated surveys and the rule engine's real output.
+ * The map is the 3D model of the simulated surveys, coloured by the rule engine's output.
  */
+
+// three.js is large; fetch it only for the home model.
+const HomeScene = lazy(() => import('../scene/HomeScene'))
 
 const [BASELINE, CURRENT] = SURVEY_EPOCHS
 const DAYS = BASELINE && CURRENT ? daysBetween(BASELINE.date, CURRENT.date) : 0
@@ -102,9 +105,19 @@ export function HomePage() {
         <div className="story-stage" aria-hidden="true">
           <Relief className="opacity-70" />
           <div className="story-frame neatline">
-            <NorthArrow className="plan-north absolute top-5 right-5 z-10 hidden sm:block" />
-
-            <SurveyPlan step={step} />
+            <div className="plan-box">
+              {ready ? (
+                <SceneErrorBoundary
+                  fallback={() => <p className="plan-status">The 3D model could not start.</p>}
+                >
+                  <Suspense fallback={<p className="plan-status">Loading the 3D model…</p>}>
+                    <HomeScene step={step} />
+                  </Suspense>
+                </SceneErrorBoundary>
+              ) : (
+                <p className="plan-status">Building the simulated surveys…</p>
+              )}
+            </div>
 
             {/* Survey clock: where in time the map is. */}
             <div className="story-clock">
@@ -178,8 +191,9 @@ export function HomePage() {
 
           <Step n={4} step={step} label="Permit check" title="Hold it against the permit.">
             PitWatch checks three things: digging outside the lease or its safety buffer, digging
-            below the approved floor, and dumping outside permitted zones. Here the east cut crosses
-            the lease line.
+            below the approved floor, and dumping outside permitted zones. Each pin is a finding;
+            red cells are violations, amber cells warnings. Here the east cut crosses the lease
+            line.
             <span className="mt-4 block text-[13px] text-ink-faint">
               {ready
                 ? `This is the rule engine's result on the simulated surveys: ${countText(findings).toLowerCase()}.`

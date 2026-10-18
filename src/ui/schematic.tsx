@@ -41,15 +41,3 @@ export function Relief({ className = '' }: { className?: string }) {
     </svg>
   )
 }
-
-export function NorthArrow({ className = '' }: { className?: string }) {
-  return (
-    <svg viewBox="-14 -30 28 52" className={`h-[52px] w-7 ${className}`} aria-hidden="true">
-      <text y="-19" className="north-n">
-        N
-      </text>
-      <path d="M0 -12 L-8 16 L0 10 Z" fill="var(--color-ink)" />
-      <path d="M0 -12 L8 16 L0 10 Z" fill="none" stroke="var(--color-ink)" strokeWidth="1.2" />
-    </svg>
-  )
-}

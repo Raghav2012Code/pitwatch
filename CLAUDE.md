@@ -24,7 +24,7 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 - Monitor layout: full-screen 3D canvas on a survey-paper backdrop (`--color-backdrop`, faint `<Relief />` contours, soft vignette; fog uses the same colour); a `ViewOffset` shifts the projection so the model centres in `.stage` (the area the side cards leave free, click-through except its controls). Left "Map" card (layers, key, exaggeration), right details card (tabs), camera presets + compass top-right, scale bar top-left, timeline pill bottom-centre. Soft `.card` surfaces (8 px radius, shadow); strata stripes only in the top-bar rule and the home page.
 - Each fact appears once: mine name in the top bar, survey dates in the timeline and the Surveys section, nothing duplicated in map overlays.
-- Home page is a scroll story on a pinned map drawn from the simulated surveys (`#/`), monitor at `#/monitor`. Topographic look: limestone paper, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity only (never status).
+- Home page is a scroll story beside the live 3D model of the simulated surveys (`#/`), monitor at `#/monitor`. Topographic look: limestone paper, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity only (never status).
 - Type: Archivo variable; `.cond` (font-stretch 72%) for headings and big figures. JetBrains Mono for coordinates and dates.
 - All colours are tokens in `@theme`; components use `var(--color-*)` or `color-mix(...)`. Never hardcode a colour in a component.
 - Severity colour always pairs with a glyph shape: warning = triangle, violation = octagon, critical = diamond.
@@ -45,6 +45,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-18: home story on the live 3D model
+
+- User did not like the flat photo map. The home story now shows the real 3D model (`src/scene/HomeScene.tsx`, lazy chunk), slowly orbiting the pit with no controls (pointer-events off so page scroll is never captured). Steps drive it: 0–1 baseline survey, 2 current survey, 3 measured change coloured on the terrain (rust cut, blue fill, unchanged ground dimmed), 4+ findings coloured by tone, the lease boundary as a white line just above the ground, and a pin per finding (violations pulse).
+- `Terrain` gained optional `marks` (`aChange` −1/0/+1 and one-hot `aFinding` [warning, violation, critical] vertex attributes) and `overlay` strengths that ease in over about 0.6 s via a per-material `uOverlay` uniform. Monitor passes neither, so it is unchanged; M5's change layer can reuse this. Overlay colours in `palette.ts` (`OVERLAY`).
+- Removed `SurveyPlan.tsx`, the north arrow (wrong on a rotating model) and their CSS.
 
 ### 2026-10-18: README
 

@@ -290,23 +290,6 @@ body {
     pointer-events: none;
   }
 
-  .north-n {
-    font-size: 11px;
-    font-weight: 700;
-    text-anchor: middle;
-    fill: var(--color-ink);
-  }
-
-  .plan-label {
-    font-size: 11px;
-    font-style: italic;
-    text-anchor: middle;
-    fill: var(--color-ink-dim);
-    paint-order: stroke;
-    stroke: var(--color-bg-2);
-    stroke-width: 4px;
-  }
-
   @keyframes appear {
     to {
       opacity: 1;
@@ -853,33 +836,6 @@ body {
     opacity: 1;
   }
 
-  .ghost-rim {
-    fill: none;
-    stroke: var(--color-panel);
-    stroke-opacity: 0.9;
-    stroke-width: 1.6;
-    stroke-dasharray: 4 4;
-  }
-
-  /* Home map drawn from the simulated surveys (SVG units are metres). */
-  .survey-plan .plan-label {
-    font-size: 34px;
-    fill: var(--color-panel);
-    stroke: color-mix(in srgb, var(--color-ink) 70%, transparent);
-    stroke-width: 6px;
-  }
-  .survey-plan .lease {
-    stroke: var(--color-panel);
-    stroke-width: 2.2;
-  }
-  .breach-mark {
-    transform-box: fill-box;
-    transform-origin: center;
-  }
-  .plan-veil {
-    fill: var(--color-ink);
-    opacity: 0.35;
-  }
   .plan-box {
     position: relative;
     flex: 1;
@@ -887,19 +843,12 @@ body {
     display: flex;
     overflow: hidden;
   }
-  .plan-box > svg {
-    position: absolute;
+  .plan-box > div,
+  .plan-box > canvas {
+    position: absolute !important;
     inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
   }
-  .plan-north {
-    box-sizing: content-box;
-    padding: 6px 8px 4px;
-    border-radius: 4px;
-    background: color-mix(in srgb, var(--color-panel) 88%, transparent);
-  }
+
   .home-corner .stamp {
     background: var(--color-panel);
   }
@@ -907,38 +856,6 @@ body {
     margin: auto;
     font-size: 14px;
     color: var(--color-ink-faint);
-  }
-
-  .lease {
-    fill: none;
-    stroke: var(--color-ink);
-    stroke-width: 1.8;
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    transition: stroke-dashoffset 1.6s cubic-bezier(0.5, 0, 0.2, 1);
-  }
-  .lease.on {
-    stroke-dashoffset: 0;
-  }
-
-  .breach-mark {
-    opacity: 0;
-    scale: 0.4;
-    transition:
-      opacity 0.4s 1.3s,
-      scale 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 1.3s;
-  }
-  .breach-mark.on {
-    opacity: 1;
-    scale: 1;
-  }
-  .ping {
-    fill: none;
-    stroke: var(--color-violation);
-    stroke-width: 1.5;
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: ping 1.8s ease-out infinite;
   }
 
   /* Sticks to the bottom of the screen only while the story column is in view. */
@@ -1003,16 +920,6 @@ body {
     }
     50% {
       scale: 1 1;
-    }
-  }
-  @keyframes ping {
-    from {
-      scale: 1;
-      opacity: 0.8;
-    }
-    to {
-      scale: 2.8;
-      opacity: 0;
     }
   }
 }
