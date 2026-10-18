@@ -1,0 +1,76 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`synthetic scenario > produces exactly the planted findings 1`] = `
+[
+  {
+    "areaM2": 8320,
+    "cells": 130,
+    "centroid": [
+      1405,
+      1032,
+    ],
+    "id": "R1-1",
+    "maxExceedance": 51.96,
+    "severity": "critical",
+    "status": "violation",
+    "type": "boundary-encroachment",
+    "volumeM3": 183730,
+  },
+  {
+    "areaM2": 1664,
+    "cells": 26,
+    "centroid": [
+      960,
+      1020,
+    ],
+    "id": "R2-1",
+    "maxExceedance": 4.13,
+    "severity": "high",
+    "status": "violation",
+    "type": "depth-limit",
+    "volumeM3": 4947,
+  },
+  {
+    "areaM2": 3264,
+    "cells": 51,
+    "centroid": [
+      1372,
+      1030,
+    ],
+    "id": "R1-2",
+    "maxExceedance": 65.08,
+    "severity": "medium",
+    "status": "warning",
+    "type": "buffer-encroachment",
+    "volumeM3": 124670,
+  },
+  {
+    "areaM2": 2688,
+    "cells": 42,
+    "centroid": [
+      1522,
+      479,
+    ],
+    "id": "R3-1",
+    "maxExceedance": 3.61,
+    "severity": "medium",
+    "status": "warning",
+    "type": "unauthorised-dumping",
+    "volumeM3": 5224,
+  },
+  {
+    "areaM2": 1152,
+    "cells": 18,
+    "centroid": [
+      953,
+      1506,
+    ],
+    "id": "R1-3",
+    "maxExceedance": 1.33,
+    "severity": "low",
+    "status": "warning",
+    "type": "buffer-encroachment",
+    "volumeM3": 1233,
+  },
+]
+`;

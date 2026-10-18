@@ -187,6 +187,43 @@ body {
     border-radius: 50%;
     border: 1.5px solid var(--color-ink-faint);
   }
+  .status-led[data-tone] {
+    border-color: transparent;
+    background: var(--tone);
+  }
+  .status-led[data-tone='critical'],
+  .tone-critical {
+    --tone: var(--color-critical);
+  }
+  .status-led[data-tone='violation'],
+  .tone-violation {
+    --tone: var(--color-violation);
+  }
+  .status-led[data-tone='warning'],
+  .tone-warning {
+    --tone: var(--color-warn);
+  }
+  .status-led[data-tone='clear'],
+  .tone-clear {
+    --tone: var(--color-ok);
+  }
+
+  /* One finding in the list: severity edge, glyph, rule, explanation, figures. */
+  .finding {
+    padding: 12px 14px 12px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--color-line);
+    border-left: 3px solid var(--tone);
+    background: color-mix(in srgb, var(--tone) 5%, var(--color-panel));
+  }
+  .finding-figures {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid var(--color-line);
+  }
 
   .btn {
     font-size: 12.5px;
@@ -547,6 +584,9 @@ body {
     border-radius: 8px;
     background: var(--color-panel-2);
     border: 1px solid var(--color-line);
+  }
+  .status-block[class*='tone-'] {
+    border-left: 3px solid var(--tone);
   }
 
   /* Two survey dates joined by a line. */

@@ -286,17 +286,17 @@ export function terracedDump(p: Vec2, m: Heap): number {
 /** Loads tipped off trucks: one heap at the centre and a loose ring around it. */
 const TIP_OFFSETS: readonly [number, number][] = [
   [0, 0],
-  [24, 6],
-  [-20, 15],
-  [8, -26],
-  [-26, -14],
-  [30, -20],
-  [-6, 30],
+  [18, 5],
+  [-15, 12],
+  [6, -19],
+  [-19, -10],
+  [23, -15],
+  [-4, 22],
 ]
 const tippedHeaps = (p: Vec2, m: Heap) =>
   TIP_OFFSETS.reduce(
     (z, [ox, oy]) =>
-      Math.max(z, mound(p, { cx: m.cx + ox, cy: m.cy + oy, r: 12, height: m.height })),
+      Math.max(z, mound(p, { cx: m.cx + ox, cy: m.cy + oy, r: 15, height: m.height })),
     0,
   )
 
@@ -310,6 +310,9 @@ export function trueSurface(
   let z = ground
   for (const pit of pitsOf(epoch)) z = Math.min(z, pitSurface(p, pit))
   if (epoch === 'baseline') return z + terracedDump(p, BASELINE_DUMP)
+  // Mining only removes rock: where the ramp now crosses old benches it is cut, never
+  // built up above the earlier surface.
+  for (const pit of pitsOf('baseline')) z = Math.min(z, pitSurface(p, pit))
 
   const c = CHANGES
   if (Math.hypot(p.x - c.sump.cx, p.y - c.sump.cy) <= c.sump.r) {

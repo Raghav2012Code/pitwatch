@@ -6,13 +6,8 @@ import { elevationRange } from '../../scene/terrainGeometry'
 import { useTerrain } from '../../state/terrain'
 import { daysBetween, formatDate, formatLat, formatLon } from '../format'
 import { useCountUp } from '../useCountUp'
+import { countText, GLYPH, RULE_NAMES, worstTone } from '../findings'
 import { Row, Section } from './parts'
-
-const RULES = [
-  { id: 'R1', name: 'Lease boundary and buffer' },
-  { id: 'R2', name: 'Approved pit floor' },
-  { id: 'R3', name: 'Permitted dump zones' },
-]
 
 export function OverviewPanel() {
   const survey = useTerrain((s) => s.surveys.current)
@@ -23,27 +18,48 @@ export function OverviewPanel() {
   const range = useMemo(() => survey && elevationRange(survey.elevations), [survey])
   const sigma = survey?.verticalUncertainty
   const m = MINE_INFO
+  const findings = useTerrain((s) => s.findings)
+  const ready = useTerrain((s) => s.status === 'ready')
+  const tone = worstTone(findings)
+  const Glyph = tone === 'clear' ? null : GLYPH[tone]
 
   return (
     <>
       {/* Status first: what the inspector most needs to know. */}
-      <section className="status-block mx-4 mt-4">
+      <section className={`status-block tone-${ready ? tone : 'clear'} mx-4 mt-4`}>
         <div className="flex items-center gap-2.5">
-          <span className="status-led" aria-hidden="true" />
-          <h3 className="cond text-[19px] font-bold text-ink">Not evaluated yet</h3>
+          {ready && Glyph ? (
+            <Glyph className="h-5 w-5 shrink-0 text-(--tone)" />
+          ) : (
+            <span
+              className="status-led"
+              data-tone={ready ? 'clear' : undefined}
+              aria-hidden="true"
+            />
+          )}
+          <h3 className="cond text-[19px] font-bold text-ink">
+            {ready ? countText(findings) : 'Evaluating'}
+          </h3>
         </div>
         <p className="mt-1.5 text-[13px] leading-5 text-ink-dim">
-          The rule engine (M4) will compare the two surveys against the permit and list every
-          finding here, with the numbers behind it.
+          The rule engine compared the current survey with the baseline and the permit. Findings
+          point to where an inspection is most needed; they do not prove a breach on their own.
         </p>
         <ul className="mt-3 space-y-1">
-          {RULES.map((r) => (
-            <li key={r.id} className="flex items-baseline gap-2 text-[12.5px]">
-              <span className="font-mono text-[11px] text-oxide">{r.id}</span>
-              <span className="flex-1 text-ink">{r.name}</span>
-              <span className="text-[11.5px] text-ink-faint">pending</span>
-            </li>
-          ))}
+          {(['R1', 'R2', 'R3'] as const).map((id) => {
+            const own = findings.filter((f) => f.ruleId === id)
+            return (
+              <li key={id} className="flex items-baseline gap-2 text-[12.5px]">
+                <span className="font-mono text-[11px] text-oxide">{id}</span>
+                <span className="flex-1 text-ink">{RULE_NAMES[id]}</span>
+                <span
+                  className={`text-[11.5px] ${own.length ? `tone-${worstTone(own)} text-(--tone)` : 'text-ink-faint'}`}
+                >
+                  {ready ? (own.length ? countText(own) : 'clear') : 'pending'}
+                </span>
+              </li>
+            )
+          })}
         </ul>
       </section>
 

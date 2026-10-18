@@ -50,7 +50,7 @@ export function LayerPanel() {
           ))}
         </ul>
         <p className="mt-2 px-1 text-[11.5px] leading-4 text-ink-faint">
-          Lease boundary, buffer, change and findings layers arrive with the rule engine.
+          Lease boundary, buffer, change and findings layers arrive with the map overlays (M5).
         </p>
       </section>
 

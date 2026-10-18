@@ -4,7 +4,9 @@ import type { TerrainProvider } from '../domain/types'
 import { useTerrain } from './terrain'
 
 describe('terrain store', () => {
-  beforeEach(() => useTerrain.setState({ status: 'idle', surveys: {}, error: undefined }))
+  beforeEach(() =>
+    useTerrain.setState({ status: 'idle', surveys: {}, findings: [], error: undefined }),
+  )
 
   it('loads mine, limits and both surveys from the provider', async () => {
     await useTerrain.getState().load(new SyntheticTerrainProvider())
@@ -13,6 +15,11 @@ describe('terrain store', () => {
     expect(s.mine?.name).toBe('Venthar Ridge Iron Pit')
     expect(s.limits?.safetyBufferMetres).toBe(20)
     expect(s.surveys.current?.elevations.length).toBe(257 * 257)
+    // The rule engine runs on load: the scenario's two violations are found.
+    expect(s.findings.filter((f) => f.status === 'violation').map((f) => f.id)).toEqual([
+      'R1-1',
+      'R2-1',
+    ])
   })
 
   it('reports provider failures instead of throwing', async () => {

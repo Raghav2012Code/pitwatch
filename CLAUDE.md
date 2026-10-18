@@ -36,8 +36,8 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 | M1  | App shell, tooling, UI                                                                  | done   |
 | M2  | Domain types, geo utils, seeded synthetic terrain + tests                               | done   |
 | M3  | 3D terrain view                                                                         | done   |
-| M4  | Compliance engine R1 boundary, R2 depth, R3 dumping (k=2, σ=√(σ1²+σ2²)) + snapshot test | next   |
-| M5  | Overlays                                                                                |        |
+| M4  | Compliance engine R1 boundary, R2 depth, R3 dumping (k=2, σ=√(σ1²+σ2²)) + snapshot test | done   |
+| M5  | Overlays                                                                                | next   |
 | M6  | Panels, picking, measure, profile, epoch slider                                         |        |
 | M7  | Polish                                                                                  |        |
 | M8  | README with Mermaid diagram, Vercel/Netlify config                                      |        |
@@ -45,6 +45,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-18: M4 compliance engine
+
+- `src/compliance/` (pure TS): `config.ts` (k = 2, minChange 0.5 m, severity thresholds: the only place to tune), `change.ts` (Δh = current − baseline; excavated below −(minChange + kσ), filled above +(minChange + kσ), σ = √(σ1² + σ2²)), `cluster.ts` (8-connected components, same key only), `engine.ts` (`ruleBoundary` R1, `ruleDepth` R2, `ruleDumping` R3, `severityOf`, `explain`, `evaluate`).
+- R1: excavated cell outside the lease = violation, inside but within the buffer = warning. R2: inside a pit zone, below the approved floor by more than kσ = violation, within kσ = warning; uses the current survey's σ (the floor is a fixed level, not a second survey) and counts volume below the floor only. R3: filled cell outside every dump zone = warning.
+- Severity: violation is critical if area, volume or exceedance reaches `critical`, else high; warning is medium if it reaches `mediumWarning`, else low. Findings sorted violations first, then severity, then area; ids `R1-1`, `R2-1`, ...
+- Scenario result (snapshot in `src/compliance/__snapshots__`): R1-1 encroachment (violation, critical), R2-1 sump (violation, high), R1-2 the pushback where it crosses the buffer (warning), R3-1 tipped heaps (warning), R1-3 buffer scrape (warning, low).
+- Scenario fixes so only planted changes are flagged: the current pit is never above the baseline pit surface (mining only removes rock; the ramp had made false fills), tipped heaps packed closer so they form one finding.
+- Wired in: terrain store runs `evaluate` on load (`change`, `findings`); top-bar status shows counts with a tone LED; Overview status block lists each rule's result; Findings tab lists cards (glyph, rule, status and severity, explanation, area, volume, max excess, centre) and the change threshold used. Map overlays and fly-to come in M5/M6.
 
 ### 2026-10-18: realism pass
 

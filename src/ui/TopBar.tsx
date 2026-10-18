@@ -1,5 +1,7 @@
 import { MINE_INFO } from '../data/fixtures/mine'
 import { useAppStore } from '../state/store'
+import { useTerrain } from '../state/terrain'
+import { countText, worstTone } from './findings'
 import { fullscreenSupported, toggleFullscreen, useIsFullscreen } from './fullscreen'
 import { FullscreenIcon, PanelLeftIcon, PanelRightIcon, PitMark } from './icons'
 import { HOME_HREF } from './route'
@@ -13,6 +15,8 @@ export function TopBar() {
   const toggleLayers = useAppStore((s) => s.toggleLayers)
   const toggleDetails = useAppStore((s) => s.toggleDetails)
   const fullscreen = useIsFullscreen()
+  const ready = useTerrain((s) => s.status === 'ready')
+  const findings = useTerrain((s) => s.findings)
 
   return (
     <header className="topbar enter-down z-30 flex h-14 shrink-0 items-center gap-4 px-4">
@@ -34,8 +38,14 @@ export function TopBar() {
 
       <div className="ml-auto flex items-center gap-2.5">
         <div className="status-light hidden md:flex" role="status">
-          <span className="status-led" aria-hidden="true" />
-          <span className="whitespace-nowrap">Compliance not evaluated</span>
+          <span
+            className="status-led"
+            data-tone={ready ? worstTone(findings) : undefined}
+            aria-hidden="true"
+          />
+          <span className="whitespace-nowrap">
+            {ready ? countText(findings) : 'Compliance not evaluated'}
+          </span>
         </div>
 
         <span
