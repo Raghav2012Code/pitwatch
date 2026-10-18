@@ -7,7 +7,6 @@ import { HomePage } from './ui/HomePage'
 import { LayerPanel } from './ui/LayerPanel'
 import { useRoute } from './ui/route'
 import { SidePanel } from './ui/SidePanel'
-import { Timeline } from './ui/Timeline'
 import { TopBar } from './ui/TopBar'
 import { Viewport } from './ui/Viewport'
 
@@ -61,7 +60,6 @@ function Monitor() {
         <Viewport />
         <LayerPanel />
         <SidePanel />
-        <Timeline />
       </div>
     </div>
   )

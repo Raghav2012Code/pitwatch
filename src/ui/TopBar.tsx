@@ -1,10 +1,10 @@
-import { MINE_INFO, SURVEY_EPOCHS } from '../data/fixtures/mine'
+import { MINE_INFO } from '../data/fixtures/mine'
 import { useAppStore } from '../state/store'
-import { formatDate } from './format'
 import { fullscreenSupported, toggleFullscreen, useIsFullscreen } from './fullscreen'
 import { FullscreenIcon, PanelLeftIcon, PanelRightIcon, PitMark } from './icons'
 import { HOME_HREF } from './route'
 
+/** Brand, which mine, overall status, data warning and view toggles. Dates live in the timeline. */
 export function TopBar() {
   const drawerOpen = useAppStore((s) => s.drawerOpen)
   const setDrawerOpen = useAppStore((s) => s.setDrawerOpen)
@@ -15,46 +15,49 @@ export function TopBar() {
   const fullscreen = useIsFullscreen()
 
   return (
-    <header className="topbar enter-down z-30 flex h-14 shrink-0 items-center gap-5 px-4">
-      <a href={HOME_HREF} className="flex items-center gap-3" aria-label="PitWatch home">
+    <header className="topbar enter-down z-30 flex h-14 shrink-0 items-center gap-4 px-4">
+      <a href={HOME_HREF} className="flex items-center gap-2.5" aria-label="PitWatch home">
         <span className="brand-mark">
           <PitMark className="h-5 w-5" />
         </span>
-        <div className="leading-tight">
-          <div className="cond text-[22px] font-bold text-ink">PitWatch</div>
-          <div className="hidden text-[11px] whitespace-nowrap text-ink-faint xl:block">
-            Compliance monitor
-          </div>
-        </div>
+        <span className="cond text-[21px] font-bold text-ink">PitWatch</span>
       </a>
 
-      <div className="hidden h-8 w-px bg-line sm:block" />
+      <div className="hidden h-6 w-px bg-line-strong sm:block" />
 
       <div className="min-w-0 leading-tight">
-        <div className="cond truncate text-[17px] font-semibold text-ink">{MINE_INFO.name}</div>
-        <div className="truncate text-[11px] text-ink-faint">
+        <h1 className="cond truncate text-[17px] font-semibold text-ink">{MINE_INFO.name}</h1>
+        <div className="hidden truncate text-[11.5px] text-ink-faint sm:block">
           {MINE_INFO.mineral}, {MINE_INFO.operator}
         </div>
       </div>
 
-      <div className="hidden items-center gap-2 xl:flex">
-        {SURVEY_EPOCHS.map((e) => (
-          <span key={e.id} className="chip">
-            <span className="text-ink-faint">{e.label}</span>
-            <span className="font-mono text-ink">{formatDate(e.date)}</span>
-          </span>
-        ))}
-      </div>
+      <div className="ml-auto flex items-center gap-2.5">
+        <div className="status-light hidden md:flex" role="status">
+          <span className="status-led" aria-hidden="true" />
+          <span className="whitespace-nowrap">Compliance not evaluated</span>
+        </div>
 
-      <div className="ml-auto flex items-center gap-3">
-        <div role="group" aria-label="View" className="hidden items-center gap-1 md:flex">
+        <span
+          className="stamp"
+          title="Every terrain value, survey and finding in this app is synthetic. The mine is fictional."
+        >
+          <span className="stamp-dot" aria-hidden="true" />
+          SIMULATED DATA
+        </span>
+
+        <div
+          role="group"
+          aria-label="View"
+          className="hidden items-center gap-0.5 border-l border-line pl-2.5 md:flex"
+        >
           <button
             type="button"
             className="icon-btn"
             aria-pressed={!layersHidden}
             aria-keyshortcuts="["
-            title="Layers panel ( [ )"
-            aria-label="Layers panel"
+            title="Map panel ( [ )"
+            aria-label="Map panel"
             onClick={toggleLayers}
           >
             <PanelLeftIcon className="h-[18px] w-[18px]" />
@@ -83,19 +86,6 @@ export function TopBar() {
               <FullscreenIcon className="h-[18px] w-[18px]" />
             </button>
           )}
-        </div>
-
-        <span
-          className="stamp"
-          title="Every terrain value, survey and finding in this app is synthetic. The mine is fictional."
-        >
-          <span className="stamp-dot" aria-hidden="true" />
-          SIMULATED DATA
-        </span>
-
-        <div className="status-light hidden md:flex" role="status">
-          <span className="status-led" aria-hidden="true" />
-          <span className="whitespace-nowrap">Compliance not evaluated</span>
         </div>
 
         <button

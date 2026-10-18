@@ -35,7 +35,7 @@ export const SURFACE = {
 
 /** Map key: what the main colours in the image mean. */
 export const SURFACE_KEY: readonly { label: string; rgb: RGB }[] = [
-  { label: 'Scrub and grass', rgb: SURFACE.scrub },
+  { label: 'Scrub', rgb: SURFACE.scrub },
   { label: 'Bare soil', rgb: SURFACE.soil },
   { label: 'Exposed rock', rgb: SURFACE.rockRed },
   { label: 'Waste rock', rgb: SURFACE.waste },

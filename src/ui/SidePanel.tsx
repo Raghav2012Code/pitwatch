@@ -39,7 +39,7 @@ export function SidePanel() {
     <aside
       id="side-panel"
       aria-label="Details"
-      className={`${drawerOpen ? 'flex' : 'hidden'} details-panel sheet hud-panel enter-right absolute top-3 right-3 bottom-3 z-20 w-[min(360px,calc(100%-24px))] flex-col lg:flex`}
+      className={`${drawerOpen ? 'flex' : 'hidden'} details-panel card enter-right absolute top-4 right-4 bottom-4 z-20 w-[min(360px,calc(100%-32px))] overflow-hidden flex-col lg:flex`}
     >
       <div role="tablist" aria-label="Details sections" className="tabs">
         {TABS.map((tab, i) => {

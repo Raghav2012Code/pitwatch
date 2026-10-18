@@ -5,6 +5,7 @@ import { useTerrain } from '../state/terrain'
 import { CameraRig } from './CameraRig'
 import { Terrain } from './Terrain'
 import { toScene } from './terrainGeometry'
+import { ViewOffset } from './ViewOffset'
 
 /** Horizon colour behind the model; fog fades distant terrain into it. */
 const horizon = () =>
@@ -59,6 +60,7 @@ export default function TerrainScene() {
       />
       <Terrain survey={survey} />
       <CameraRig pit={aim.pit} floorRL={aim.floorRL} />
+      <ViewOffset region=".stage" />
     </Canvas>
   )
 }

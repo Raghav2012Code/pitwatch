@@ -22,8 +22,9 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 ## Design
 
-- Monitor layout: full-bleed map viewport with floating paper panels (layer panel left, details panel right, timeline bottom), map neatline on `.stage`. Home page is a scroll story on a pinned map (`#/`), monitor at `#/monitor`.
-- Topographic survey-sheet look: limestone paper base, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity and strata bands only (never status). Contour-line backdrop, double map neatline around the stage, panels are paper `.sheet`s with a strata band (`--strata`) down the left edge.
+- Monitor layout: full-screen 3D canvas under a sky gradient; a `ViewOffset` shifts the projection so the model centres in `.stage` (the area the side cards leave free, click-through except its controls). Left "Map" card (layers, key, exaggeration), right details card (tabs), camera presets + compass top-right, scale bar top-left, timeline pill bottom-centre. Soft `.card` surfaces (8 px radius, shadow); strata stripes only in the top-bar rule and the home page.
+- Each fact appears once: mine name in the top bar, survey dates in the timeline and the Surveys section, nothing duplicated in map overlays.
+- Home page is a scroll story on a pinned map (`#/`), monitor at `#/monitor`. Topographic look: limestone paper, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity only (never status).
 - Type: Archivo variable; `.cond` (font-stretch 72%) for headings and big figures. JetBrains Mono for coordinates and dates.
 - All colours are tokens in `@theme`; components use `var(--color-*)` or `color-mix(...)`. Never hardcode a colour in a component.
 - Severity colour always pairs with a glyph shape: warning = triangle, violation = octagon, critical = diamond.
@@ -44,6 +45,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-18: monitor layout redesign
+
+- Map fills the screen: canvas moved out of the framed stage to `inset-0`; `src/scene/ViewOffset.tsx` uses `camera.setViewOffset` + ResizeObserver so the model centres in `.stage` and glides as panels open/close. No neatline frame or contour backdrop on the monitor.
+- Left card is now "Map": three working layer switches (pill switches), one line about the layers still to come, the key for the active colouring (`MapKey`), the exaggeration slider, and the orbit/R hint. Disabled placeholder rows removed.
+- Overview rebuilt: status block first ("Not evaluated yet" + R1–R3 pending), then Surveys (date pair, interval), Current surface (lowest/highest ± σ, grid), Lease (operator, lease area derived from the polygon, buffer, approved floor, origin). KPI tiles and `Kpi` removed; `Row` takes an optional provenance tag.
+- Top bar: brand, mine (one line + subtitle), status, SIMULATED DATA, view toggles. Survey date chips removed.
+- Timeline is a compact pill inside the map with month initials, an "on map" marker on the current survey, and container queries for narrow stages. Title block removed (duplicate). Scale bar is a small chip top-left.
+- CSS: `.card`, `.panel-title`, `.map-chip`, `.switch`, `.status-block`, `.survey-pair`, `.epoch-dot`, `.map-tag`; removed `.sheet`, `.hud-sheet`, `.kpi*`, `.chip`, `.toggle`, `.panel-head`, frame/fade entrance classes.
 
 ### 2026-10-18: natural-looking 3D model
 
