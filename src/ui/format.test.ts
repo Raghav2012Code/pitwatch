@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { daysBetween, formatDate, formatLat, formatLon, monthTicks } from './format'
+import { addDays, daysBetween, formatDate, formatLat, formatLon, monthTicks } from './format'
 
 describe('format', () => {
   it('formats ISO dates without timezone drift', () => {
@@ -9,6 +9,8 @@ describe('format', () => {
   it('counts days between survey dates', () => {
     expect(daysBetween('2025-11-14', '2026-08-22')).toBe(281)
     expect(daysBetween('2026-01-01', '2026-01-01')).toBe(0)
+    expect(addDays('2025-11-14', 281)).toBe('2026-08-22')
+    expect(addDays('2025-12-31', 1)).toBe('2026-01-01')
   })
 
   it('formats hemispheres', () => {

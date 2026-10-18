@@ -16,10 +16,26 @@ const surfaceUniforms = {
   uInk: { value: new THREE.Color(CONTOUR_INK) },
 }
 
+/*
+ * Morph: every vertex also carries the other survey's height (aAltY) and normal
+ * (aAltNormal); uMorph blends 0 = this survey, 1 = the other. Without a second survey the
+ * alternates equal the originals, so uMorph has no effect.
+ */
+const MORPH_HEAD = 'attribute float aAltY;\nuniform float uMorph;\n'
+const MORPH_POSITION =
+  'vec3 transformed = vec3(position);\n  transformed.y = mix(position.y, aAltY, uMorph);'
+
 const ELEVATION_VARYING = {
-  head: 'varying float vElev;\nuniform float uBase;\nattribute float aChange;\nattribute vec3 aFinding;\nvarying float vChange;\nvarying vec3 vFinding;\n',
-  body: '#include <begin_vertex>\n  vElev = position.y + uBase;\n  vChange = aChange;\n  vFinding = aFinding;',
+  head:
+    MORPH_HEAD +
+    'attribute vec3 aAltNormal;\nvarying float vElev;\nuniform float uBase;\nattribute float aChange;\nattribute vec3 aFinding;\nvarying float vChange;\nvarying vec3 vFinding;\n',
+  normal: 'vec3 objectNormal = normalize(mix(vec3(normal), aAltNormal, uMorph));',
+  body:
+    MORPH_POSITION +
+    '\n  vElev = transformed.y + uBase;\n  vChange = aChange;\n  vFinding = aFinding;',
 }
+
+type Uniform<T> = { value: T }
 
 /**
  * Per-cell overlay marks, one value per grid cell. `change`: −1 excavated, +1 filled.
@@ -34,7 +50,11 @@ export interface TerrainMarks {
  * Surface material: aerial image or elevation tint (blended by a uniform), lit by the
  * scene, with optional contour lines drawn in the fragment shader.
  */
-function makeSurfaceMaterial(map: THREE.Texture | null) {
+function makeSurfaceMaterial(
+  map: THREE.Texture | null,
+  map2: THREE.Texture | null,
+  morph: Uniform<number>,
+) {
   const m = new THREE.MeshStandardMaterial({
     map,
     vertexColors: true,
@@ -53,12 +73,17 @@ function makeSurfaceMaterial(map: THREE.Texture | null) {
       uWarn: color(OVERLAY.warning),
       uViol: color(OVERLAY.violation),
       uCrit: color(OVERLAY.critical),
+      uMorph: morph,
+      uMap2: { value: map2 ?? map },
     })
     shader.vertexShader =
       ELEVATION_VARYING.head +
-      shader.vertexShader.replace('#include <begin_vertex>', ELEVATION_VARYING.body)
+      shader.vertexShader
+        .replace('#include <beginnormal_vertex>', ELEVATION_VARYING.normal)
+        .replace('#include <begin_vertex>', ELEVATION_VARYING.body)
     shader.fragmentShader =
       'varying float vElev;\nuniform float uInterval;\nuniform float uContours;\nuniform float uTint;\nuniform vec3 uInk;\n' +
+      'uniform float uMorph;\nuniform sampler2D uMap2;\n' +
       'varying float vChange;\nvarying vec3 vFinding;\nuniform vec2 uOverlay;\nuniform vec3 uCut;\nuniform vec3 uFill;\nuniform vec3 uWarn;\nuniform vec3 uViol;\nuniform vec3 uCrit;\n' +
       shader.fragmentShader
         .replace(
@@ -66,7 +91,7 @@ function makeSurfaceMaterial(map: THREE.Texture | null) {
           `#ifdef USE_MAP
   // With the tint on, keep the photo's light and dark detail (tracks, scrub, rock) at
   // reduced strength, so the tint reads as a survey layer over real ground.
-  vec4 photo = texture2D(map, vMapUv);
+  vec4 photo = mix(texture2D(map, vMapUv), texture2D(uMap2, vMapUv), uMorph);
   float luma = dot(photo.rgb, vec3(0.2126, 0.7152, 0.0722));
   vec3 detail = vec3(clamp(mix(1.0, luma / 0.22, 0.35), 0.75, 1.2));
   diffuseColor.rgb *= mix(photo.rgb, detail, uTint);
@@ -105,13 +130,14 @@ function makeSurfaceMaterial(map: THREE.Texture | null) {
  * Block sides painted as a soil profile by depth below the ground above: topsoil,
  * red laterite, weathered rock, bedrock, with soft transitions and faint bedding.
  */
-function makeSkirtMaterial() {
+function makeSkirtMaterial(morph: Uniform<number>) {
   const m = new THREE.MeshStandardMaterial({ roughness: 1, side: THREE.DoubleSide })
   const c = Object.fromEntries(
     Object.entries(SOIL_PROFILE).map(([k, v]) => [k, { value: new THREE.Color(v) }]),
   )
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uBase = { value: BASE_RL }
+    shader.uniforms.uMorph = morph
     Object.assign(shader.uniforms, {
       uTopsoil: c.topsoil,
       uLaterite: c.laterite,
@@ -119,10 +145,12 @@ function makeSkirtMaterial() {
       uBedrock: c.bedrock,
     })
     shader.vertexShader =
-      'attribute float aTop;\nvarying float vDepth;\nvarying float vElev;\nuniform float uBase;\n' +
+      MORPH_HEAD +
+      'attribute float aTop;\nattribute float aAltTop;\nvarying float vDepth;\nvarying float vElev;\nuniform float uBase;\n' +
       shader.vertexShader.replace(
         '#include <begin_vertex>',
-        '#include <begin_vertex>\n  vElev = position.y + uBase;\n  vDepth = aTop - vElev;',
+        MORPH_POSITION +
+          '\n  vElev = transformed.y + uBase;\n  vDepth = mix(aTop, aAltTop, uMorph) - vElev;',
       )
     shader.fragmentShader =
       'varying float vDepth;\nvarying float vElev;\nuniform vec3 uTopsoil;\nuniform vec3 uLaterite;\nuniform vec3 uSaprolite;\nuniform vec3 uBedrock;\n' +
@@ -141,6 +169,33 @@ function makeSkirtMaterial() {
   m.customProgramCacheKey = () => 'terrain-skirt-soil'
   return m
 }
+
+/** Shadow-map material that follows the morph, so shadows match the blended surface. */
+function makeDepthMaterial(morph: Uniform<number>) {
+  const m = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking })
+  m.onBeforeCompile = (shader) => {
+    shader.uniforms.uMorph = morph
+    shader.vertexShader =
+      MORPH_HEAD + shader.vertexShader.replace('#include <begin_vertex>', MORPH_POSITION)
+  }
+  m.customProgramCacheKey = () => 'terrain-depth-morph'
+  return m
+}
+
+/** Vertex normals of a surface built from `elevations`, for the morph target. */
+function normalsOf(g: TerrainSurvey['grid'], elevations: Float32Array) {
+  const t = buildTerrainArrays(g, elevations)
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute('position', new THREE.BufferAttribute(t.positions, 3))
+  geo.setIndex(new THREE.BufferAttribute(t.index, 1))
+  geo.computeVertexNormals()
+  const n = geo.getAttribute('normal').array as Float32Array
+  geo.dispose()
+  return n
+}
+
+/** The y of each xyz position. */
+const ys = (positions: Float32Array) => positions.filter((_, i) => i % 3 === 1)
 
 function orthoTexture(photo: Orthophoto, maxAnisotropy: number) {
   const t = new THREE.DataTexture(photo.rgba, photo.width, photo.height, THREE.RGBAFormat)
@@ -174,16 +229,21 @@ function geometryFrom(
 /**
  * Terrain surface plus block sides. Built once per survey; exaggeration is a y-scale.
  * Optional `marks` with `overlay` = [change, findings] strengths (0–1) colour cells on the
- * surface; strengths ease towards their targets.
+ * surface; strengths ease towards their targets. Optional `morphTo` (same grid) with
+ * `morph` (read every frame, 0–1) blends shape, shading and image towards that survey.
  */
 export function Terrain({
   survey,
   marks,
   overlay = [0, 0],
+  morphTo,
+  morph,
 }: {
   survey: TerrainSurvey
   marks?: TerrainMarks
   overlay?: readonly [number, number]
+  morphTo?: TerrainSurvey
+  morph?: () => number
 }) {
   const exaggeration = useAppStore((s) => s.exaggeration)
   const layers = useAppStore((s) => s.layers)
@@ -194,25 +254,50 @@ export function Terrain({
     const t = buildTerrainArrays(survey.grid, survey.elevations)
     const s = buildSkirtArrays(survey.grid, survey.elevations)
     const n = survey.grid.cols * survey.grid.rows
+    const alt = morphTo ?? survey
+    const altSkirt = morphTo ? buildSkirtArrays(alt.grid, alt.elevations) : s
+    const surface = geometryFrom(t.positions, t.index, {
+      color: [t.colors, 3],
+      uv: [t.uvs, 2],
+      aChange: [marks?.change ?? new Float32Array(n), 1],
+      aFinding: [marks?.finding ?? new Float32Array(n * 3), 3],
+      aAltY: [Float32Array.from(alt.elevations, (z) => z - BASE_RL), 1],
+    })
+    const ownNormals = surface.getAttribute('normal').array as Float32Array
+    surface.setAttribute(
+      'aAltNormal',
+      new THREE.BufferAttribute(morphTo ? normalsOf(alt.grid, alt.elevations) : ownNormals, 3),
+    )
     return {
-      surface: geometryFrom(t.positions, t.index, {
-        color: [t.colors, 3],
-        uv: [t.uvs, 2],
-        aChange: [marks?.change ?? new Float32Array(n), 1],
-        aFinding: [marks?.finding ?? new Float32Array(n * 3), 3],
+      surface,
+      skirt: geometryFrom(s.positions, s.index, {
+        aTop: [s.tops, 1],
+        aAltTop: [altSkirt.tops, 1],
+        aAltY: [ys(altSkirt.positions), 1],
       }),
-      skirt: geometryFrom(s.positions, s.index, { aTop: [s.tops, 1] }),
     }
-  }, [survey, marks])
+  }, [survey, morphTo, marks])
 
   const texture = useMemo(
     () => (survey.orthophoto ? orthoTexture(survey.orthophoto, maxAnisotropy) : null),
     [survey, maxAnisotropy],
   )
-  const materials = useMemo(
-    () => ({ surface: makeSurfaceMaterial(texture), skirt: makeSkirtMaterial() }),
-    [texture],
+  const texture2 = useMemo(
+    () => (morphTo?.orthophoto ? orthoTexture(morphTo.orthophoto, maxAnisotropy) : null),
+    [morphTo, maxAnisotropy],
   )
+  const materials = useMemo(() => {
+    const morphU = { value: 0 }
+    return {
+      getMorph: () => morphU.value,
+      setMorph: (v: number) => {
+        morphU.value = v
+      },
+      surface: makeSurfaceMaterial(texture, texture2, morphU),
+      skirt: makeSkirtMaterial(morphU),
+      depth: makeDepthMaterial(morphU),
+    }
+  }, [texture, texture2])
 
   useEffect(
     () => () => {
@@ -224,10 +309,12 @@ export function Terrain({
   useEffect(
     () => () => {
       texture?.dispose()
+      texture2?.dispose()
       materials.surface.dispose()
       materials.skirt.dispose()
+      materials.depth.dispose()
     },
-    [texture, materials],
+    [texture, texture2, materials],
   )
 
   // Without an aerial image the tint is the only colouring available.
@@ -241,6 +328,17 @@ export function Terrain({
   // Ease overlay strengths towards their targets (about 0.6 s).
   const [targetChange, targetFindings] = overlay
   useFrame((_, dt) => {
+    if (morph) {
+      // Glide towards the requested blend instead of jumping with each scroll event.
+      const target = Math.min(1, Math.max(0, morph()))
+      const m = materials.getMorph()
+      if (Math.abs(target - m) > 1e-4) {
+        materials.setMorph(
+          Math.abs(target - m) < 0.002 ? target : m + (target - m) * Math.min(1, dt * 8),
+        )
+        invalidate()
+      }
+    }
     const u = (materials.surface.userData.overlay as { value: THREE.Vector2 }).value
     const k = Math.min(1, dt * 5)
     const dx = targetChange - u.x
@@ -252,7 +350,13 @@ export function Terrain({
 
   return (
     <group scale={[1, exaggeration, 1]} visible={layers.terrain}>
-      <mesh geometry={geometry.surface} material={materials.surface} castShadow receiveShadow />
+      <mesh
+        geometry={geometry.surface}
+        material={materials.surface}
+        customDepthMaterial={materials.depth}
+        castShadow
+        receiveShadow
+      />
       <mesh geometry={geometry.skirt} material={materials.skirt} receiveShadow />
     </group>
   )

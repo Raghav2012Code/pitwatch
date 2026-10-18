@@ -5,6 +5,7 @@ import * as THREE from 'three'
 import type { ComplianceFinding, Polygon, TerrainSurvey } from '../domain/types'
 import { sampleBilinear } from '../geo/grid'
 import { useAppStore } from '../state/store'
+import { useStory } from '../state/story'
 import { useTerrain } from '../state/terrain'
 import { OVERLAY } from './palette'
 import { Terrain, type TerrainMarks } from './Terrain'
@@ -13,7 +14,8 @@ import { BASE_RL, toScene } from './terrainGeometry'
 /*
  * The home-page model: the same simulated surveys and engine output as the monitor,
  * slowly turning (whole block in frame) while the story steps change what it shows:
- *   0–1 baseline, 2 current, 3 measured change, 4+ findings with lease line and pins.
+ *   baseline, morphing smoothly to current as the page scrolls between those two steps,
+ *   then 3 measured change, 4+ findings with lease line and pins.
  * No controls, so scrolling the page is never captured by the canvas.
  */
 
@@ -26,6 +28,9 @@ const TONE_COLOR = {
   violation: OVERLAY.violation,
   critical: OVERLAY.critical,
 } as const
+
+/** Scroll position in time, 0 = baseline, 1 = current (read every frame). */
+const readTime = () => useStory.getState().t
 
 const toneOf = (f: ComplianceFinding) => (f.severity === 'critical' ? 'critical' : f.status)
 
@@ -171,12 +176,13 @@ export default function HomeScene({ step }: { step: number }) {
         shadow-bias={-0.0004}
         shadow-normalBias={1.5}
       />
-      <group visible={step < 2}>
-        <Terrain survey={baseline} />
-      </group>
-      <group visible={step >= 2}>
-        <Terrain survey={current} marks={marks} overlay={overlay} />
-      </group>
+      <Terrain
+        survey={baseline}
+        morphTo={current}
+        morph={readTime}
+        marks={marks}
+        overlay={overlay}
+      />
       {step >= 4 && lease && <Line points={lease} color="#fbfaf6" lineWidth={2.5} />}
       {step >= 4 && findings.map((f) => <Pin key={f.id} f={f} survey={current} ex={ex} />)}
       <Orbit target={target} />

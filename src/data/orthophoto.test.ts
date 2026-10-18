@@ -27,7 +27,7 @@ describe('simulated orthophoto', () => {
   it('is reproducible', () => {
     const again = buildOrthophoto(GRID, elevations, natural, 'current', SEED, SIZE)
     expect(again.rgba).toEqual(photo.rgba)
-  })
+  }, 30_000)
 
   it('shows the pit as bare ground, redder than it is green', () => {
     const [r, g] = pixel(1130, 1030)

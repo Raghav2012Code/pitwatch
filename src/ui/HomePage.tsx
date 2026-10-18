@@ -1,15 +1,17 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
 import { SURVEY_EPOCHS } from '../data/fixtures/mine'
-import { daysBetween, formatDate, monthTicks } from './format'
+import { daysBetween, formatDate } from './format'
 import { PitMark } from './icons'
 import { ProvenanceTag } from './ProvenanceTag'
 import { WorkerTerrainProvider } from '../data/WorkerTerrainProvider'
+import { useStory } from '../state/story'
 import { useTerrain } from '../state/terrain'
 import { countText } from './findings'
 import { MONITOR_HREF } from './route'
 import { NoiseCheck } from './home/NoiseCheck'
 import { PermitSheet } from './home/PermitSheet'
 import { Resolution } from './home/Resolution'
+import { StoryClock } from './home/StoryClock'
 import { SceneErrorBoundary } from './viewport/SceneErrorBoundary'
 import { Relief } from './schematic'
 
@@ -24,7 +26,6 @@ const HomeScene = lazy(() => import('../scene/HomeScene'))
 
 const [BASELINE, CURRENT] = SURVEY_EPOCHS
 const DAYS = BASELINE && CURRENT ? daysBetween(BASELINE.date, CURRENT.date) : 0
-const MONTHS = BASELINE && CURRENT ? monthTicks(BASELINE.date, CURRENT.date) : []
 
 const STEPS = [
   'Start',
@@ -73,13 +74,40 @@ export function HomePage() {
     )
     root.querySelectorAll('.reveal').forEach((el) => reveal.observe(el))
 
+    // Time between the surveys follows the scroll: 0 while the baseline block sits on the
+    // activation line, 1 once the current-survey block reaches it, smooth in between.
+    const first = root.querySelector<HTMLElement>('[data-step="1"]')
+    const second = root.querySelector<HTMLElement>('[data-step="2"]')
+    let frame = 0
+    const track = () => {
+      frame = 0
+      if (!first || !second) return
+      const top = root.getBoundingClientRect().top
+      const line = root.clientHeight * 0.65
+      const centre = (el: HTMLElement) => {
+        const r = el.getBoundingClientRect()
+        return r.top - top + r.height / 2
+      }
+      const c1 = centre(first)
+      const c2 = centre(second)
+      const t = Math.min(1, Math.max(0, (c1 - line) / (c1 - c2)))
+      if (Math.abs(t - useStory.getState().t) > 0.0005) useStory.setState({ t })
+    }
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(track)
+    }
+    track()
+    root.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+
     return () => {
       io.disconnect()
       reveal.disconnect()
+      root.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      cancelAnimationFrame(frame)
     }
   }, [])
-
-  const on = (n: number) => (step >= n ? 'on' : '')
 
   return (
     <div ref={rootRef} className="home h-full overflow-y-auto">
@@ -119,31 +147,7 @@ export function HomePage() {
               )}
             </div>
 
-            {/* Survey clock: where in time the map is. */}
-            <div className="story-clock">
-              <div className="flex items-baseline justify-between text-[12px]">
-                <span className={step >= 2 ? 'text-ink-faint' : 'font-semibold text-ink'}>
-                  {BASELINE && formatDate(BASELINE.date)}
-                </span>
-                <span className="cond text-[14px] font-semibold text-ink-dim">
-                  {DAYS} days between surveys
-                </span>
-                <span className={step >= 2 ? 'font-semibold text-ink' : 'text-ink-faint'}>
-                  {CURRENT && formatDate(CURRENT.date)}
-                </span>
-              </div>
-              <div className="relative mt-2 h-4">
-                <div className="track absolute inset-x-0 top-2" />
-                {MONTHS.map((m) => (
-                  <span
-                    key={m.label}
-                    className="absolute top-1 h-2 w-px bg-ink-faint"
-                    style={{ left: `${m.t * 100}%` }}
-                  />
-                ))}
-                <span className={`clock-marker ${on(2)}`} />
-              </div>
-            </div>
+            <StoryClock />
           </div>
         </div>
 
@@ -179,8 +183,8 @@ export function HomePage() {
             title="Then, the ground as it is."
           >
             The same grid surveyed again {DAYS} days later. The west wall has been pushed back, a
-            new cut has opened on the east side and the floor is a bench deeper. The old rim stays
-            as a dashed line.
+            new cut has opened on the east side and the floor is a bench deeper. Scroll slowly and
+            the model moves through the days between the two surveys.
           </Step>
 
           <Step n={3} step={step} label="Measured change" title="Subtract one from the other.">

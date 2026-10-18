@@ -772,10 +772,20 @@ body {
     background: var(--color-accent);
     border: 2px solid var(--color-panel);
     box-shadow: 0 0 0 1px var(--color-accent);
-    transition: left 1.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+    left: calc(var(--t, 0) * 100%);
+    transition: left 0.12s linear;
   }
-  .clock-marker.on {
-    left: 100%;
+  .clock-fill {
+    height: 2px;
+    width: calc(var(--t, 0) * 100%);
+    background: var(--color-accent);
+    transition: width 0.12s linear;
+  }
+  .clock-tick {
+    background: var(--color-ink-faint);
+  }
+  .clock-tick.passed {
+    background: var(--color-accent);
   }
 
   .story-steps {

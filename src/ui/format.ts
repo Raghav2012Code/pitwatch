@@ -14,6 +14,11 @@ export function formatDate(iso: string): string {
   return DATE_FMT.format(toMs(iso))
 }
 
+/** ISO date `days` after `iso`. */
+export function addDays(iso: string, days: number): string {
+  return new Date(toMs(iso) + days * 86_400_000).toISOString().slice(0, 10)
+}
+
 /** Whole days from a to b (ISO dates). */
 export function daysBetween(a: string, b: string): number {
   return Math.round((toMs(b) - toMs(a)) / 86_400_000)

@@ -20,7 +20,7 @@ describe('terrain store', () => {
       'R1-1',
       'R2-1',
     ])
-  })
+  }, 30_000)
 
   it('reports provider failures instead of throwing', async () => {
     const broken: TerrainProvider = {

@@ -46,6 +46,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-18: home timeline follows the scroll
+
+- `src/state/story.ts` (`useStory`, t from 0 = baseline to 1 = current) is set from the scroll position: 0 while the baseline block sits on the 65% activation line, 1 when the current-survey block reaches it, linear in between (rAF-throttled scroll listener in `HomePage`).
+- `src/ui/home/StoryClock.tsx` replaces the inline clock: the marker slides and the track fills with t (CSS `--t`), month ticks turn blue as they pass, the readout counts the date and day (`addDays` in `format.ts`, tested), and a status line says when the model is a blend between surveys ("an illustration, not a survey").
+- `Terrain` gained `morphTo` + `morph`: every vertex also carries the other survey's height and normal (`aAltY`, `aAltNormal`), the skirt its alternate top, the image blends with a second texture, and a custom depth material keeps shadows in step. `uMorph` eases towards the requested value so scroll steps glide. The home model is now one morphing mesh instead of two swapped ones.
+
 ### 2026-10-18: home model framing
 
 - The home orbit now circles the block centre (not the pit) at about 38° elevation, and its distance is recomputed from the canvas size each frame so the whole 2048 m block, corners included, stays in view at every angle and aspect ratio (`Orbit` in `HomeScene.tsx`).
