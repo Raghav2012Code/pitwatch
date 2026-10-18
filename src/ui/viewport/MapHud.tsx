@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
 import { MINE_INFO, SURVEY_EPOCHS } from '../../data/fixtures/mine'
+import { SURFACE_KEY } from '../../data/orthophoto'
 import { useCameraState } from '../../scene/cameraState'
 import { rampGradient } from '../../scene/palette'
 import { scaleBar, type ViewPreset } from '../../scene/presets'
@@ -97,9 +98,11 @@ export function ViewControls() {
 export function TerrainLegend() {
   const survey = useTerrain((s) => s.surveys.current)
   const contours = useAppStore((s) => s.layers.contours)
+  const tintOn = useAppStore((s) => s.layers.tint)
   const range = useMemo(() => survey && elevationRange(survey.elevations), [survey])
   if (!survey || !range) return null
   const sigma = survey.verticalUncertainty
+  const tint = tintOn || !survey.orthophoto
 
   return (
     <section
@@ -108,16 +111,40 @@ export function TerrainLegend() {
       style={delay(1.2)}
     >
       <div className="flex items-baseline justify-between">
-        <h3 className="cond text-[14px] font-semibold text-ink">Elevation</h3>
+        <h3 className="cond text-[14px] font-semibold text-ink">
+          {tint ? 'Elevation' : 'Surface'}
+        </h3>
         <ProvenanceTag value="simulated" />
       </div>
-      <div className="mt-2 h-2.5 border border-line" style={{ background: rampGradient() }} />
-      <div className="mt-1 flex justify-between font-mono text-[11px] text-ink">
-        <span>{range.min.toFixed(1)} m</span>
-        <span>{range.max.toFixed(1)} m</span>
-      </div>
-      <div className="mt-0.5 text-[11px] text-ink-faint">
-        RL, each value ± {sigma.toFixed(2)} m (1σ survey error)
+      {tint ? (
+        <>
+          <div className="mt-2 h-2.5 border border-line" style={{ background: rampGradient() }} />
+          <div className="mt-1 flex justify-between font-mono text-[11px] text-ink">
+            <span>{range.min.toFixed(1)} m</span>
+            <span>{range.max.toFixed(1)} m</span>
+          </div>
+        </>
+      ) : (
+        <>
+          <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+            {SURFACE_KEY.map((k) => (
+              <li key={k.label} className="flex items-center gap-1.5 text-[11px] text-ink-dim">
+                <span
+                  className="h-2.5 w-2.5 shrink-0 border border-line"
+                  style={{ background: `rgb(${k.rgb.join(' ')})` }}
+                  aria-hidden="true"
+                />
+                {k.label}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-1.5 text-[11px] text-ink-faint">
+            Simulated aerial image draped on the survey
+          </div>
+        </>
+      )}
+      <div className="mt-1 text-[11px] text-ink-faint">
+        Elevation {range.min.toFixed(1)}–{range.max.toFixed(1)} m RL, ± {sigma.toFixed(2)} m (1σ)
       </div>
       {contours && (
         <div className="mt-2 flex items-center gap-2 border-t border-line pt-2 text-[11px] text-ink-dim">

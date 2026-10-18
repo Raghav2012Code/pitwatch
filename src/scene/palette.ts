@@ -13,15 +13,16 @@ export const RAMP: readonly (readonly [t: number, hex: string])[] = [
   [1, '#c4c8a2'],
 ]
 
-/** Rock layers painted on the sides of the terrain block, top to bottom (repeats). */
-export const STRATA_BANDS = [
-  '#cfc6ad',
-  '#b07a1a',
-  '#ddd5bf',
-  '#8a3324',
-  '#77736b',
-  '#bfb294',
-] as const
+/**
+ * Soil profile on the sides of the terrain block, by depth below ground: dark topsoil,
+ * red lateritic soil (typical over iron formations), weathered rock, then bedrock.
+ */
+export const SOIL_PROFILE = {
+  topsoil: '#4a3a2c',
+  laterite: '#8c4c33',
+  saprolite: '#a58c6a',
+  bedrock: '#6f6a63',
+} as const
 
 /** Contour line colour. */
 export const CONTOUR_INK = '#3b2a20'

@@ -25,6 +25,10 @@
   --color-ochre: #b07a1a;
   --color-contour: #9c6a3c;
 
+  /* Sky behind the 3D model: cool haze above, warm horizon where fog meets it. */
+  --color-sky: #d9e0e0;
+  --color-horizon: #e8e3d8;
+
   /* Severity: each level also has its own glyph shape. */
   --color-ok: #2f7d4a;
   --color-warn: #9a620a;
@@ -342,7 +346,12 @@ body {
 
   .scene-wrap {
     overflow: hidden;
-    background: var(--color-bg-2);
+    background: linear-gradient(
+      to bottom,
+      var(--color-sky) 0%,
+      var(--color-horizon) 58%,
+      var(--color-bg-2) 100%
+    );
     cursor: grab;
   }
   .scene-wrap:active {

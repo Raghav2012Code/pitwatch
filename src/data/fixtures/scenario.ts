@@ -37,9 +37,9 @@ export const SAFETY_BUFFER_M = 20
  */
 export const PLATEAU_RL = 422
 export const BENCH_HEIGHT_M = 10
-export const BERM_WIDTH_M = 8
-/** Horizontal run of one bench face (≈ 59° face angle). */
-export const FACE_RUN_M = 6
+export const BERM_WIDTH_M = 10
+/** Horizontal run of one bench face (≈ 55° face angle). */
+export const FACE_RUN_M = 7
 
 export interface PitShape {
   cx: number
@@ -87,9 +87,41 @@ export const CHANGES = {
   encroachment: { x0: 1300, x1: 1440, y0: 985, y1: 1075, depth: 12 },
   sump: { cx: 960, cy: 1020, r: 22, depthBelowFloor: 6 },
   bufferScrape: { x0: 900, x1: 1010, y0: 1500, y1: 1510, depth: 1.2 },
+  /** A cluster of truck-tipped heaps around (cx, cy). */
   strayDump: { cx: 1520, cy: 480, r: 45, height: 4 },
-  zoneDump: { cx: 540, cy: 510, r: 90, height: 6 },
+  /** The terraced west dump grows taller and wider (see BASELINE_DUMP). */
+  zoneDump: { cx: 540, cy: 510, r: 115, height: 10 },
 } as const
+
+/** Terraced waste dump that already exists in the baseline survey, inside the dump zone. */
+export const BASELINE_DUMP = { cx: 530, cy: 505, r: 85, height: 5 } as const
+
+/** Haul ramp spiralling down the pit wall: starts on the south rim, turns anticlockwise. */
+export const RAMP = { startAngle: -Math.PI / 2, grade: 0.1, width: 22 } as const
+
+/**
+ * Haul roads on the plateau (local metres). They only appear in the simulated aerial
+ * image; on the ground they are flat enough not to matter at survey resolution.
+ */
+export const ROADS: readonly (readonly [number, number][])[] = [
+  [
+    [985, 745],
+    [1010, 640],
+    [880, 560],
+    [700, 520],
+    [600, 500],
+  ],
+  [
+    [1010, 640],
+    [1120, 420],
+    [1180, 0],
+  ],
+  [
+    [1120, 420],
+    [1330, 450],
+    [1500, 470],
+  ],
+]
 
 export const SURVEY_SIGMA_M = { baseline: 0.05, current: 0.05 } as const
 

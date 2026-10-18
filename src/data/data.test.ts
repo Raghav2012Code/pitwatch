@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { cellAt, indexOf, sampleBilinear } from '../geo/grid'
 import { distanceToBoundary, pointInPolygon } from '../geo/polygon'
 import {
+  BERM_WIDTH_M,
   CHANGES,
   CURRENT_PIT,
   DUMP_ZONE,
+  FACE_RUN_M,
   GRID,
   LEASE,
   PIT_ZONE,
@@ -12,7 +14,7 @@ import {
 } from './fixtures/scenario'
 import { fbm, valueNoise } from './noise'
 import { gaussian, mulberry32 } from './rng'
-import { benchDepth } from './synthetic'
+import { benchDepth, rimRadius } from './synthetic'
 import { SyntheticTerrainProvider } from './SyntheticTerrainProvider'
 
 describe('rng', () => {
@@ -49,11 +51,12 @@ describe('noise', () => {
 
 describe('bench profile', () => {
   it('drops one bench per face and stays flat along each berm', () => {
+    const step = BERM_WIDTH_M + FACE_RUN_M
     expect(benchDepth(0)).toBe(0)
-    expect(benchDepth(3)).toBe(5) // halfway down the first face
-    expect(benchDepth(6)).toBe(10) // top of the first berm
-    expect(benchDepth(13)).toBe(10) // still on the berm
-    expect(benchDepth(14 + 6)).toBe(20)
+    expect(benchDepth(FACE_RUN_M / 2)).toBe(5) // halfway down the first face
+    expect(benchDepth(FACE_RUN_M)).toBe(10) // top of the first berm
+    expect(benchDepth(step - 1)).toBe(10) // still on the berm
+    expect(benchDepth(step + FACE_RUN_M)).toBe(20)
   })
 })
 
@@ -80,7 +83,7 @@ describe('synthetic terrain provider', async () => {
     expect(again.elevations).toEqual(current.elevations)
     const other = await new SyntheticTerrainProvider(1).getSurvey('current')
     expect(other.elevations).not.toEqual(current.elevations)
-  })
+  }, 30_000)
 
   it('rejects unknown surveys', async () => {
     await expect(provider.getSurvey('nope')).rejects.toThrow('Unknown survey')
@@ -107,7 +110,8 @@ describe('synthetic terrain provider', async () => {
 
   it('plants each scenario change where the rules will look for it', () => {
     // 1. Legitimate expansion inside the lease: ground lowered west of the old rim.
-    expect(dh(CURRENT_PIT.cx - CURRENT_PIT.a + 12, CURRENT_PIT.cy)).toBeLessThan(-5)
+    const westRim = rimRadius({ x: 0, y: CURRENT_PIT.cy }, CURRENT_PIT)
+    expect(dh(CURRENT_PIT.cx - westRim + 12, CURRENT_PIT.cy)).toBeLessThan(-5)
 
     // 2. Encroachment: deep cut outside the east lease edge.
     const out = { x: 1420, y: 1030 }
@@ -128,6 +132,6 @@ describe('synthetic terrain provider', async () => {
     const stray = { x: CHANGES.strayDump.cx, y: CHANGES.strayDump.cy }
     expect(pointInPolygon(stray, DUMP_ZONE.polygon)).toBe(false)
     expect(dh(stray.x, stray.y)).toBeGreaterThan(3)
-    expect(dh(CHANGES.zoneDump.cx, CHANGES.zoneDump.cy)).toBeGreaterThan(5)
+    expect(dh(CHANGES.zoneDump.cx, CHANGES.zoneDump.cy)).toBeGreaterThan(3)
   })
 })

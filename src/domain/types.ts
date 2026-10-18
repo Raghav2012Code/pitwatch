@@ -79,12 +79,26 @@ export interface GridSpec {
   originXY: Vec2
 }
 
+/**
+ * Aerial image draped over the surface, covering the same extent as the grid's cell
+ * centres. Row 0 is the southern edge. Real drone surveys deliver an orthomosaic
+ * alongside the elevation model; the synthetic provider generates a stand-in.
+ */
+export interface Orthophoto {
+  width: number
+  height: number
+  /** sRGB, 4 bytes per pixel. */
+  rgba: Uint8Array
+  provenance: Provenance
+}
+
 /** One terrain survey (epoch). `elevations[row * cols + col]` is the RL of that cell. */
 export interface TerrainSurvey extends SurveyEpochInfo {
   grid: GridSpec
   elevations: Float32Array
   /** 1σ vertical uncertainty of this survey, metres. */
   verticalUncertainty: number
+  orthophoto?: Orthophoto
 }
 
 /* ---------- Permit ---------- */

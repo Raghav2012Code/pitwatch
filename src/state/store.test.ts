@@ -20,9 +20,9 @@ describe('app store', () => {
 describe('view settings', () => {
   it('toggles live layers', () => {
     const s = useAppStore.getState
-    expect(s().layers.contours).toBe(true)
+    expect(s().layers.contours).toBe(false)
     s().toggleLayer('contours')
-    expect(s().layers).toEqual({ terrain: true, contours: false })
+    expect(s().layers).toEqual({ terrain: true, tint: false, contours: true })
   })
 
   it('clamps vertical exaggeration to 1×–3×', () => {

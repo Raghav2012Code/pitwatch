@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { SyntheticTerrainProvider } from './data/SyntheticTerrainProvider'
+import { WorkerTerrainProvider } from './data/WorkerTerrainProvider'
 import { useAppStore } from './state/store'
 import { useTerrain } from './state/terrain'
 import { toggleFullscreen } from './ui/fullscreen'
@@ -26,9 +26,9 @@ function Monitor() {
   const layersHidden = useAppStore((s) => s.layersHidden)
   const detailsHidden = useAppStore((s) => s.detailsHidden)
 
-  // Build the synthetic surveys once, the first time the monitor opens.
+  // Build the synthetic surveys once, in a worker, the first time the monitor opens.
   useEffect(() => {
-    void useTerrain.getState().load(new SyntheticTerrainProvider())
+    void useTerrain.getState().load(new WorkerTerrainProvider())
   }, [])
 
   // [ and ] collapse the side panels, F toggles full screen, R resets the view.

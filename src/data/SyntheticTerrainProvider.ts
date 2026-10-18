@@ -7,12 +7,14 @@ import type {
 } from '../domain/types'
 import { SURVEY_EPOCHS } from './fixtures/mine'
 import { GRID, LIMITS, MINE, SEED, SURVEY_SIGMA_M } from './fixtures/scenario'
-import { buildSurface } from './synthetic'
+import { buildOrthophoto } from './orthophoto'
+import { buildSurface, naturalField } from './synthetic'
 
 /** Serves the seeded fictional mine. Surfaces are built on first request and cached. */
 export class SyntheticTerrainProvider implements TerrainProvider {
   private readonly seed: number
   private readonly cache = new Map<string, TerrainSurvey>()
+  private natural?: Float32Array
 
   constructor(seed = SEED) {
     this.seed = seed
@@ -38,11 +40,14 @@ export class SyntheticTerrainProvider implements TerrainProvider {
     if (!info || (id !== 'baseline' && id !== 'current')) throw new Error(`Unknown survey: ${id}`)
 
     const sigma = SURVEY_SIGMA_M[id]
+    this.natural ??= naturalField(GRID, this.seed)
+    const elevations = buildSurface(GRID, id, this.seed, sigma, this.natural)
     const survey: TerrainSurvey = {
       ...info,
       grid: GRID,
-      elevations: buildSurface(GRID, id, this.seed, sigma),
+      elevations,
       verticalUncertainty: sigma,
+      orthophoto: buildOrthophoto(GRID, elevations, this.natural, id, this.seed),
     }
     this.cache.set(id, survey)
     return survey

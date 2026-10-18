@@ -44,8 +44,9 @@ describe('terrain geometry', () => {
   })
 
   it('creates one vertex per cell and two upward triangles per square', () => {
-    const { positions, colors, index } = buildTerrainArrays(grid, elev)
+    const { positions, colors, uvs, index } = buildTerrainArrays(grid, elev)
     expect(positions.length).toBe(6 * 3)
+    expect(Array.from(uvs)).toEqual([0, 0, 0.5, 0, 1, 0, 0, 1, 0.5, 1, 1, 1])
     expect(colors.length).toBe(6 * 3)
     expect(index.length).toBe(2 * 1 * 6)
     expect(Array.from(positions.slice(0, 3))).toEqual([-8, 400 - BASE_RL, 4])
@@ -69,7 +70,9 @@ describe('terrain geometry', () => {
   })
 
   it('drops the block sides from every edge cell to the skirt level', () => {
-    const { positions, index } = buildSkirtArrays(grid, elev)
+    const { positions, tops, index } = buildSkirtArrays(grid, elev)
+    expect(tops[0]).toBe(400)
+    expect(tops[1]).toBe(400)
     // Perimeter strips: 3 + 2 + 3 + 2 points, two vertices each.
     expect(positions.length / 3).toBe(20)
     expect(index.length).toBe((2 + 1 + 2 + 1) * 6)

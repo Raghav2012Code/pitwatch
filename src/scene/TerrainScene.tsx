@@ -6,9 +6,9 @@ import { CameraRig } from './CameraRig'
 import { Terrain } from './Terrain'
 import { toScene } from './terrainGeometry'
 
-/** Paper colour behind the model; fog fades distant terrain into it. */
-const paper = () =>
-  getComputedStyle(document.documentElement).getPropertyValue('--color-bg-2').trim() || '#ece9e1'
+/** Horizon colour behind the model; fog fades distant terrain into it. */
+const horizon = () =>
+  getComputedStyle(document.documentElement).getPropertyValue('--color-horizon').trim() || '#e8e3d8'
 
 /**
  * The 3D view: current survey surface on a block, lit from the north-west (the
@@ -18,7 +18,7 @@ const paper = () =>
 export default function TerrainScene() {
   const survey = useTerrain((s) => s.surveys.current)
   const limits = useTerrain((s) => s.limits)
-  const fog = useMemo(() => paper(), [])
+  const fog = useMemo(() => horizon(), [])
 
   const aim = useMemo(() => {
     if (!survey || !limits) return null
@@ -40,10 +40,12 @@ export default function TerrainScene() {
       gl={{ antialias: true, alpha: true }}
     >
       <fog attach="fog" args={[fog, 5200, 12000]} />
-      <hemisphereLight args={['#fffaf0', '#5f5040', 0.75]} />
+      {/* Cool sky fill and a warm, fairly low sun from the north-west. */}
+      <hemisphereLight args={['#e4ebee', '#6b5a48', 0.95]} />
       <directionalLight
-        position={[-1700, 1500, -1100]}
-        intensity={2.6}
+        position={[-1700, 1400, -1100]}
+        color="#fff0dc"
+        intensity={2.4}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-1500}

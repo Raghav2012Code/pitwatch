@@ -13,7 +13,7 @@ import { rampAt, srgbToLinear } from './palette'
 /** Elevation that maps to scene y = 0. Keeps vertex numbers small. */
 export const BASE_RL = 400
 /** Bottom of the block diagram sides. */
-export const SKIRT_RL = 300
+export const SKIRT_RL = 335
 
 export const gridCentre = (g: GridSpec): Vec2 => {
   const e = extent(g)
@@ -45,6 +45,8 @@ export function elevationRange(values: Float32Array) {
 export interface TerrainArrays {
   positions: Float32Array
   colors: Float32Array
+  /** 0–1 across the grid extent; v = 0 on the southern edge, matching the orthophoto rows. */
+  uvs: Float32Array
   index: Uint32Array
 }
 
@@ -57,6 +59,7 @@ export function buildTerrainArrays(
   const n = g.cols * g.rows
   const positions = new Float32Array(n * 3)
   const colors = new Float32Array(n * 3)
+  const uvs = new Float32Array(n * 2)
   const span = range.max - range.min || 1
   const c = gridCentre(g)
 
@@ -71,6 +74,8 @@ export function buildTerrainArrays(
       colors[i * 3] = srgbToLinear(rgb[0])
       colors[i * 3 + 1] = srgbToLinear(rgb[1])
       colors[i * 3 + 2] = srgbToLinear(rgb[2])
+      uvs[i * 2] = col / (g.cols - 1)
+      uvs[i * 2 + 1] = row / (g.rows - 1)
     }
   }
 
@@ -87,10 +92,14 @@ export function buildTerrainArrays(
       k += 6
     }
   }
-  return { positions, colors, index }
+  return { positions, colors, uvs, index }
 }
 
-/** Vertical sides of the block: one strip per grid edge, from the terrain down to SKIRT_RL. */
+/**
+ * Vertical sides of the block: one strip per grid edge, from the terrain down to SKIRT_RL.
+ * `tops` holds the surface RL above each vertex so the shader can paint a soil profile
+ * by depth below ground.
+ */
 export function buildSkirtArrays(g: GridSpec, elevations: Float32Array) {
   const edges: number[][] = [
     Array.from({ length: g.cols }, (_, c) => c), // south
@@ -100,6 +109,7 @@ export function buildSkirtArrays(g: GridSpec, elevations: Float32Array) {
   ]
   const verts = edges.reduce((s, e) => s + e.length * 2, 0)
   const positions = new Float32Array(verts * 3)
+  const tops = new Float32Array(verts)
   const index: number[] = []
   const c = gridCentre(g)
   let v = 0
@@ -110,6 +120,7 @@ export function buildSkirtArrays(g: GridSpec, elevations: Float32Array) {
       const x = g.originXY.x + (i % g.cols) * g.cellSize - c.x
       const z = -(g.originXY.y + Math.floor(i / g.cols) * g.cellSize - c.y)
       positions.set([x, elevations[i] - BASE_RL, z, x, SKIRT_RL - BASE_RL, z], v * 3)
+      tops[v] = tops[v + 1] = elevations[i]
       v += 2
     }
     for (let j = 0; j < edge.length - 1; j++) {
@@ -117,5 +128,5 @@ export function buildSkirtArrays(g: GridSpec, elevations: Float32Array) {
       index.push(top, top + 1, top + 2, top + 1, top + 3, top + 2)
     }
   }
-  return { positions, index: Uint32Array.from(index) }
+  return { positions, tops, index: Uint32Array.from(index) }
 }

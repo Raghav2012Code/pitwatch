@@ -13,6 +13,7 @@ import {
   PickIcon,
   ResetViewIcon,
   TerrainIcon,
+  TintIcon,
 } from './icons'
 
 type Icon = ComponentType<SVGProps<SVGSVGElement>>
@@ -22,6 +23,7 @@ type Layer = { label: string; Icon: Icon } & ({ id: LayerId } | { pending: strin
 
 const LAYERS: Layer[] = [
   { label: 'Terrain', Icon: TerrainIcon, id: 'terrain' },
+  { label: 'Elevation tint', Icon: TintIcon, id: 'tint' },
   { label: 'Contours', Icon: ContourIcon, id: 'contours' },
   { label: 'Change overlay', Icon: ChangeIcon, pending: 'M5' },
   { label: 'Lease boundary', Icon: BoundaryIcon, pending: 'M5' },

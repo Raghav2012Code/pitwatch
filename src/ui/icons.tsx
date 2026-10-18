@@ -21,6 +21,13 @@ function Svg({ children, ...props }: IconProps) {
   )
 }
 
+export const TintIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3" y="3.5" width="14" height="13" rx="1.5" />
+    <path d="M3 8h14M3 12.5h14" />
+  </Svg>
+)
+
 export const ContourIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="M3 13c2-4 5-6 8-6s5 2 6 4" />

@@ -24,7 +24,9 @@ export function AboutDataPanel() {
       <Section title="This mine is fictional">
         <p className="text-[13px] leading-5 text-ink-dim">
           The terrain, both surveys and every finding are generated from a fixed random seed, so the
-          same scenario appears every time. Use it to judge the method, not any real site.
+          same scenario appears every time. The aerial image draped on the 3D model is simulated
+          too: it is painted from the synthetic surface, not photographed. Use it to judge the
+          method, not any real site.
         </p>
       </Section>
       <div className="divider" />

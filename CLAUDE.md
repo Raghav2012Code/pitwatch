@@ -45,6 +45,16 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-18: natural-looking 3D model
+
+- Simulated orthophoto (`src/data/orthophoto.ts`, 768 px ≈ 2.7 m/px): scrub, dry grass, lateritic soil, tree crowns, cleared ground around the pit, haul roads (`ROADS` in the scenario), banded iron rock on faces, dusty berms and ramp, muddy floor, wet sump, waste rock, fresh red cuts, baked shading in hollows. `TerrainSurvey.orthophoto` (optional, provenance simulated) is the stand-in for a drone orthomosaic. `SURFACE_KEY` feeds the map key.
+- Terrain shape: domain-warped hills and ridgelines; irregular pit outline (`rimWobble`, phases keep the east wall clear of the buffer); spiral haul ramp (`RAMP`, 10% grade); terraced waste dump that exists in the baseline and grows (`BASELINE_DUMP` -> `CHANGES.zoneDump`); stray dump is now a cluster of truck-tipped heaps. Benches 10 m high, 10 m berm, 7 m face. Each cell is the mean of four sub-samples (area-averaged like a gridded survey) so benches do not alias.
+- Generation moved to a Web Worker (`src/workers/terrain.worker.ts`, `WorkerTerrainProvider`), about 1.2 s for both epochs; buffers are transferred. Natural ground is computed once and shared by both epochs and the image.
+- Scene: surface shader blends image and hypsometric tint by a uniform; new "Elevation tint" layer (off by default); contours off by default. Block sides are a soil profile by depth below ground (topsoil, laterite, saprolite, bedrock) via an `aTop` attribute. Sky gradient tokens `--color-sky` / `--color-horizon`, fog uses the horizon colour, cooler fill light and a warm low sun.
+- Legend shows the surface key when the image is on, the elevation ramp when tint is on. About data says the image is simulated.
+- Removed `src/data/zz_probe.test.ts`, a debugging leftover committed in M2.
+- Browser checks now use `%TEMP%/pitwatch-scripts/shot.mjs` (playwright-core + the installed Chromium, SwiftShader WebGL). Use exact selectors like `button:text-is("Pit")`; `text=Pit` matches "PitWatch".
+
 ### 2026-10-18: M3 3D terrain and monitor redesign around it
 
 - `src/scene/`: `TerrainScene` (lazy chunk; Canvas `frameloop="demand"`, `flat`, PCF shadows, NW key light, fog into paper colour), `Terrain` (surface + block sides built once per survey; exaggeration is a y-scale), `CameraRig` (drei OrbitControls, damped; animated flights; intro flight from high above into the oblique view; keeps the aim point when exaggeration changes), pure helpers `terrainGeometry.ts` (scene axes: x east, y = RL − 400, z = −north), `palette.ts` (hypsometric ramp shared with the legend, strata bands), `presets.ts` (oblique/top/pit poses, north-up, heading, metres per pixel, scale-bar length), `cameraState.ts` (transient store for HUD).
