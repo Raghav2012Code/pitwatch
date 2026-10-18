@@ -1,258 +1,332 @@
-import type { JSX } from 'react'
-import type { Provenance } from '../domain/types'
-import { CriticalGlyph, PitMark, ViolationGlyph, WarningGlyph } from './icons'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { SURVEY_EPOCHS } from '../data/fixtures/mine'
+import { loop, ticks, toPath } from './contours'
+import { daysBetween, formatDate, monthTicks } from './format'
+import { PitMark } from './icons'
 import { ProvenanceTag } from './ProvenanceTag'
-import { HOME_HREF, MONITOR_HREF } from './route'
-import { NorthArrow, PitPlan, Relief } from './schematic'
+import { MONITOR_HREF } from './route'
+import { NorthArrow, Relief } from './schematic'
+
+/*
+ * The home page is one scroll story told on a pinned map:
+ * baseline survey -> current survey -> measured change -> permit check -> monitor.
+ * Everything on the map is an illustration, not survey data.
+ */
+
+const [BASELINE, CURRENT] = SURVEY_EPOCHS
+const DAYS = BASELINE && CURRENT ? daysBetween(BASELINE.date, CURRENT.date) : 0
+const MONTHS = BASELINE && CURRENT ? monthTicks(BASELINE.date, CURRENT.date) : []
+
+/* ---------- Map geometry (illustration) ---------- */
+
+const BENCHES = Array.from({ length: 8 }, (_, i) => {
+  const s = 1 - i / 8.6
+  const cx = -40 + i * 4
+  const cy = i * 3
+  const pts = loop(cx, cy, 170 * s, 118 * s, [
+    [0.06, 2, 0.8 + i * 0.12],
+    [0.04, 3, 2.1 - i * 0.1],
+    [0.02, 5, 0.3 + i * 0.25],
+  ])
+  return { d: toPath(pts), ticks: ticks(pts, cx, cy, 6, 5), index: i % 3 === 0 }
+})
+const RIM = BENCHES[0]!.d
+const LEASE = 'M-265 -178 L196 -186 L206 176 L-256 182 Z'
+const OUTSIDE_LEASE = `M-400 -300 H400 V300 H-400 Z ${LEASE}`
 
 const STEPS = [
-  {
-    title: 'Baseline survey',
-    text: 'A drone, LiDAR or DGPS survey records the ground surface at the start of the period.',
-    layer: 'var(--layer-1)',
-  },
-  {
-    title: 'Current survey',
-    text: 'A second survey of the same ground at the end of the period, on the same grid.',
-    layer: 'var(--layer-2)',
-  },
-  {
-    title: 'Measure the change',
-    text: 'Subtract one surface from the other to find where rock was removed or dumped. The uncertainty of both surveys is carried through.',
-    layer: 'var(--layer-3)',
-  },
-  {
-    title: 'Check it against the permit',
-    text: 'Each change is tested against the lease boundary, the approved floor and the permitted dump zones.',
-    layer: 'var(--layer-4)',
-  },
-]
-
-const RULES: { id: string; title: string; text: string; inset: JSX.Element }[] = [
-  {
-    id: 'R1',
-    title: 'Lease boundary',
-    text: 'Flags excavation outside the mining lease or inside its safety buffer.',
-    inset: (
-      <>
-        <path d="M14 14 L150 8 L176 74 L24 84 Z" className="inset-lease" />
-        <path d="M26 24 L142 19 L163 67 L34 74 Z" className="inset-buffer" />
-        <ellipse cx="160" cy="46" rx="34" ry="20" className="inset-cut" />
-      </>
-    ),
-  },
-  {
-    id: 'R2',
-    title: 'Approved depth',
-    text: 'Flags pit floor dug deeper than the approved floor level.',
-    inset: (
-      <>
-        <path
-          d="M0 20 H36 L52 36 H70 L84 52 H96 L104 72 H132 L140 52 H150 L164 36 H178 L192 20 H200 V92 H0 Z"
-          className="inset-ground"
-        />
-        <rect x="104" y="60" width="28" height="12" className="inset-excess" />
-        <path d="M70 60 H166" className="inset-floor" />
-      </>
-    ),
-  },
-  {
-    id: 'R3',
-    title: 'Dumping',
-    text: 'Flags waste rock placed outside the permitted dump zones.',
-    inset: (
-      <>
-        <rect x="12" y="16" width="88" height="66" className="inset-zone" />
-        <path d="M24 70 Q56 26 88 70 Z" className="inset-mound" />
-        <path d="M122 70 Q154 36 186 70 Z" className="inset-mound inset-mound-out" />
-      </>
-    ),
-  },
-]
-
-const PROVENANCE: { value: Provenance; text: string }[] = [
-  { value: 'measured', text: 'Taken directly from a survey instrument.' },
-  { value: 'derived', text: 'Calculated in the app from other values.' },
-  { value: 'simulated', text: 'Synthetic, generated for the fictional mine.' },
-  { value: 'unverified', text: 'Reported, but not checked against a survey.' },
-]
+  'Start',
+  'Baseline survey',
+  'Current survey',
+  'Measured change',
+  'Permit check',
+  'Monitor',
+] as const
 
 export function HomePage() {
-  return (
-    <div className="home h-full overflow-y-auto">
-      <header className="topbar sticky top-0 z-30">
-        <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-6 px-5">
-          <a href={HOME_HREF} className="flex items-center gap-3" aria-label="PitWatch home">
-            <span className="brand-mark">
-              <PitMark className="h-5 w-5" />
-            </span>
-            <span className="cond text-[22px] font-bold text-ink">PitWatch</span>
-          </a>
-          <nav aria-label="Sections" className="hidden gap-5 text-[14px] text-ink-dim md:flex">
-            <a className="nav-link" href="#how">
-              How it works
-            </a>
-            <a className="nav-link" href="#checks">
-              What it checks
-            </a>
-            <a className="nav-link" href="#data">
-              Data
-            </a>
-          </nav>
-          <div className="ml-auto flex items-center gap-3">
-            <span className="stamp hidden sm:inline-flex">
-              <span className="stamp-dot" aria-hidden="true" />
-              SIMULATED DATA
-            </span>
-            <a href={MONITOR_HREF} className="btn-primary">
-              Open the monitor
-            </a>
-          </div>
-        </div>
-      </header>
+  const [step, setStep] = useState(0)
+  const rootRef = useRef<HTMLDivElement>(null)
 
-      <main>
-        <section className="relative overflow-hidden border-b border-line">
-          <Relief />
-          <div className="relative mx-auto grid max-w-[1200px] items-center gap-12 px-5 py-14 lg:grid-cols-[1.05fr_1fr] lg:py-20">
-            <div>
-              <div className="map-note">Demo with a fictional mine</div>
-              <h1 className="cond mt-5 text-[clamp(44px,6.4vw,80px)] leading-[0.94] font-bold tracking-[-0.01em] text-ink">
-                Check an open-pit mine against its permit, one survey at a time.
-              </h1>
-              <p className="mt-6 max-w-[34rem] text-[17px] leading-7 text-ink-dim">
-                PitWatch compares two terrain surveys of the same mine, measures what changed, and
-                checks every change against the lease boundary, the approved depth and the permitted
-                dump zones.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-5">
-                <a href={MONITOR_HREF} className="btn-primary btn-lg">
-                  Open the monitor
-                </a>
-                <a href="#how" className="nav-link text-[15px] text-ink">
-                  See how it works
-                </a>
+  // The step whose block crosses a line 65% down the screen drives the map (below the pinned map on phones).
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) setStep(Number((e.target as HTMLElement).dataset.step))
+        }
+      },
+      { root, rootMargin: '-65% 0px -35% 0px' },
+    )
+    root.querySelectorAll('[data-step]').forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  }, [])
+
+  const on = (n: number) => (step >= n ? 'on' : '')
+
+  return (
+    <div ref={rootRef} className="home h-full overflow-y-auto">
+      {/* Floating corner marks instead of a nav bar. */}
+      <a href="#/" className="home-brand" aria-label="PitWatch home">
+        <span className="brand-mark">
+          <PitMark className="h-5 w-5" />
+        </span>
+        <span className="cond text-[20px] font-bold text-ink">PitWatch</span>
+      </a>
+      <div className="home-corner">
+        <span className="stamp hidden sm:inline-flex">
+          <span className="stamp-dot" aria-hidden="true" />
+          SIMULATED DATA
+        </span>
+        <a href={MONITOR_HREF} className="btn-primary">
+          Open the monitor
+        </a>
+      </div>
+
+      <div className="story">
+        {/* ---------- Pinned map ---------- */}
+        <div className="story-stage" aria-hidden="true">
+          <Relief className="opacity-70" />
+          <div className="story-frame neatline">
+            <NorthArrow className="absolute top-5 right-5 hidden sm:block" />
+
+            <svg viewBox="-285 -205 570 410" className="story-map">
+              <defs>
+                <pattern
+                  id="hatch-cut"
+                  width="7"
+                  height="7"
+                  patternUnits="userSpaceOnUse"
+                  patternTransform="rotate(45)"
+                >
+                  <rect width="7" height="7" fill="var(--color-oxide)" fillOpacity="0.14" />
+                  <path
+                    d="M0 0V7"
+                    stroke="var(--color-oxide)"
+                    strokeWidth="2"
+                    strokeOpacity="0.7"
+                  />
+                </pattern>
+                <pattern
+                  id="hatch-breach"
+                  width="6"
+                  height="6"
+                  patternUnits="userSpaceOnUse"
+                  patternTransform="rotate(-45)"
+                >
+                  <rect width="6" height="6" fill="var(--color-violation)" fillOpacity="0.3" />
+                  <path d="M0 0V6" stroke="var(--color-violation)" strokeWidth="2.4" />
+                </pattern>
+                {/* New ground = current rim minus baseline rim. */}
+                <mask
+                  id="cut-mask"
+                  maskUnits="userSpaceOnUse"
+                  x="-400"
+                  y="-300"
+                  width="800"
+                  height="600"
+                >
+                  <g className={`grow ${on(2)}`}>
+                    <path d={RIM} fill="white" />
+                  </g>
+                  <path d={RIM} fill="black" />
+                </mask>
+                <clipPath id="outside-lease">
+                  <path d={OUTSIDE_LEASE} clipRule="evenodd" />
+                </clipPath>
+              </defs>
+
+              {/* Measured change. */}
+              <rect
+                x="-400"
+                y="-300"
+                width="800"
+                height="600"
+                fill="url(#hatch-cut)"
+                mask="url(#cut-mask)"
+                className={`fade ${on(3)}`}
+              />
+
+              {/* The pit: baseline shape, grows to the current survey. */}
+              <g className={`grow ${on(2)}`}>
+                {BENCHES.map((b, i) => (
+                  <g key={i} style={{ '--i': i } as CSSProperties}>
+                    <path
+                      d={b.d}
+                      pathLength={1}
+                      className={`draw ${b.index ? 'bench bench-index' : 'bench'}`}
+                    />
+                    <path d={b.ticks} className="bench-ticks" />
+                  </g>
+                ))}
+              </g>
+
+              {/* Ghost of the baseline rim once the pit has grown. */}
+              <path d={RIM} className={`ghost-rim fade ${on(2)}`} />
+
+              {/* Lease boundary and the part of the cut that crosses it. */}
+              <path d={LEASE} pathLength={1} className={`lease ${on(4)}`} />
+              <rect
+                x="-400"
+                y="-300"
+                width="800"
+                height="600"
+                fill="url(#hatch-breach)"
+                mask="url(#cut-mask)"
+                clipPath="url(#outside-lease)"
+                className={`fade ${on(4)}`}
+              />
+              <g className={`breach-mark ${on(4)}`} transform="translate(262 -12)">
+                <circle r="11" className="ping" />
+                <path
+                  d="M-4.1 -10 H4.1 L10 -4.1 V4.1 L4.1 10 H-4.1 L-10 4.1 V-4.1 Z"
+                  fill="var(--color-panel)"
+                  stroke="var(--color-violation)"
+                  strokeWidth="2"
+                />
+                <path d="M-4 -4 L4 4 M4 -4 L-4 4" stroke="var(--color-violation)" strokeWidth="2" />
+              </g>
+
+              <text x="-40" y="-150" className={`plan-label fade ${on(2)}`}>
+                baseline rim
+              </text>
+              <text x="-180" y="-188" className={`plan-label fade ${on(4)}`}>
+                lease boundary
+              </text>
+            </svg>
+
+            {/* Survey clock: where in time the map is. */}
+            <div className="story-clock">
+              <div className="flex items-baseline justify-between text-[12px]">
+                <span className={step >= 2 ? 'text-ink-faint' : 'font-semibold text-ink'}>
+                  {BASELINE && formatDate(BASELINE.date)}
+                </span>
+                <span className="cond text-[14px] font-semibold text-ink-dim">
+                  {DAYS} days between surveys
+                </span>
+                <span className={step >= 2 ? 'font-semibold text-ink' : 'text-ink-faint'}>
+                  {CURRENT && formatDate(CURRENT.date)}
+                </span>
+              </div>
+              <div className="relative mt-2 h-4">
+                <div className="track absolute inset-x-0 top-2" />
+                {MONTHS.map((m) => (
+                  <span
+                    key={m.label}
+                    className="absolute top-1 h-2 w-px bg-ink-faint"
+                    style={{ left: `${m.t * 100}%` }}
+                  />
+                ))}
+                <span className={`clock-marker ${on(2)}`} />
               </div>
             </div>
-
-            <figure className="plate relative p-6 sm:p-8">
-              <NorthArrow className="absolute top-5 right-5" />
-              <PitPlan className="w-full" />
-              <figcaption className="mt-2 flex items-baseline justify-between gap-4 border-t border-line pt-3 text-[12px] text-ink-faint">
-                <span className="cond text-[15px] font-semibold text-ink">
-                  Venthar Ridge Iron Pit
-                </span>
-                <span className="italic">Schematic, not survey data</span>
-              </figcaption>
-            </figure>
           </div>
-        </section>
-
-        <section id="how" className="mx-auto max-w-[1200px] scroll-mt-16 px-5 py-16 lg:py-20">
-          <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr]">
-            <div>
-              <h2 className="cond text-[40px] leading-none font-bold text-ink">How it works</h2>
-              <p className="mt-4 max-w-sm text-[15px] leading-6 text-ink-dim">
-                Read it like a drill core: each step rests on the one above it.
-              </p>
-            </div>
-            <ol className="core-log">
-              {STEPS.map((s, i) => (
-                <li key={s.title}>
-                  <span className="core-layer" style={{ background: s.layer }} aria-hidden="true" />
-                  <div className="py-5">
-                    <h3 className="cond text-[22px] font-semibold text-ink">
-                      <span className="mr-3 text-ink-faint">{i + 1}</span>
-                      {s.title}
-                    </h3>
-                    <p className="mt-1.5 max-w-[36rem] text-[15px] leading-6 text-ink-dim">
-                      {s.text}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        <section id="checks" className="border-y border-line bg-panel">
-          <div className="mx-auto max-w-[1200px] scroll-mt-16 px-5 py-16 lg:py-20">
-            <h2 className="cond text-[40px] leading-none font-bold text-ink">What it checks</h2>
-            <p className="mt-4 max-w-2xl text-[15px] leading-6 text-ink-dim">
-              A change only counts when it is larger than twice the combined uncertainty of both
-              surveys. Smaller changes could be survey noise, so they are not reported as breaches.
-            </p>
-
-            <ul className="mt-10 grid gap-5 md:grid-cols-3">
-              {RULES.map((r) => (
-                <li key={r.id} className="rule-card">
-                  <svg viewBox="0 0 200 92" className="rule-inset" aria-hidden="true">
-                    {r.inset}
-                  </svg>
-                  <div className="p-5">
-                    <div className="flex items-baseline gap-3">
-                      <span className="font-mono text-[12px] text-oxide">{r.id}</span>
-                      <h3 className="cond text-[22px] font-semibold text-ink">{r.title}</h3>
-                    </div>
-                    <p className="mt-1.5 text-[14.5px] leading-6 text-ink-dim">{r.text}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-3 text-[14px]">
-              <span className="text-ink-dim">Findings are graded:</span>
-              <span className="flex items-center gap-2 text-warn">
-                <WarningGlyph className="h-[18px] w-[18px]" /> Warning
-              </span>
-              <span className="flex items-center gap-2 text-violation">
-                <ViolationGlyph className="h-[18px] w-[18px]" /> Violation
-              </span>
-              <span className="flex items-center gap-2 text-critical">
-                <CriticalGlyph className="h-[18px] w-[18px]" /> Critical
-              </span>
-            </div>
-            <p className="mt-4 text-[13px] text-ink-faint">
-              The rule engine is still being built. The monitor shows each check once it works.
-            </p>
-          </div>
-        </section>
-
-        <section id="data" className="mx-auto max-w-[1200px] scroll-mt-16 px-5 py-16 lg:py-20">
-          <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr]">
-            <div>
-              <h2 className="cond text-[40px] leading-none font-bold text-ink">
-                Every number says where it came from
-              </h2>
-              <p className="mt-4 max-w-sm text-[15px] leading-6 text-ink-dim">
-                Measured values are shown with their uncertainty, and each one carries a tag for its
-                source.
-              </p>
-            </div>
-            <dl className="divide-y divide-line border-y border-line">
-              {PROVENANCE.map((p) => (
-                <div key={p.value} className="flex items-baseline gap-5 py-4">
-                  <dt className="w-24 shrink-0">
-                    <ProvenanceTag value={p.value} />
-                  </dt>
-                  <dd className="text-[15px] text-ink-dim">{p.text}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </section>
-      </main>
-
-      <footer className="strata-rule">
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4 px-5 py-8 text-[13px] text-ink-dim">
-          <span>
-            Venthar Ridge, its operator and every survey in this demo are fictional and synthetic.
-          </span>
-          <a href={MONITOR_HREF} className="nav-link text-ink">
-            Open the monitor
-          </a>
         </div>
-      </footer>
+
+        {/* ---------- Scrolling text ---------- */}
+        <div className="story-steps">
+          <section data-step="0" className={`story-step story-intro ${step === 0 ? 'active' : ''}`}>
+            <h1 className="cond rise text-[clamp(64px,10vw,150px)] leading-[0.85] font-bold text-ink">
+              Pit
+              <br />
+              Watch
+            </h1>
+            <p className="rise rise-2 mt-6 max-w-[26rem] text-[19px] leading-7 text-ink-dim">
+              Compare two surveys of an open-pit mine and see, on the map, where the digging broke
+              its permit.
+            </p>
+            <div className="rise rise-3 scroll-cue mt-10">Scroll to compare the surveys</div>
+          </section>
+
+          <Step
+            n={1}
+            step={step}
+            label={`${BASELINE?.label} survey, ${BASELINE && formatDate(BASELINE.date)}`}
+            title="First, the ground as it was."
+          >
+            A drone survey records the pit surface: every bench, ramp and floor, to within a few
+            centimetres.
+          </Step>
+
+          <Step
+            n={2}
+            step={step}
+            label={`${CURRENT?.label} survey, ${CURRENT && formatDate(CURRENT.date)}`}
+            title="Then, the ground as it is."
+          >
+            The same grid surveyed again {DAYS} days later. The pit has pushed east, and its old rim
+            is left behind as a ghost line.
+          </Step>
+
+          <Step n={3} step={step} label="Measured change" title="Subtract one from the other.">
+            Where the two surfaces differ by more than twice their combined uncertainty, rock was
+            really removed. Anything smaller could be survey noise, so it is ignored.
+          </Step>
+
+          <Step n={4} step={step} label="Permit check" title="Hold it against the permit.">
+            PitWatch checks three things: digging outside the lease or its safety buffer, digging
+            below the approved floor, and dumping outside permitted zones. Here the new cut crosses
+            the lease line.
+            <span className="mt-4 block text-[13px] text-ink-faint">
+              Illustration. The rule engine is still being built.
+            </span>
+          </Step>
+
+          <section data-step="5" className={`story-step ${step === 5 ? 'active' : ''}`}>
+            <div className="step-label">The monitor</div>
+            <h2 className="cond mt-3 text-[clamp(38px,4.6vw,60px)] leading-[0.95] font-bold text-ink">
+              Venthar Ridge is waiting.
+            </h2>
+            <p className="mt-4 max-w-[30rem] text-[17px] leading-7 text-ink-dim">
+              The mine is fictional and every survey is synthetic. Each value in the monitor says
+              where it came from:
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <ProvenanceTag value="measured" />
+              <ProvenanceTag value="derived" />
+              <ProvenanceTag value="simulated" />
+              <ProvenanceTag value="unverified" />
+            </div>
+            <a href={MONITOR_HREF} className="btn-primary btn-lg mt-9 self-start">
+              Open the monitor
+            </a>
+          </section>
+        </div>
+      </div>
+
+      {/* Depth gauge: which part of the story the map shows. */}
+      <ol className="story-gauge" aria-hidden="true">
+        {STEPS.map((s, i) => (
+          <li key={s} className={i === step ? 'on' : ''}>
+            {s}
+          </li>
+        ))}
+      </ol>
     </div>
+  )
+}
+
+function Step({
+  n,
+  step,
+  label,
+  title,
+  children,
+}: {
+  n: number
+  step: number
+  label: string
+  title: string
+  children: ReactNode
+}) {
+  return (
+    <section data-step={n} className={`story-step ${step === n ? 'active' : ''}`}>
+      <div className="step-label">{label}</div>
+      <h2 className="cond mt-3 text-[clamp(34px,4vw,52px)] leading-[0.98] font-bold text-ink">
+        {title}
+      </h2>
+      <p className="mt-4 max-w-[30rem] text-[17px] leading-7 text-ink-dim">{children}</p>
+    </section>
   )
 }
