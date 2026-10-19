@@ -10,7 +10,7 @@ import {
   volumeOf,
 } from './grid'
 import { latLonToLocal, localToLatLon } from './latlon'
-import { measure } from './measure'
+import { measure, measureOnSurface } from './measure'
 import { distanceToBoundary, insetSegments, pointInPolygon, polygonArea } from './polygon'
 
 const square: Polygon = [
@@ -137,5 +137,21 @@ describe('measure', () => {
     expect(m.dz).toBe(12)
     expect(m.slopeDistance).toBe(13)
     expect(m.provenance).toBe('derived')
+  })
+})
+
+describe('measure on a surface', () => {
+  const g: GridSpec = { cols: 11, rows: 11, cellSize: 10, originXY: { x: 0, y: 0 } }
+  const ramp = Float32Array.from({ length: 121 }, (_, i) => 100 + (i % 11) * 10)
+
+  it('reads both elevations from the grid', () => {
+    const m = measureOnSurface(g, ramp, { x: 0, y: 20 }, { x: 30, y: 60 })!
+    expect(m.horizontalDistance).toBeCloseTo(50)
+    expect(m.dz).toBeCloseTo(30)
+    expect(m.slopeDistance).toBeCloseTo(Math.hypot(50, 30))
+  })
+
+  it('has no measurement when an end is off the grid', () => {
+    expect(measureOnSurface(g, ramp, { x: 0, y: 20 }, { x: 500, y: 60 })).toBeNull()
   })
 })

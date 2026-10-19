@@ -230,12 +230,15 @@ export function Terrain({
   overlay = [0, 0],
   morphTo,
   morph,
+  onPick,
 }: {
   survey: TerrainSurvey
   marks?: TerrainMarks
   overlay?: readonly [number, number]
   morphTo?: TerrainSurvey
   morph?: () => number
+  /** Called with the world position of a click (not a drag) on the surface. */
+  onPick?: (point: THREE.Vector3) => void
 }) {
   const exaggeration = useAppStore((s) => s.exaggeration)
   const layers = useAppStore((s) => s.layers)
@@ -348,6 +351,15 @@ export function Terrain({
         customDepthMaterial={materials.depth}
         castShadow
         receiveShadow
+        onClick={
+          onPick
+            ? (e) => {
+                if (e.delta > 4) return // a drag, not a click
+                e.stopPropagation()
+                onPick(e.point)
+              }
+            : undefined
+        }
       />
       <mesh geometry={geometry.skirt} material={materials.skirt} receiveShadow />
     </group>

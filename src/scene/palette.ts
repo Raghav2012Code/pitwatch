@@ -41,6 +41,8 @@ export const OVERLAY = {
   critical: '#8c3bb0',
   /** Lease boundary and buffer lines. */
   lease: '#fbfaf6',
+  /** Picked point and measure line (same as --color-accent). */
+  accent: '#1f5f86',
   /** Pin badge: paper fill, ink text (same as --color-ink). */
   badgeInk: '#23262b',
 } as const

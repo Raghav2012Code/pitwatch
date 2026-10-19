@@ -36,9 +36,13 @@ function Monitor() {
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return
       if ((e.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return
-      const { toggleLayers, toggleDetails, requestView } = useAppStore.getState()
+      const { toggleLayers, toggleDetails, requestView, setTool, clearPicks } =
+        useAppStore.getState()
       if (e.key === '[') toggleLayers()
       else if (e.key === ']') toggleDetails()
+      else if (e.key === 'm' || e.key === 'M')
+        setTool(useAppStore.getState().tool === 'measure' ? 'inspect' : 'measure')
+      else if (e.key === 'Escape') clearPicks()
       else if (e.key === 'f' || e.key === 'F') toggleFullscreen()
       else if ((e.key === 'r' || e.key === 'R') && useTerrain.getState().status === 'ready')
         requestView('oblique')

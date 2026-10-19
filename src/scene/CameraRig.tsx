@@ -4,10 +4,13 @@ import { useCallback, useEffect, useRef } from 'react'
 import type { PerspectiveCamera } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 import type { Vec2 } from '../domain/types'
+import { sampleBilinear } from '../geo/grid'
 import { useAppStore } from '../state/store'
+import { useTerrain } from '../state/terrain'
 import { useCameraState } from './cameraState'
 import {
   easeInOutCubic,
+  focusPose,
   headingOf,
   metresPerPixel,
   northUp,
@@ -15,7 +18,7 @@ import {
   type Pose,
   type V3,
 } from './presets'
-import { BASE_RL } from './terrainGeometry'
+import { BASE_RL, toScene } from './terrainGeometry'
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -38,6 +41,7 @@ export function CameraRig({ pit, floorRL }: { pit: Vec2; floorRL: number }) {
   const invalidate = useThree((s) => s.invalidate)
   const exaggeration = useAppStore((s) => s.exaggeration)
   const view = useAppStore((s) => s.view)
+  const focus = useAppStore((s) => s.focus)
 
   const floorY = (floorRL - BASE_RL) * exaggeration
 
@@ -105,6 +109,18 @@ export function CameraRig({ pit, floorRL }: { pit: Vec2; floorRL: number }) {
     // Only react to new requests, not to exaggeration changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view.n])
+
+  // Fly to a point on the ground (a finding picked in the list or on the map).
+  useEffect(() => {
+    if (!focus) return
+    const survey = useTerrain.getState().surveys.current
+    if (!survey) return
+    const z = sampleBilinear(survey.grid, survey.elevations, focus.p) ?? BASE_RL
+    const [x, , sz] = toScene(survey.grid, focus.p, z)
+    flyTo(focusPose([x, (z - BASE_RL) * exaggeration, sz]), 1300)
+    // Only react to new requests, not to exaggeration changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus?.n])
 
   // Keep the aim point on the same ground feature when the vertical scale changes.
   const lastEx = useRef(exaggeration)

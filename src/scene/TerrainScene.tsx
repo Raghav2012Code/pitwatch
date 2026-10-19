@@ -1,5 +1,5 @@
-import { Canvas } from '@react-three/fiber'
-import { useMemo } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
+import { useEffect, useMemo } from 'react'
 import { centroidOf } from '../geo/polygon'
 import { useAppStore } from '../state/store'
 import { useTerrain } from '../state/terrain'
@@ -7,13 +7,23 @@ import { CameraRig } from './CameraRig'
 import { buildMarks } from './marks'
 import { Overlays } from './Overlays'
 import { Terrain } from './Terrain'
-import { toScene } from './terrainGeometry'
+import { fromScene, toScene } from './terrainGeometry'
 import { ViewOffset } from './ViewOffset'
 
 /** Backdrop colour behind the model; fog fades distant terrain into it. */
 const horizon = () =>
   getComputedStyle(document.documentElement).getPropertyValue('--color-backdrop').trim() ||
   '#e8e4d9'
+
+/** Asks the on-demand canvas for a frame when `on` changes (it does not render by itself). */
+function Redraw({ on }: { on: unknown }) {
+  const invalidate = useThree((s) => s.invalidate)
+  useEffect(() => invalidate(), [on, invalidate])
+  return null
+}
+
+/** Eased morph target: 1 shows the baseline survey, 0 the current one. */
+const epochMorph = () => (useAppStore.getState().epoch === 'baseline' ? 1 : 0)
 
 /**
  * The 3D view: current survey surface on a block, lit from the north-west (the
@@ -22,6 +32,9 @@ const horizon = () =>
  */
 export default function TerrainScene() {
   const survey = useTerrain((s) => s.surveys.current)
+  const baseline = useTerrain((s) => s.surveys.baseline)
+  const epoch = useAppStore((s) => s.epoch)
+  const pickPoint = useAppStore((s) => s.pickPoint)
   const limits = useTerrain((s) => s.limits)
   const change = useTerrain((s) => s.change)
   const findings = useTerrain((s) => s.findings)
@@ -72,7 +85,15 @@ export default function TerrainScene() {
         shadow-bias={-0.0004}
         shadow-normalBias={1.5}
       />
-      <Terrain survey={survey} marks={marks} overlay={[showChange ? 1 : 0, showFindings ? 1 : 0]} />
+      <Terrain
+        survey={survey}
+        marks={marks}
+        overlay={epoch === 'current' ? [showChange ? 1 : 0, showFindings ? 1 : 0] : [0, 0]}
+        morphTo={baseline}
+        morph={epochMorph}
+        onPick={(pt) => pickPoint(fromScene(survey.grid, pt.x, pt.z))}
+      />
+      <Redraw on={epoch} />
       <Overlays survey={survey} />
       <CameraRig pit={aim.pit} floorRL={aim.floorRL} />
       <ViewOffset region=".stage" />

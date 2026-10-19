@@ -38,13 +38,24 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 | M3  | 3D terrain view                                                                         | done   |
 | M4  | Compliance engine R1 boundary, R2 depth, R3 dumping (k=2, σ=√(σ1²+σ2²)) + snapshot test | done   |
 | M5  | Overlays: lease, buffer, change, findings (zone outlines not drawn yet)                 | done   |
-| M6  | Panels, picking, measure, profile, epoch slider                                         | next   |
-| M7  | Polish                                                                                  |        |
+| M6  | Panels, picking, measure, profile, epoch slider, fly-to                                 | done   |
+| M7  | Polish                                                                                  | next   |
 | M8  | README with Mermaid diagram, Vercel/Netlify config (deploy live since 2026-10-18)       |        |
 
 ## Update log
 
 Newest first.
+
+### 2026-10-19: M6 picking, measure, profile, survey slider, fly-to
+
+- **Survey slider:** the timeline has a real control now. A range input (0/1, snaps) over the track plus clickable Baseline and Current labels set `epoch` in the store. The monitor `Terrain` always holds the current survey and morphs to the baseline (`morphTo` + `morph` from the home page), so switching glides. Only two surveys exist, so there is no in-between state to fake. On the baseline, change and finding overlays and pins are hidden (they describe current vs baseline). A `Redraw` component asks the demand-driven canvas for a frame when the epoch changes.
+- **Tools:** Inspect and Measure switch (top-left under the scale bar, shortcut `M`, `Esc` clears). Store: `tool`, `picked`, `measureA`, `measureB`, `pickPoint`, `clearPicks`. Terrain `onPick` fires on a click, not a drag (`e.delta` ≤ 4 px). Measure: A, B, a third click starts again. Cursor is a crosshair while measuring.
+- **Inspector tab:** `src/compliance/inspect.ts` `readPoint` (pure, tested) gives position, lat/lon (display-only), current and baseline RL ± σ, change ± combined σ with the engine's threshold verdict, slope, lease inside/outside and distance, buffer, pit floor margin, and the findings under the cell (links). Measurement section: horizontal, slope distance, elevation change ± √2σ, average grade, profile chart. Measured on the current survey; horizontal position error is not modelled (the panel says so).
+- **Profile:** `src/geo/profile.ts` `profileAlong` (half-cell steps, NaN off-grid, tested); `measureOnSurface` in `geo/measure.ts`. `ProfileChart.tsx` draws current (solid), baseline (dashed) and the approved floor (dotted) only where the line is inside the pit zone. Vertical scale is fitted to the data and the chart says so. A map chip shows the headline numbers so they are visible when the drawer is closed.
+- **Map markers:** `PickLayer.tsx`: ring for an inspected point, A/B discs and the draped line for a measurement (sprites at constant screen size via `useScreenSize.ts`, `raycast` disabled so they never block clicks).
+- **Findings:** pins are clickable (select + open Findings tab + fly), each card has "Show on map" and a highlight ring when selected. `CameraRig` handles `focus` requests with `focusPose` (close oblique from the south-east, tested).
+- Not done: outlines of the pit and dump zones. Pins that overlap (R1-1, R1-2 in top view) are still hard to tell apart without zooming. Picks hit the current surface geometry even while the baseline is shown (small horizontal offset on steep walls).
+- Browser check: the Playwright helper takes `{"mouse":[x,y]}` and `{"key":"m"}` actions; epoch buttons are `.epoch-btn:has-text("Baseline")`.
 
 ### 2026-10-19: M5 monitor overlays
 

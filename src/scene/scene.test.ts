@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { GridSpec } from '../domain/types'
 import { hexToRgb, RAMP, rampAt, rampGradient, srgbToLinear } from './palette'
-import { headingOf, metresPerPixel, northUp, presetPose, scaleBar } from './presets'
+import { focusPose, headingOf, metresPerPixel, northUp, presetPose, scaleBar } from './presets'
 import {
   BASE_RL,
   buildSkirtArrays,
@@ -125,5 +125,16 @@ describe('camera presets', () => {
     expect(metresPerPixel(1000, 90, 2000)).toBeCloseTo(1)
     expect(scaleBar(1)).toEqual({ metres: 100, px: 100 })
     expect(scaleBar(3)).toEqual({ metres: 200, px: 200 / 3 })
+  })
+})
+
+describe('focus view', () => {
+  it('looks at the point from the south-east, above it', () => {
+    const { position, target } = focusPose([10, 20, 30])
+    expect(target).toEqual([10, 20, 30])
+    expect(position[0]).toBeGreaterThan(10)
+    expect(position[1]).toBeGreaterThan(20)
+    expect(position[2]).toBeGreaterThan(30)
+    expect(headingOf(position, target)).toBeGreaterThan(270) // looking north-west
   })
 })

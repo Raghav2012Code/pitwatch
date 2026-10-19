@@ -1,8 +1,9 @@
 import { lazy, Suspense } from 'react'
+import { useAppStore } from '../state/store'
 import { useTerrain } from '../state/terrain'
 import { Relief } from './schematic'
 import { Timeline } from './Timeline'
-import { ScaleBar, SceneStatus, ViewControls } from './viewport/MapHud'
+import { ScaleBar, SceneStatus, ToolControls, ViewControls } from './viewport/MapHud'
 import { SceneErrorBoundary } from './viewport/SceneErrorBoundary'
 
 // three.js is large; fetch it only when the monitor actually shows the model.
@@ -17,12 +18,14 @@ export function Viewport() {
   const status = useTerrain((s) => s.status)
   const error = useTerrain((s) => s.error)
   const ready = status === 'ready'
+  const tool = useAppStore((s) => s.tool)
 
   return (
     <main aria-label="3D mine view" className="viewport absolute inset-0">
       <Relief className="opacity-45" />
       <div
         className="scene-wrap absolute inset-0"
+        data-tool={tool}
         role="img"
         aria-label="3D terrain of the fictional Venthar Ridge pit, current survey. Drag to orbit, right-drag to pan, scroll to zoom."
       >
@@ -50,6 +53,7 @@ export function Viewport() {
           <>
             <ViewControls />
             <ScaleBar />
+            <ToolControls />
           </>
         )}
         <Timeline />

@@ -1,5 +1,4 @@
 import { Line } from '@react-three/drei'
-import { useThree } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import type { ComplianceFinding, TerrainSurvey } from '../domain/types'
@@ -9,6 +8,8 @@ import { useTerrain } from '../state/terrain'
 import { toneOf } from './marks'
 import { OVERLAY, TONE_COLOR } from './palette'
 import { leaseLine, onGround } from './overlayGeometry'
+import { PickLayer } from './PickLayer'
+import { useScreenHeight } from './useScreenSize'
 
 /** Badge size on screen, pixels tall. */
 const BADGE_PX = 26
@@ -74,6 +75,10 @@ function badgeTexture(tone: keyof typeof SHAPE, id: string) {
   return t
 }
 
+const setCursor = (e: Event, cursor: string) => {
+  ;(e.target as HTMLElement).style.cursor = cursor
+}
+
 /** Stick with a badge on top. The badge keeps its screen size at any zoom. */
 function FindingPin({
   f,
@@ -87,19 +92,29 @@ function FindingPin({
   const tone = toneOf(f)
   const [x, y, z] = onGround(survey, f.centroid, ex, 0)
   const height = 90
-  const size = useThree((s) => s.size)
-  const fov = useThree((s) => (s.camera as THREE.PerspectiveCamera).fov)
+  const selected = useAppStore((s) => s.selectedFinding === f.id)
+  const selectFinding = useAppStore((s) => s.selectFinding)
   const map = useMemo(() => badgeTexture(tone, f.id), [tone, f.id])
   useEffect(() => () => map.dispose(), [map])
-  // Unattenuated sprites are sized in view-space units: fraction of height × 2·tan(fov/2).
-  const h = (BADGE_PX / size.height) * 2 * Math.tan(THREE.MathUtils.degToRad(fov) / 2)
+  const h = useScreenHeight(BADGE_PX) * (selected ? 1.3 : 1)
   return (
     <group position={[x, y, z]}>
       <mesh position={[0, height / 2, 0]}>
         <cylinderGeometry args={[1.6, 1.6, height, 6]} />
         <meshBasicMaterial color={TONE_COLOR[tone]} />
       </mesh>
-      <sprite position={[0, height, 0]} scale={[h * (BADGE_W / BADGE_H), h, 1]} renderOrder={10}>
+      <sprite
+        position={[0, height, 0]}
+        scale={[h * (BADGE_W / BADGE_H), h, 1]}
+        renderOrder={10}
+        onClick={(e) => {
+          if (e.delta > 4) return
+          e.stopPropagation()
+          selectFinding(f.id, f.centroid)
+        }}
+        onPointerOver={(e) => setCursor(e.nativeEvent, 'pointer')}
+        onPointerOut={(e) => setCursor(e.nativeEvent, '')}
+      >
         <spriteMaterial map={map} sizeAttenuation={false} depthTest={false} transparent />
       </sprite>
     </group>
@@ -112,6 +127,7 @@ export function Overlays({ survey }: { survey: TerrainSurvey }) {
   const findings = useTerrain((s) => s.findings)
   const layers = useAppStore((s) => s.layers)
   const ex = useAppStore((s) => s.exaggeration)
+  const epoch = useAppStore((s) => s.epoch)
 
   const lease = useMemo(
     () => (limits ? leaseLine(survey, limits.leaseBoundary, ex) : null),
@@ -141,7 +157,9 @@ export function Overlays({ survey }: { survey: TerrainSurvey }) {
         />
       )}
       {layers.findings &&
+        epoch === 'current' &&
         findings.map((f) => <FindingPin key={f.id} f={f} survey={survey} ex={ex} />)}
+      <PickLayer survey={survey} />
     </>
   )
 }

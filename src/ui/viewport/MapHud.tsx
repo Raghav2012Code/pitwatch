@@ -6,6 +6,7 @@ import { OVERLAY, rampGradient } from '../../scene/palette'
 import { scaleBar, type ViewPreset } from '../../scene/presets'
 import { elevationScale } from '../../scene/terrainGeometry'
 import { EXAGGERATION, useAppStore } from '../../state/store'
+import { measureOnSurface } from '../../geo/measure'
 import { useTerrain } from '../../state/terrain'
 import { GLYPH } from '../findings'
 
@@ -59,6 +60,66 @@ export function ViewControls() {
           </g>
         </svg>
       </button>
+    </div>
+  )
+}
+
+/** Chooses what a click on the terrain does, with a one-line prompt for the current step. */
+export function ToolControls() {
+  const tool = useAppStore((s) => s.tool)
+  const setTool = useAppStore((s) => s.setTool)
+  const a = useAppStore((s) => s.measureA)
+  const b = useAppStore((s) => s.measureB)
+  const picked = useAppStore((s) => s.picked)
+  const clearPicks = useAppStore((s) => s.clearPicks)
+  const survey = useTerrain((s) => s.surveys.current)
+
+  const m = survey && a && b ? measureOnSurface(survey.grid, survey.elevations, a, b) : null
+  let hint = 'Click the terrain to read a point.'
+  if (tool === 'measure') {
+    hint = !a ? 'Click point A.' : !b ? 'Click point B.' : ''
+  } else if (picked) {
+    hint = 'Point read. See Inspector.'
+  }
+  const anything = tool === 'measure' ? Boolean(a) : Boolean(picked)
+
+  return (
+    <div
+      className="enter-down absolute top-[60px] left-4 flex flex-col items-start gap-2"
+      style={delay(1.3)}
+    >
+      <div role="group" aria-label="Click tool" className="seg">
+        <button type="button" aria-pressed={tool === 'inspect'} onClick={() => setTool('inspect')}>
+          Inspect
+        </button>
+        <button
+          type="button"
+          aria-pressed={tool === 'measure'}
+          aria-keyshortcuts="M"
+          onClick={() => setTool('measure')}
+        >
+          Measure
+        </button>
+      </div>
+      <div className="map-chip flex items-center gap-2 text-[11.5px] text-ink-dim" role="status">
+        {m ? (
+          <span className="font-mono text-ink">
+            {m.horizontalDistance.toFixed(0)} m across, {m.dz >= 0 ? '+' : '−'}
+            {Math.abs(m.dz).toFixed(1)} m
+          </span>
+        ) : (
+          hint
+        )}
+        {anything && (
+          <button
+            type="button"
+            className="text-accent underline underline-offset-2"
+            onClick={clearPicks}
+          >
+            Clear
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -121,6 +182,7 @@ export function OverlayKey() {
   const layers = useAppStore((s) => s.layers)
   const limits = useTerrain((s) => s.limits)
   const change = useTerrain((s) => s.change)
+  const onCurrent = useAppStore((s) => s.epoch === 'current')
   if (!limits || !change) return null
   const rows: { key: string; swatch: React.ReactNode; label: string }[] = []
   const line = (opacity: number, h: number) => (
@@ -142,7 +204,7 @@ export function OverlayKey() {
       label: `Safety buffer (${limits.safetyBufferMetres} m)`,
     })
   }
-  if (layers.change) {
+  if (layers.change && onCurrent) {
     const box = (c: string) => (
       <span className="h-3 w-3 shrink-0 rounded-[2px]" style={{ background: c }} />
     )
@@ -151,7 +213,7 @@ export function OverlayKey() {
       { key: 'fill', swatch: box(OVERLAY.fill), label: 'Filled' },
     )
   }
-  if (layers.findings) {
+  if (layers.findings && onCurrent) {
     for (const [tone, label] of [
       ['warning', 'Warning'],
       ['violation', 'Violation'],
@@ -176,13 +238,13 @@ export function OverlayKey() {
           </li>
         ))}
       </ul>
-      {layers.change && (
+      {layers.change && onCurrent && (
         <p className="mt-2 text-[11.5px] leading-4 text-ink-faint">
           Change is shown only where it exceeds {COMPLIANCE_CONFIG.minChangeM} m plus{' '}
           {COMPLIANCE_CONFIG.k}σ (σ ±{change.sigma.toFixed(2)} m). Other ground is dimmed.
         </p>
       )}
-      {layers.findings && (
+      {layers.findings && onCurrent && (
         <p className="mt-2 text-[11.5px] leading-4 text-ink-faint">
           Coloured cells and pins come from the rule engine, not from hand-placed marks.
         </p>

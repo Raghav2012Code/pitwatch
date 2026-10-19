@@ -31,6 +31,19 @@ export function presetPose(kind: ViewPreset | 'intro', pit: Vec2, floorY: number
   return { position: [t[0] + o[0], t[1] + o[1], t[2] + o[2]], target: t }
 }
 
+/** Close oblique view of a ground point (scene units), looking from the south-east. */
+export function focusPose(ground: V3, distance = 560): Pose {
+  const o: V3 = [0.4, 0.58, 0.71]
+  return {
+    position: [
+      ground[0] + o[0] * distance,
+      ground[1] + o[1] * distance,
+      ground[2] + o[2] * distance,
+    ],
+    target: ground,
+  }
+}
+
 /**
  * Same distance and tilt, turned so the camera looks due north (towards −z).
  */

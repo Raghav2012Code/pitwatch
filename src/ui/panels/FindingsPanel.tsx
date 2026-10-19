@@ -1,5 +1,6 @@
 import { COMPLIANCE_CONFIG } from '../../compliance/config'
 import type { ComplianceFinding } from '../../domain/types'
+import { useAppStore } from '../../state/store'
 import { useTerrain } from '../../state/terrain'
 import { countText, GLYPH, RULE_NAMES, toneOf } from '../findings'
 import { CriticalGlyph, ViolationGlyph, WarningGlyph } from '../icons'
@@ -31,8 +32,14 @@ const n = (v: number, digits = 0) =>
 function FindingCard({ f }: { f: ComplianceFinding }) {
   const tone = toneOf(f)
   const Glyph = GLYPH[tone]
+  const selected = useAppStore((s) => s.selectedFinding === f.id)
+  const selectFinding = useAppStore((s) => s.selectFinding)
   return (
-    <li className={`finding tone-${tone}`}>
+    <li
+      className={`finding tone-${tone}`}
+      aria-current={selected || undefined}
+      data-selected={selected || undefined}
+    >
       <div className="flex items-start gap-2.5">
         <Glyph className="mt-0.5 h-[18px] w-[18px] shrink-0 text-(--tone)" />
         <div className="min-w-0 flex-1">
@@ -58,8 +65,17 @@ function FindingCard({ f }: { f: ComplianceFinding }) {
           </div>
         ))}
       </dl>
-      <div className="mt-1.5 font-mono text-[11px] text-ink-faint">
-        Centre E {n(f.centroid.x)} m, N {n(f.centroid.y)} m
+      <div className="mt-1.5 flex items-center justify-between gap-2">
+        <span className="font-mono text-[11px] text-ink-faint">
+          Centre E {n(f.centroid.x)} m, N {n(f.centroid.y)} m
+        </span>
+        <button
+          type="button"
+          className="text-[12px] font-semibold text-accent underline underline-offset-2"
+          onClick={() => selectFinding(f.id, f.centroid)}
+        >
+          Show on map
+        </button>
       </div>
     </li>
   )

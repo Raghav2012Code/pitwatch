@@ -213,6 +213,9 @@ body {
     border-left: 3px solid var(--tone);
     background: color-mix(in srgb, var(--tone) 5%, var(--color-panel));
   }
+  .finding[data-selected] {
+    box-shadow: 0 0 0 2px var(--tone);
+  }
   .finding-figures {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -328,6 +331,9 @@ body {
   .scene-wrap:active {
     cursor: grabbing;
   }
+  .scene-wrap[data-tool='measure'] {
+    cursor: crosshair;
+  }
 
   /* Small translucent label on the map (scale bar). */
   .map-chip {
@@ -359,6 +365,10 @@ body {
   }
   .seg button + button {
     border-left: 1px solid var(--color-line);
+  }
+  .seg button[aria-pressed='true'] {
+    color: var(--color-panel);
+    background: var(--color-accent);
   }
   .seg button:hover {
     color: var(--color-accent);
@@ -654,6 +664,42 @@ body {
     background: var(--color-accent);
     translate: 50% 0;
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  }
+  .epoch-dot.shown.at-start {
+    translate: -50% 0;
+  }
+  .epoch-btn {
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+  }
+  .epoch-btn:not(:disabled):hover {
+    background: var(--color-panel-2);
+  }
+  /* Invisible range input laid over the track: drag or arrow keys move between the surveys. */
+  .epoch-range {
+    position: absolute;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    height: 28px;
+    margin: 0;
+    border-radius: 6px;
+  }
+  .epoch-range::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 20px;
+    background: transparent;
+  }
+  .epoch-range::-moz-range-thumb {
+    width: 14px;
+    height: 20px;
+    border: 0;
+    background: transparent;
+  }
+  .epoch-range:disabled {
+    cursor: default;
   }
   .map-tag {
     font-size: 10px;
