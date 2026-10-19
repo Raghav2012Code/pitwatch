@@ -2,8 +2,7 @@ import { create } from 'zustand'
 import type { ViewRequest } from '../scene/presets'
 
 export type PanelTab = 'overview' | 'findings' | 'inspector' | 'about'
-/** Layers that work today. The rest are listed in the panel as coming later. */
-export type LayerId = 'terrain' | 'tint' | 'contours'
+export type LayerId = 'terrain' | 'tint' | 'contours' | 'lease' | 'buffer' | 'change' | 'findings'
 
 export const EXAGGERATION = { min: 1, max: 3, initial: 1.5 } as const
 
@@ -31,8 +30,17 @@ export const useAppStore = create<AppState>((set) => ({
   drawerOpen: false,
   layersHidden: false,
   detailsHidden: false,
-  // Natural look by default: aerial image, no tint, no contour overlay.
-  layers: { terrain: true, tint: false, contours: false },
+  // Natural look by default: aerial image, no tint or contours; the lease line and the
+  // engine's findings are on because they are what the monitor is for.
+  layers: {
+    terrain: true,
+    tint: false,
+    contours: false,
+    lease: true,
+    buffer: false,
+    change: false,
+    findings: true,
+  },
   exaggeration: EXAGGERATION.initial,
   view: { kind: 'intro', n: 0 },
   setActiveTab: (activeTab) => set({ activeTab }),

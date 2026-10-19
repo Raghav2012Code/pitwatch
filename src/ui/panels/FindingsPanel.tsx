@@ -30,7 +30,7 @@ const n = (v: number, digits = 0) =>
 
 function FindingCard({ f }: { f: ComplianceFinding }) {
   const tone = toneOf(f)
-  const Glyph = GLYPH[tone === 'clear' ? 'warning' : tone]
+  const Glyph = GLYPH[tone]
   return (
     <li className={`finding tone-${tone}`}>
       <div className="flex items-start gap-2.5">

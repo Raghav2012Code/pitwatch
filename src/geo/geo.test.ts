@@ -11,7 +11,7 @@ import {
 } from './grid'
 import { latLonToLocal, localToLatLon } from './latlon'
 import { measure } from './measure'
-import { distanceToBoundary, pointInPolygon, polygonArea } from './polygon'
+import { distanceToBoundary, insetSegments, pointInPolygon, polygonArea } from './polygon'
 
 const square: Polygon = [
   { x: 0, y: 0 },
@@ -49,6 +49,42 @@ describe('polygon', () => {
   it('measures distance to the outline from inside and outside', () => {
     expect(distanceToBoundary({ x: 5, y: 2 }, square)).toBe(2)
     expect(distanceToBoundary({ x: 13, y: 14 }, square)).toBe(5)
+  })
+})
+
+describe('buffer outline', () => {
+  const big: Polygon = [
+    { x: 0, y: 0 },
+    { x: 200, y: 0 },
+    { x: 200, y: 120 },
+    { x: 0, y: 120 },
+  ]
+
+  it('traces points inside the polygon, the inset distance from its outline', () => {
+    const segs = insetSegments(big, 20, 4)
+    expect(segs.length).toBeGreaterThan(100)
+    expect(segs.length % 2).toBe(0)
+    for (const p of segs) {
+      expect(pointInPolygon(p, big)).toBe(true)
+      expect(distanceToBoundary(p, big)).toBeCloseTo(20, 0)
+    }
+  })
+
+  it('follows a concave notch instead of cutting across it', () => {
+    const notch: Polygon = [
+      { x: 0, y: 0 },
+      { x: 200, y: 0 },
+      { x: 200, y: 120 },
+      { x: 110, y: 120 },
+      { x: 110, y: 50 },
+      { x: 90, y: 50 },
+      { x: 90, y: 120 },
+      { x: 0, y: 120 },
+    ]
+    const segs = insetSegments(notch, 15, 2)
+    // Nothing may land inside the notch or within 15 m of its walls.
+    for (const p of segs) expect(distanceToBoundary(p, notch)).toBeGreaterThan(14.5)
+    expect(segs.some((p) => p.x > 90 && p.x < 110 && p.y > 50)).toBe(false)
   })
 })
 

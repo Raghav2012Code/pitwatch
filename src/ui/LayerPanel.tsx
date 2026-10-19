@@ -1,13 +1,28 @@
 import type { ComponentType, CSSProperties, SVGProps } from 'react'
 import { useAppStore, type LayerId } from '../state/store'
 import { useTerrain } from '../state/terrain'
-import { ContourIcon, TerrainIcon, TintIcon } from './icons'
-import { ExaggerationSlider, MapKey } from './viewport/MapHud'
+import {
+  BoundaryIcon,
+  BufferIcon,
+  ChangeIcon,
+  ContourIcon,
+  FindingIcon,
+  TerrainIcon,
+  TintIcon,
+} from './icons'
+import { ExaggerationSlider, MapKey, OverlayKey } from './viewport/MapHud'
 
 const LAYERS: { id: LayerId; label: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }[] = [
   { id: 'terrain', label: 'Terrain', Icon: TerrainIcon },
   { id: 'tint', label: 'Elevation tint', Icon: TintIcon },
   { id: 'contours', label: 'Contours', Icon: ContourIcon },
+]
+
+const OVERLAYS: typeof LAYERS = [
+  { id: 'lease', label: 'Lease boundary', Icon: BoundaryIcon },
+  { id: 'buffer', label: 'Safety buffer', Icon: BufferIcon },
+  { id: 'change', label: 'Change since baseline', Icon: ChangeIcon },
+  { id: 'findings', label: 'Findings', Icon: FindingIcon },
 ]
 
 function LayerSwitch({ id, label, Icon, i }: (typeof LAYERS)[number] & { i: number }) {
@@ -49,9 +64,12 @@ export function LayerPanel() {
             <LayerSwitch key={l.id} {...l} i={i} />
           ))}
         </ul>
-        <p className="mt-2 px-1 text-[11.5px] leading-4 text-ink-faint">
-          Lease boundary, buffer, change and findings layers arrive with the map overlays (M5).
-        </p>
+        <h2 className="panel-title mt-3 px-1">Permit and change</h2>
+        <ul role="list" className="mt-1.5 flex flex-col gap-0.5">
+          {OVERLAYS.map((l, i) => (
+            <LayerSwitch key={l.id} {...l} i={i + LAYERS.length} />
+          ))}
+        </ul>
       </section>
 
       {ready && (
@@ -59,6 +77,9 @@ export function LayerPanel() {
           <section className="border-t border-line px-4 py-3">
             <h2 className="panel-title mb-2">Key</h2>
             <MapKey />
+            <div className="mt-3 border-t border-line pt-3 empty:hidden">
+              <OverlayKey />
+            </div>
           </section>
           <section className="border-t border-line px-4 py-3">
             <ExaggerationSlider />

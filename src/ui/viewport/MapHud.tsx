@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
 import { SURFACE_KEY } from '../../data/orthophoto'
 import { useCameraState } from '../../scene/cameraState'
-import { rampGradient } from '../../scene/palette'
+import { COMPLIANCE_CONFIG } from '../../compliance/config'
+import { OVERLAY, rampGradient } from '../../scene/palette'
 import { scaleBar, type ViewPreset } from '../../scene/presets'
 import { elevationScale } from '../../scene/terrainGeometry'
 import { EXAGGERATION, useAppStore } from '../../state/store'
 import { useTerrain } from '../../state/terrain'
+import { GLYPH } from '../findings'
 
 const delay = (s: number) => ({ '--d': `${s}s` }) as CSSProperties
 
@@ -108,6 +110,81 @@ export function MapKey() {
       {!tint && (
         <p className="mt-2 text-[11.5px] leading-4 text-ink-faint">
           Simulated aerial image draped on the survey surface.
+        </p>
+      )}
+    </div>
+  )
+}
+
+/** Key for the permit, change and finding overlays that are switched on. */
+export function OverlayKey() {
+  const layers = useAppStore((s) => s.layers)
+  const limits = useTerrain((s) => s.limits)
+  const change = useTerrain((s) => s.change)
+  if (!limits || !change) return null
+  const rows: { key: string; swatch: React.ReactNode; label: string }[] = []
+  const line = (opacity: number, h: number) => (
+    <span
+      className="w-4 shrink-0 rounded-full"
+      style={{
+        height: h,
+        background: OVERLAY.lease,
+        opacity,
+        boxShadow: '0 0 0 1px var(--color-line-strong)',
+      }}
+    />
+  )
+  if (layers.lease) rows.push({ key: 'lease', swatch: line(1, 3), label: 'Lease boundary' })
+  if (layers.buffer) {
+    rows.push({
+      key: 'buffer',
+      swatch: line(0.7, 1.5),
+      label: `Safety buffer (${limits.safetyBufferMetres} m)`,
+    })
+  }
+  if (layers.change) {
+    const box = (c: string) => (
+      <span className="h-3 w-3 shrink-0 rounded-[2px]" style={{ background: c }} />
+    )
+    rows.push(
+      { key: 'cut', swatch: box(OVERLAY.cut), label: 'Excavated' },
+      { key: 'fill', swatch: box(OVERLAY.fill), label: 'Filled' },
+    )
+  }
+  if (layers.findings) {
+    for (const [tone, label] of [
+      ['warning', 'Warning'],
+      ['violation', 'Violation'],
+      ['critical', 'Critical'],
+    ] as const) {
+      const Glyph = GLYPH[tone]
+      rows.push({
+        key: tone,
+        swatch: <Glyph className="h-4 w-4 shrink-0" style={{ color: OVERLAY[tone] }} />,
+        label,
+      })
+    }
+  }
+  if (!rows.length) return null
+  return (
+    <div>
+      <ul className="flex flex-wrap gap-x-4 gap-y-1.5">
+        {rows.map((r) => (
+          <li key={r.key} className="flex items-center gap-2 text-[12px] text-ink-dim">
+            {r.swatch}
+            {r.label}
+          </li>
+        ))}
+      </ul>
+      {layers.change && (
+        <p className="mt-2 text-[11.5px] leading-4 text-ink-faint">
+          Change is shown only where it exceeds {COMPLIANCE_CONFIG.minChangeM} m plus{' '}
+          {COMPLIANCE_CONFIG.k}σ (σ ±{change.sigma.toFixed(2)} m). Other ground is dimmed.
+        </p>
+      )}
+      {layers.findings && (
+        <p className="mt-2 text-[11.5px] leading-4 text-ink-faint">
+          Coloured cells and pins come from the rule engine, not from hand-placed marks.
         </p>
       )}
     </div>

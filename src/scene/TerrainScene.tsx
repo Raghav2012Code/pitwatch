@@ -1,8 +1,11 @@
 import { Canvas } from '@react-three/fiber'
 import { useMemo } from 'react'
 import { centroidOf } from '../geo/polygon'
+import { useAppStore } from '../state/store'
 import { useTerrain } from '../state/terrain'
 import { CameraRig } from './CameraRig'
+import { buildMarks } from './marks'
+import { Overlays } from './Overlays'
 import { Terrain } from './Terrain'
 import { toScene } from './terrainGeometry'
 import { ViewOffset } from './ViewOffset'
@@ -20,7 +23,17 @@ const horizon = () =>
 export default function TerrainScene() {
   const survey = useTerrain((s) => s.surveys.current)
   const limits = useTerrain((s) => s.limits)
+  const change = useTerrain((s) => s.change)
+  const findings = useTerrain((s) => s.findings)
+  const showChange = useAppStore((s) => s.layers.change)
+  const showFindings = useAppStore((s) => s.layers.findings)
   const fog = useMemo(() => horizon(), [])
+
+  // Marks are built once; the layer switches only change how strongly they show.
+  const marks = useMemo(
+    () => (survey ? buildMarks(survey.grid.cols * survey.grid.rows, change, findings) : undefined),
+    [survey, change, findings],
+  )
 
   const aim = useMemo(() => {
     if (!survey || !limits) return null
@@ -59,7 +72,8 @@ export default function TerrainScene() {
         shadow-bias={-0.0004}
         shadow-normalBias={1.5}
       />
-      <Terrain survey={survey} />
+      <Terrain survey={survey} marks={marks} overlay={[showChange ? 1 : 0, showFindings ? 1 : 0]} />
+      <Overlays survey={survey} />
       <CameraRig pit={aim.pit} floorRL={aim.floorRL} />
       <ViewOffset region=".stage" />
     </Canvas>

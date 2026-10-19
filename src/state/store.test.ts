@@ -22,7 +22,8 @@ describe('view settings', () => {
     const s = useAppStore.getState
     expect(s().layers.contours).toBe(false)
     s().toggleLayer('contours')
-    expect(s().layers).toEqual({ terrain: true, tint: false, contours: true })
+    expect(s().layers.contours).toBe(true)
+    expect(s().layers.lease).toBe(true)
   })
 
   it('clamps vertical exaggeration to 1×–3×', () => {

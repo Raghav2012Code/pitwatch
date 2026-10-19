@@ -37,14 +37,24 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 | M2  | Domain types, geo utils, seeded synthetic terrain + tests                               | done   |
 | M3  | 3D terrain view                                                                         | done   |
 | M4  | Compliance engine R1 boundary, R2 depth, R3 dumping (k=2, σ=√(σ1²+σ2²)) + snapshot test | done   |
-| M5  | Overlays                                                                                | next   |
-| M6  | Panels, picking, measure, profile, epoch slider                                         |        |
+| M5  | Overlays: lease, buffer, change, findings (zone outlines not drawn yet)                 | done   |
+| M6  | Panels, picking, measure, profile, epoch slider                                         | next   |
 | M7  | Polish                                                                                  |        |
 | M8  | README with Mermaid diagram, Vercel/Netlify config (deploy live since 2026-10-18)       |        |
 
 ## Update log
 
 Newest first.
+
+### 2026-10-19: M5 monitor overlays
+
+- Four new layer switches under "Permit and change" in the Map card: Lease boundary (on), Safety buffer (off), Change since baseline (off), Findings (on). Store `LayerId` gained `lease | buffer | change | findings`.
+- Change and findings colour the terrain cells (existing `aChange`/`aFinding` attributes and `overlay` strengths from the home page; the switches only set the strengths, marks are built once). `src/scene/marks.ts` (`buildMarks`, `toneOf`, tested) is now shared by the home page and the monitor; `src/ui/findings.ts` re-exports `toneOf`.
+- `src/scene/Overlays.tsx`: lease line, buffer line and one pin per finding (stick plus a camera-facing badge with the finding id). The badge is a canvas-textured sprite at constant screen size with the severity shape (triangle, octagon, diamond) and the same inner marks as the panel glyphs, so colour is never the only signal. Not drei `Html`: it logs a React 19 "unmount a root while rendering" error. `src/scene/overlayGeometry.ts` holds the pure helpers (`onGround`, `leaseLine`, shared with the home scene).
+- Buffer line: `insetSegments` in `src/geo/polygon.ts` (marching squares on the signed distance to the lease outline, 4 m step, handles the concave lease; tested). It is the same distance test R1 uses, so the line is where the warning band starts.
+- Key: `OverlayKey` lists only the overlays that are on, with the change threshold (minChange + kσ, σ shown) and a note that cells and pins come from the engine. Palette: `OVERLAY.lease`, `OVERLAY.badgeInk`, `TONE_COLOR`.
+- Not done: outlines of pit and dump zones, pin picking and fly-to (M6). Pins at the east wall (R1-1, R1-2) overlap in top view.
+- Browser check gotcha: switch rows are `[role=switch]`; use `[role=switch]:has-text("Safety buffer")` rather than `button:text-is`.
 
 ### 2026-10-18: home timeline follows the scroll
 

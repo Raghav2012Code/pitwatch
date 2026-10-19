@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import type { Orthophoto, TerrainSurvey } from '../domain/types'
 import { useAppStore } from '../state/store'
+import type { TerrainMarks } from './marks'
 import { CONTOUR_INK, OVERLAY, SOIL_PROFILE } from './palette'
 import { BASE_RL, buildSkirtArrays, buildTerrainArrays } from './terrainGeometry'
 
@@ -36,15 +37,6 @@ const ELEVATION_VARYING = {
 }
 
 type Uniform<T> = { value: T }
-
-/**
- * Per-cell overlay marks, one value per grid cell. `change`: −1 excavated, +1 filled.
- * `finding`: one-hot [warning, violation, critical] per cell (3 values per cell).
- */
-export interface TerrainMarks {
-  change: Float32Array
-  finding: Float32Array
-}
 
 /**
  * Surface material: aerial image or elevation tint (blended by a uniform), lit by the

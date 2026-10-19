@@ -49,3 +49,50 @@ export function centroidOf(points: readonly Vec2[]): Vec2 {
   }
   return { x: x / points.length, y: y / points.length }
 }
+
+/**
+ * Line segments (a0, b0, a1, b1, ...) tracing the set of points inside `poly` that are
+ * exactly `inset` metres from its outline: the inner edge of a safety buffer. Marching
+ * squares on the signed distance (positive inside) sampled every `step` metres, so
+ * concave corners and pinch-offs come out right. Accuracy is a fraction of `step`.
+ */
+export function insetSegments(poly: Polygon, inset: number, step = 4): Vec2[] {
+  const xs = poly.map((p) => p.x)
+  const ys = poly.map((p) => p.y)
+  const x0 = Math.min(...xs) - step
+  const y0 = Math.min(...ys) - step
+  const nx = Math.ceil((Math.max(...xs) + step - x0) / step) + 1
+  const ny = Math.ceil((Math.max(...ys) + step - y0) / step) + 1
+  const f = new Float32Array(nx * ny)
+  for (let j = 0; j < ny; j++) {
+    for (let i = 0; i < nx; i++) {
+      const p = { x: x0 + i * step, y: y0 + j * step }
+      f[j * nx + i] = (pointInPolygon(p, poly) ? 1 : -1) * distanceToBoundary(p, poly) - inset
+    }
+  }
+  const out: Vec2[] = []
+  // Zero crossing on the edge between corner values a (at pa) and b (at pb).
+  const cross = (pa: Vec2, a: number, pb: Vec2, b: number): Vec2 => {
+    const t = a / (a - b)
+    return { x: pa.x + (pb.x - pa.x) * t, y: pa.y + (pb.y - pa.y) * t }
+  }
+  for (let j = 0; j + 1 < ny; j++) {
+    for (let i = 0; i + 1 < nx; i++) {
+      const c = [
+        { p: { x: x0 + i * step, y: y0 + j * step }, v: f[j * nx + i] },
+        { p: { x: x0 + (i + 1) * step, y: y0 + j * step }, v: f[j * nx + i + 1] },
+        { p: { x: x0 + (i + 1) * step, y: y0 + (j + 1) * step }, v: f[(j + 1) * nx + i + 1] },
+        { p: { x: x0 + i * step, y: y0 + (j + 1) * step }, v: f[(j + 1) * nx + i] },
+      ]
+      const pts: Vec2[] = []
+      for (let k = 0; k < 4; k++) {
+        const a = c[k]
+        const b = c[(k + 1) % 4]
+        if (a.v > 0 !== b.v > 0) pts.push(cross(a.p, a.v, b.p, b.v))
+      }
+      // 2 crossings: one segment. 4 (saddle): pair them in edge order, a fine approximation.
+      for (let k = 0; k + 1 < pts.length; k += 2) out.push(pts[k], pts[k + 1])
+    }
+  }
+  return out
+}

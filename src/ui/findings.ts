@@ -1,4 +1,5 @@
 import type { ComplianceFinding, RuleId } from '../domain/types'
+import { toneOf } from '../scene/marks'
 import { CriticalGlyph, ViolationGlyph, WarningGlyph } from './icons'
 
 export const RULE_NAMES: Record<RuleId, string> = {
@@ -9,9 +10,7 @@ export const RULE_NAMES: Record<RuleId, string> = {
 
 export type Tone = 'critical' | 'violation' | 'warning' | 'clear'
 
-/** Display tone: critical outranks the plain violation colour. */
-export const toneOf = (f: ComplianceFinding): Tone =>
-  f.severity === 'critical' ? 'critical' : f.status
+export { toneOf }
 
 export const GLYPH = { critical: CriticalGlyph, violation: ViolationGlyph, warning: WarningGlyph }
 

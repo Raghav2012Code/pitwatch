@@ -39,6 +39,17 @@ export const OVERLAY = {
   warning: '#c98a12',
   violation: '#c0262d',
   critical: '#8c3bb0',
+  /** Lease boundary and buffer lines. */
+  lease: '#fbfaf6',
+  /** Pin badge: paper fill, ink text (same as --color-ink). */
+  badgeInk: '#23262b',
+} as const
+
+/** Tone to overlay colour, for pins and the map key. */
+export const TONE_COLOR = {
+  warning: OVERLAY.warning,
+  violation: OVERLAY.violation,
+  critical: OVERLAY.critical,
 } as const
 
 /** Contour line colour. */

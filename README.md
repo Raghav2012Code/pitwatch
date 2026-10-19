@@ -16,10 +16,11 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
   - Optional elevation tint, with colours spread so the plateau's relief shows, and optional 5 m contours.
   - Vertical exaggeration from 1× to 3×.
   - Oblique, top and pit camera views, a compass and a live scale bar.
+  - Overlay layers: lease boundary, safety buffer, measured change (excavated and filled, only beyond the noise threshold) and finding markers, all drawn from the engine output.
   - Top-bar compliance status, an Overview tab with each rule's result, and a Findings tab where every finding comes with its explanation and figures.
 - **Compliance engine** (`src/compliance/`): change detection, rules R1–R3, clustering into findings, severity and plain-English explanations. All of it is pure TypeScript and unit-tested.
 
-Still to come in the monitor: map overlays (lease fence, buffer, approved floor, change map, finding markers), point picking, a measure tool with a profile chart and the epoch slider. See [Roadmap](#roadmap).
+Still to come in the monitor: outlines of the pit and dump zones, point picking, a measure tool with a profile chart and the epoch slider. See [Roadmap](#roadmap).
 
 ## Data honesty
 
@@ -146,8 +147,8 @@ Vite, React 19, TypeScript (strict), three.js with @react-three/fiber and drei, 
 | M2  | Domain types, geo utilities, synthetic terrain                              | done   |
 | M3  | 3D terrain view                                                             | done   |
 | M4  | Compliance engine and scenario snapshot                                     | done   |
-| M5  | Overlays: lease fence, buffer, approved floor, change map, finding markers  | next   |
-| M6  | Panels: point picking, measure tool and profile chart, epoch slider, fly-to |        |
+| M5  | Overlays: lease boundary, buffer, change map, finding markers               | done   |
+| M6  | Panels: point picking, measure tool and profile chart, epoch slider, fly-to | next   |
 | M7  | Polish: accessibility, performance                                          |        |
 | M8  | Deployment config (Vercel or Netlify) and final checks                      |        |
 

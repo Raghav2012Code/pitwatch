@@ -2,13 +2,15 @@ import { Line } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { useMemo, useRef } from 'react'
 import * as THREE from 'three'
-import type { ComplianceFinding, Polygon, TerrainSurvey } from '../domain/types'
+import type { ComplianceFinding, TerrainSurvey } from '../domain/types'
 import { sampleBilinear } from '../geo/grid'
 import { useAppStore } from '../state/store'
 import { useStory } from '../state/story'
 import { useTerrain } from '../state/terrain'
-import { OVERLAY } from './palette'
-import { Terrain, type TerrainMarks } from './Terrain'
+import { buildMarks, toneOf } from './marks'
+import { leaseLine } from './overlayGeometry'
+import { TONE_COLOR } from './palette'
+import { Terrain } from './Terrain'
 import { BASE_RL, toScene } from './terrainGeometry'
 
 /*
@@ -23,48 +25,8 @@ const backdrop = () =>
   getComputedStyle(document.documentElement).getPropertyValue('--color-backdrop').trim() ||
   '#e8e4d9'
 
-const TONE_COLOR = {
-  warning: OVERLAY.warning,
-  violation: OVERLAY.violation,
-  critical: OVERLAY.critical,
-} as const
-
 /** Scroll position in time, 0 = baseline, 1 = current (read every frame). */
 const readTime = () => useStory.getState().t
-
-const toneOf = (f: ComplianceFinding) => (f.severity === 'critical' ? 'critical' : f.status)
-
-function buildMarks(survey: TerrainSurvey, findings: readonly ComplianceFinding[]) {
-  const n = survey.grid.cols * survey.grid.rows
-  const change = useTerrain.getState().change
-  const marks: TerrainMarks = { change: new Float32Array(n), finding: new Float32Array(n * 3) }
-  if (change) {
-    for (let i = 0; i < n; i++)
-      marks.change[i] = change.excavated[i] ? -1 : change.filled[i] ? 1 : 0
-  }
-  const slot = { warning: 0, violation: 1, critical: 2 }
-  for (const f of findings) {
-    for (const i of f.cells) marks.finding[i * 3 + slot[toneOf(f)]] = 1
-  }
-  return marks
-}
-
-/** Polyline along the lease boundary, a few metres above the ground, every ~16 m. */
-function leaseLine(survey: TerrainSurvey, lease: Polygon, ex: number) {
-  const pts: [number, number, number][] = []
-  for (let k = 0; k < lease.length; k++) {
-    const a = lease[k]
-    const b = lease[(k + 1) % lease.length]
-    const steps = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 16))
-    for (let s = 0; s <= steps; s++) {
-      const p = { x: a.x + ((b.x - a.x) * s) / steps, y: a.y + ((b.y - a.y) * s) / steps }
-      const z = sampleBilinear(survey.grid, survey.elevations, p) ?? BASE_RL
-      const [x, , sz] = toScene(survey.grid, p, z)
-      pts.push([x, (z - BASE_RL) * ex + 6, sz])
-    }
-  }
-  return pts
-}
 
 function Pin({ f, survey, ex }: { f: ComplianceFinding; survey: TerrainSurvey; ex: number }) {
   const head = useRef<THREE.Mesh>(null)
@@ -133,9 +95,11 @@ export default function HomeScene({ step }: { step: number }) {
   const ex = useAppStore((s) => s.exaggeration)
   const fog = useMemo(() => backdrop(), [])
 
+  const change = useTerrain((s) => s.change)
   const marks = useMemo(
-    () => (current ? buildMarks(current, findings) : undefined),
-    [current, findings],
+    () =>
+      current ? buildMarks(current.grid.cols * current.grid.rows, change, findings) : undefined,
+    [current, change, findings],
   )
   const lease = useMemo(
     () => (current && limits ? leaseLine(current, limits.leaseBoundary, ex) : null),
