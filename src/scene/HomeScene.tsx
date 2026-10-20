@@ -36,7 +36,7 @@ function Pin({ f, survey, ex }: { f: ComplianceFinding; survey: TerrainSurvey; e
   const height = f.status === 'violation' ? 150 : 100
   const color = TONE_COLOR[toneOf(f)]
   useFrame(({ clock }) => {
-    if (f.status === 'violation' && head.current) {
+    if (f.status === 'violation' && head.current && !reducedMotion()) {
       head.current.scale.setScalar(1 + 0.18 * Math.sin(clock.elapsedTime * 3))
     }
   })
@@ -68,7 +68,7 @@ const THICKNESS = 260
 function Orbit({ target }: { target: [number, number, number] }) {
   const angle = useRef(0.55)
   useFrame(({ camera, size }, dt) => {
-    angle.current += dt * 0.045
+    if (!reducedMotion()) angle.current += dt * 0.045
     const cam = camera as THREE.PerspectiveCamera
     const v = THREE.MathUtils.degToRad(cam.fov) / 2
     const h = Math.atan(Math.tan(v) * (size.width / size.height))
@@ -87,7 +87,10 @@ function Orbit({ target }: { target: [number, number, number] }) {
   return null
 }
 
-export default function HomeScene({ step }: { step: number }) {
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/** `active` false stops rendering altogether (the story is scrolled out of view). */
+export default function HomeScene({ step, active }: { step: number; active: boolean }) {
   const baseline = useTerrain((s) => s.surveys.baseline)
   const current = useTerrain((s) => s.surveys.current)
   const limits = useTerrain((s) => s.limits)
@@ -118,6 +121,7 @@ export default function HomeScene({ step }: { step: number }) {
     <Canvas
       shadows="percentage"
       flat
+      frameloop={active ? 'always' : 'never'}
       dpr={[1, 2]}
       camera={{ fov: 35, near: 10, far: 16000, position: [0, 3000, 2000] }}
       gl={{ antialias: true, alpha: true }}

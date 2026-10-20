@@ -18,11 +18,11 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
   - Oblique, top and pit camera views, a compass and a live scale bar.
   - Click the terrain with the Inspect tool to read a point (elevation ± uncertainty, change, slope, lease and pit-floor status, findings there), or switch to Measure for distances, grade and an elevation profile of current against baseline.
   - A survey slider on the timeline switches the map between the baseline and current surveys. Findings can be opened from their pins and flown to from the Findings tab.
-  - Overlay layers: lease boundary, safety buffer, measured change (excavated and filled, only beyond the noise threshold) and finding markers, all drawn from the engine output.
+  - Overlay layers: lease boundary, safety buffer, pit and dump zone outlines, measured change (excavated and filled, only beyond the noise threshold) and finding markers, all drawn from the engine output.
   - Top-bar compliance status, an Overview tab with each rule's result, and a Findings tab where every finding comes with its explanation and figures.
 - **Compliance engine** (`src/compliance/`): change detection, rules R1–R3, clustering into findings, severity and plain-English explanations. All of it is pure TypeScript and unit-tested.
 
-Still to come in the monitor: outlines of the pit and dump zones and a polish pass. See [Roadmap](#roadmap).
+Everything planned for the monitor is built. See [Roadmap](#roadmap).
 
 ## Data honesty
 
@@ -151,7 +151,7 @@ Vite, React 19, TypeScript (strict), three.js with @react-three/fiber and drei, 
 | M4  | Compliance engine and scenario snapshot                                     | done   |
 | M5  | Overlays: lease boundary, buffer, change map, finding markers               | done   |
 | M6  | Panels: point picking, measure tool and profile chart, epoch slider, fly-to | done   |
-| M7  | Polish: accessibility, performance                                          | next   |
+| M7  | Polish: accessibility, performance                                          | done   |
 | M8  | Deployment config (Vercel or Netlify) and final checks                      |        |
 
 `CLAUDE.md` keeps a detailed log of every change.

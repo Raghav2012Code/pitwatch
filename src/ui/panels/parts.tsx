@@ -40,7 +40,11 @@ export function Row({
       <dd className={`min-w-0 flex-1 text-[13px] text-ink ${mono ? 'font-mono text-[12px]' : ''}`}>
         {value}
       </dd>
-      {provenance && <ProvenanceTag value={provenance} />}
+      {provenance && (
+        <dd>
+          <ProvenanceTag value={provenance} />
+        </dd>
+      )}
     </div>
   )
 }

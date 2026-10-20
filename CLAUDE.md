@@ -37,14 +37,26 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 | M2  | Domain types, geo utils, seeded synthetic terrain + tests                               | done   |
 | M3  | 3D terrain view                                                                         | done   |
 | M4  | Compliance engine R1 boundary, R2 depth, R3 dumping (k=2, σ=√(σ1²+σ2²)) + snapshot test | done   |
-| M5  | Overlays: lease, buffer, change, findings (zone outlines not drawn yet)                 | done   |
+| M5  | Overlays: lease, buffer, zones, change, findings                                        | done   |
 | M6  | Panels, picking, measure, profile, epoch slider, fly-to                                 | done   |
-| M7  | Polish                                                                                  | next   |
-| M8  | README with Mermaid diagram, Vercel/Netlify config (deploy live since 2026-10-18)       |        |
+| M7  | Polish: accessibility, performance, share metadata                                      | done   |
+| M8  | README with Mermaid diagram, Vercel/Netlify config (deploy live since 2026-10-18)       | next   |
 
 ## Update log
 
 Newest first.
+
+### 2026-10-20: M7 polish
+
+- **Audit:** axe-core (wcag2a/aa, wcag21aa, best-practice) on home, monitor, Findings tab, an active measurement and home at 800 px: now 0 violations everywhere. Helper `%TEMP%/pitwatch-scripts/axe.mjs <url> <width> [actions]` (axe-core installed there, not in the project).
+- **Fixes:** `--color-ink-faint` #62676e to #5a5f66 and `--color-warn` #9a620a to #865509 (both were just under 4.5:1 on the paper backgrounds); home page has `<header>` and `<main>` landmarks; `Row` puts the provenance tag in a `<dd>` (a `<span>` inside `<dl><div>` is invalid); the scrolling tab panel is focusable (`tabIndex=0`).
+- **Performance:** the home 3D canvas stops rendering (`frameloop="never"`) when the story is scrolled out of view and resumes on return. Under `prefers-reduced-motion` the home orbit holds still and violation pins do not pulse. Measured: no main-thread hotspot of ours (monitor terrain geometry about 80–100 ms including the baseline morph data; the long tasks in headless Chromium are software WebGL). Monitor was already demand-rendered; terrain generation already in a worker.
+- **Permitted zones layer** (off by default): pit zone as long dashes, dump zone as dots, from the permit polygons; key lists them with the approved floor. Closes the M5 gap.
+- **Pins:** every other badge (west to east) hangs to the left of its stick, so nearby findings (R1-1, R1-2) sit side by side instead of overlapping.
+- Key swatches for the white map lines sit on a dark chip so they read on the pale panel.
+- **Home:** the step gauge only shows on screens at least 760 px tall (it overlapped the intro text on short windows); permit-step copy now mentions purple for the most severe findings.
+- **Share metadata:** theme-color, Open Graph and Twitter card tags, `public/og.png` (1200×630 screenshot of the permit step), a `<noscript>` line.
+- Not done: no keyboard way to pick a point on the 3D map (the Findings tab and the finding links cover reading findings); `THREE.Clock` deprecation warning comes from three/r3f, not our code.
 
 ### 2026-10-19: M6 picking, measure, profile, survey slider, fly-to
 

@@ -15,7 +15,7 @@
   --color-line-strong: rgb(52 46 36 / 0.28);
   --color-ink: #23262b;
   --color-ink-dim: #4a4f57;
-  --color-ink-faint: #62676e;
+  --color-ink-faint: #5a5f66;
 
   /* Interaction accent: map-water blue. */
   --color-accent: #1f5f86;
@@ -31,7 +31,7 @@
 
   /* Severity: each level also has its own glyph shape. */
   --color-ok: #2f7d4a;
-  --color-warn: #9a620a;
+  --color-warn: #865509;
   --color-violation: #c0262d;
   --color-critical: #8c3bb0;
 }
@@ -952,7 +952,8 @@ body {
     width: 22px;
     background: var(--color-oxide);
   }
-  @media (width >= 64rem) {
+  /* Needs room: on short screens it would sit on top of the intro text. */
+  @media (width >= 64rem) and (height >= 760px) {
     .story-gauge {
       display: flex;
     }

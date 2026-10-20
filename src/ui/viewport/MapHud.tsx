@@ -185,17 +185,17 @@ export function OverlayKey() {
   const onCurrent = useAppStore((s) => s.epoch === 'current')
   if (!limits || !change) return null
   const rows: { key: string; swatch: React.ReactNode; label: string }[] = []
-  const line = (opacity: number, h: number) => (
+  // White map lines sit on a dark chip so they stay visible on the pale panel.
+  const swatch = (inner: React.CSSProperties) => (
     <span
-      className="w-4 shrink-0 rounded-full"
-      style={{
-        height: h,
-        background: OVERLAY.lease,
-        opacity,
-        boxShadow: '0 0 0 1px var(--color-line-strong)',
-      }}
-    />
+      className="flex h-3 w-5 shrink-0 items-center rounded-[2px] px-0.5"
+      style={{ background: 'color-mix(in srgb, var(--color-ink) 62%, transparent)' }}
+    >
+      <span className="w-full" style={{ height: 0, ...inner }} />
+    </span>
   )
+  const line = (opacity: number, h: number) =>
+    swatch({ borderTop: `${h}px solid ${OVERLAY.lease}`, opacity })
   if (layers.lease) rows.push({ key: 'lease', swatch: line(1, 3), label: 'Lease boundary' })
   if (layers.buffer) {
     rows.push({
@@ -203,6 +203,17 @@ export function OverlayKey() {
       swatch: line(0.7, 1.5),
       label: `Safety buffer (${limits.safetyBufferMetres} m)`,
     })
+  }
+  if (layers.zones) {
+    const dashed = (dash: string) => swatch({ borderTop: `2px ${dash} ${OVERLAY.lease}` })
+    rows.push(
+      {
+        key: 'pit',
+        swatch: dashed('dashed'),
+        label: `Pit zone (floor ${limits.pitZones[0].approvedFloorElevation} m RL)`,
+      },
+      { key: 'dump', swatch: dashed('dotted'), label: 'Dump zone' },
+    )
   }
   if (layers.change && onCurrent) {
     const box = (c: string) => (

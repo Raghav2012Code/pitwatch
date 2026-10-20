@@ -7,6 +7,7 @@ import {
   ChangeIcon,
   ContourIcon,
   FindingIcon,
+  FloorIcon,
   TerrainIcon,
   TintIcon,
 } from './icons'
@@ -21,6 +22,7 @@ const LAYERS: { id: LayerId; label: string; Icon: ComponentType<SVGProps<SVGSVGE
 const OVERLAYS: typeof LAYERS = [
   { id: 'lease', label: 'Lease boundary', Icon: BoundaryIcon },
   { id: 'buffer', label: 'Safety buffer', Icon: BufferIcon },
+  { id: 'zones', label: 'Permitted zones', Icon: FloorIcon },
   { id: 'change', label: 'Change since baseline', Icon: ChangeIcon },
   { id: 'findings', label: 'Findings', Icon: FindingIcon },
 ]

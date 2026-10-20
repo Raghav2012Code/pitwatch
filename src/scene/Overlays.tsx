@@ -84,10 +84,13 @@ function FindingPin({
   f,
   survey,
   ex,
+  left,
 }: {
   f: ComplianceFinding
   survey: TerrainSurvey
   ex: number
+  /** Badge hangs to the left of the stick top instead of the right, so neighbours do not overlap. */
+  left: boolean
 }) {
   const tone = toneOf(f)
   const [x, y, z] = onGround(survey, f.centroid, ex, 0)
@@ -105,6 +108,7 @@ function FindingPin({
       </mesh>
       <sprite
         position={[0, height, 0]}
+        center={[left ? 0.88 : 0.12, 0.5]}
         scale={[h * (BADGE_W / BADGE_H), h, 1]}
         renderOrder={10}
         onClick={(e) => {
@@ -133,6 +137,27 @@ export function Overlays({ survey }: { survey: TerrainSurvey }) {
     () => (limits ? leaseLine(survey, limits.leaseBoundary, ex) : null),
     [survey, limits, ex],
   )
+  // West-to-east, every other badge hangs left; nearby findings then sit side by side.
+  const leftOf = useMemo(
+    () =>
+      new Set(
+        [...findings]
+          .sort((a, b) => a.centroid.x - b.centroid.x)
+          .filter((_, i) => i % 2 === 0)
+          .map((f) => f.id),
+      ),
+    [findings],
+  )
+  const zones = useMemo(
+    () =>
+      limits
+        ? {
+            pit: limits.pitZones.map((z) => leaseLine(survey, z.polygon, ex)),
+            dump: limits.dumpZones.map((z) => leaseLine(survey, z.polygon, ex)),
+          }
+        : null,
+    [survey, limits, ex],
+  )
   // Marching squares over the lease is the slow part; it only depends on the permit.
   const bufferPlan = useMemo(
     () => (limits ? insetSegments(limits.leaseBoundary, limits.safetyBufferMetres) : null),
@@ -156,9 +181,35 @@ export function Overlays({ survey }: { survey: TerrainSurvey }) {
           opacity={0.7}
         />
       )}
+      {layers.zones &&
+        zones?.pit.map((pts, i) => (
+          <Line
+            key={`pit${i}`}
+            points={pts}
+            color={OVERLAY.lease}
+            lineWidth={1.6}
+            dashed
+            dashSize={26}
+            gapSize={14}
+          />
+        ))}
+      {layers.zones &&
+        zones?.dump.map((pts, i) => (
+          <Line
+            key={`dump${i}`}
+            points={pts}
+            color={OVERLAY.lease}
+            lineWidth={1.6}
+            dashed
+            dashSize={4}
+            gapSize={10}
+          />
+        ))}
       {layers.findings &&
         epoch === 'current' &&
-        findings.map((f) => <FindingPin key={f.id} f={f} survey={survey} ex={ex} />)}
+        findings.map((f) => (
+          <FindingPin key={f.id} f={f} survey={survey} ex={ex} left={leftOf.has(f.id)} />
+        ))}
       <PickLayer survey={survey} />
     </>
   )

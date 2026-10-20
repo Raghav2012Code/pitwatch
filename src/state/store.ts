@@ -3,7 +3,8 @@ import type { Vec2 } from '../domain/types'
 import type { ViewRequest } from '../scene/presets'
 
 export type PanelTab = 'overview' | 'findings' | 'inspector' | 'about'
-export type LayerId = 'terrain' | 'tint' | 'contours' | 'lease' | 'buffer' | 'change' | 'findings'
+export type LayerId =
+  'terrain' | 'tint' | 'contours' | 'lease' | 'buffer' | 'zones' | 'change' | 'findings'
 
 /** What a click on the terrain does. */
 export type Tool = 'inspect' | 'measure'
@@ -61,6 +62,7 @@ export const useAppStore = create<AppState>((set) => ({
     contours: false,
     lease: true,
     buffer: false,
+    zones: false,
     change: false,
     findings: true,
   },

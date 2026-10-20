@@ -68,6 +68,7 @@ export function SidePanel() {
         role="tabpanel"
         id="details-tabpanel"
         aria-labelledby={`tab-${activeTab}`}
+        tabIndex={0}
         className="min-h-0 flex-1 overflow-y-auto"
       >
         <div key={activeTab} className="tab-in">

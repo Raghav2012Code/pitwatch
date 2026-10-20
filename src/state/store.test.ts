@@ -24,6 +24,7 @@ describe('view settings', () => {
     s().toggleLayer('contours')
     expect(s().layers.contours).toBe(true)
     expect(s().layers.lease).toBe(true)
+    expect(s().layers.zones).toBe(false)
   })
 
   it('clamps vertical exaggeration to 1×–3×', () => {
