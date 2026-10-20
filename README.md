@@ -151,7 +151,7 @@ Vite, React 19, TypeScript (strict), three.js with @react-three/fiber and drei, 
 | M4  | Compliance engine and scenario snapshot                                     | done   |
 | M5  | Overlays: lease boundary, buffer, change map, finding markers               | done   |
 | M6  | Panels: point picking, measure tool and profile chart, epoch slider, fly-to | done   |
-| M7  | Polish: accessibility, performance                                          | done   |
-| M8  | Deployment config (Vercel or Netlify) and final checks                      |        |
+| M7  | Polish: accessibility, performance, share metadata                          | done   |
+| M8  | Deployment config (Vercel) and final checks                                 | done   |
 
 `CLAUDE.md` keeps a detailed log of every change.

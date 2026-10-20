@@ -40,11 +40,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 | M5  | Overlays: lease, buffer, zones, change, findings                                        | done   |
 | M6  | Panels, picking, measure, profile, epoch slider, fly-to                                 | done   |
 | M7  | Polish: accessibility, performance, share metadata                                      | done   |
-| M8  | README with Mermaid diagram, Vercel/Netlify config (deploy live since 2026-10-18)       | next   |
+| M8  | README with Mermaid diagram, Vercel/Netlify config (deploy live since 2026-10-18)       | done   |
 
 ## Update log
 
 Newest first.
+
+### 2026-10-20: M8 deploy check
+
+- Final pass, no code changes. `vercel.json` pins the Vite build; the repo is connected, so pushes to `main` redeploy. Live site returns 200 and serves `og.png`, `favicon.svg` and the Open Graph tags from M7. README already has the Mermaid architecture diagram and Deploy section. Netlify config skipped: Vercel is the one target. Roadmap tables updated, all milestones M1–M8 done.
 
 ### 2026-10-20: M7 polish
 
