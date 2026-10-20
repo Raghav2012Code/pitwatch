@@ -17,8 +17,16 @@ const TerrainScene = lazy(() => import('../scene/TerrainScene'))
 export function Viewport() {
   const status = useTerrain((s) => s.status)
   const error = useTerrain((s) => s.error)
+  const findings = useTerrain((s) => s.findings)
+  const epoch = useAppStore((s) => s.epoch)
   const ready = status === 'ready'
   const tool = useAppStore((s) => s.tool)
+  // The label follows the survey on screen and the engine's output, so a screen reader
+  // hears what the map currently shows rather than a stale sentence.
+  const sceneLabel =
+    `3D terrain of the fictional Venthar Ridge pit, ${epoch} survey.` +
+    (ready ? ` ${findings.length} findings marked.` : '') +
+    ' Drag to orbit, right-drag to pan, scroll to zoom.'
 
   return (
     <main aria-label="3D mine view" className="viewport absolute inset-0">
@@ -27,7 +35,7 @@ export function Viewport() {
         className="scene-wrap absolute inset-0"
         data-tool={tool}
         role="img"
-        aria-label="3D terrain of the fictional Venthar Ridge pit, current survey. Drag to orbit, right-drag to pan, scroll to zoom."
+        aria-label={sceneLabel}
       >
         {ready && (
           <SceneErrorBoundary

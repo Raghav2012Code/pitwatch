@@ -32,3 +32,8 @@ coverage
 .playwright-mcp/
 
 .vercel
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/

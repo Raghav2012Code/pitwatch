@@ -325,7 +325,7 @@ export function ScaleBar() {
 /** Shown while the surfaces are generated or the 3D engine downloads, or if loading failed. */
 export function SceneStatus({ error, label }: { error?: string; label: string }) {
   return (
-    <div className="absolute inset-0 grid place-items-center" role="status">
+    <div className="absolute inset-0 grid place-items-center" role={error ? 'alert' : 'status'}>
       <div className="card w-[260px] p-4 text-center">
         {error ? (
           <>
