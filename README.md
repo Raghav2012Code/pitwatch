@@ -158,4 +158,4 @@ Vite, React 19, TypeScript (strict), three.js with @react-three/fiber and drei, 
 | M7  | Polish: accessibility, performance, share metadata                          | done   |
 | M8  | Deployment config (Vercel) and final checks                                 | done   |
 
-`CLAUDE.md` keeps a detailed log of every change.
+`AGENTS.md` keeps a detailed log of every change (Claude Code reads it through `CLAUDE.md`).
