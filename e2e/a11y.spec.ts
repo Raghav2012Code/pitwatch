@@ -3,6 +3,10 @@ import { expect, test, type Page } from '@playwright/test'
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
 
+// Entrance animations start at opacity 0. Reduced motion is the app's own supported mode and
+// keeps the scan on the steady state instead of a mid-fade frame.
+test.use({ reducedMotion: 'reduce' })
+
 /** Critical and serious WCAG A/AA violations, as readable lines. */
 async function seriousViolations(page: Page) {
   const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze()
