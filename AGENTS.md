@@ -48,6 +48,11 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: agent-skills setup (issue tracker, labels, domain docs)
+
+- Enabled GitHub Issues on the fork (`has_issues` was off) and created the five triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`; `wontfix` was already inherited from the fork defaults).
+- `docs/agents/issue-tracker.md` (GitHub via `gh`), `triage-labels.md` (1:1 defaults), `domain.md` (single-context), plus the `## Agent skills` block in `CLAUDE.md`.
+- Published the audit spec as issue #1 with `ready-for-agent`.
 ### 2026-10-20: one instruction file for every agent
 
 - `CLAUDE.md` moved to `AGENTS.md`, the tool-neutral name other agents read. `CLAUDE.md` is now a short pointer that imports it (`@AGENTS.md`), so there is one source of truth and no drift between two copies.
