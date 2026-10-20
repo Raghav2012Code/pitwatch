@@ -48,6 +48,11 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: narrow-screens spec from the browser audit
+
+- Playwright-driven UI/UX audit (screenshots, pointer probes, keyboard, zoom, drag at 390–1440 px) published as issue #2 with `ready-for-agent`: scale-bar chip eats camera-button clicks at 1024 and below, SIMULATED badge hidden on phones, no layer controls on mobile.
+- Worker-leak count from the same audit (8 created, 0 terminated across repeated navigation) stays in issue #1.
+
 ### 2026-10-21: agent-skills setup (issue tracker, labels, domain docs)
 
 - Enabled GitHub Issues on the fork (`has_issues` was off) and created the five triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`; `wontfix` was already inherited from the fork defaults).
