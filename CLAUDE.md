@@ -11,10 +11,10 @@
 ## Checks
 
 ```sh
-npm run typecheck && npm run lint && npm test && npm run build && npm run format:check
+npm run verify && npm run test:e2e
 ```
 
-Then a browser check at 1440, 1100 and 800 px wide (dev server: `npx vite --port 5179 --strictPort`).
+`verify` is typecheck, lint, format check and unit tests; `test:e2e` builds and serves the production bundle for Playwright. Then a browser check at 1440, 1100 and 800 px wide (dev server: `npx vite --port 5179 --strictPort`).
 
 ## Stack
 
@@ -45,6 +45,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-20: CI, browser checks, accessibility automation
+
+- **Playwright** (`e2e/`, config at the root) runs against the production build (`vite preview` on 4173), not the dev server, so a minified-only breakage still fails. Five checks: seeded findings reach the DOM (2 violations, 3 warnings, all five ids), the R3F canvas mounts with a live WebGL context and no console/page errors, home -> monitor navigation, and axe (WCAG A/AA) on both routes.
+- **CI** (`.github/workflows/ci.yml`): Node 22 on `ubuntu-24.04`, `npm ci`, `npm run verify`, build, Playwright with chromium, report uploaded on failure. Actions pinned to current majors (v7). Deliberately one job: two would duplicate install and browser download for the same wall clock.
+- **New scripts:** `test:e2e`, `test:e2e:ui`, and `verify` (typecheck, lint, format check, unit tests). `test:e2e` is not part of `verify`, because it owns a build and a preview server.
+- **Accessibility fixes:** the map's `role="img"` label now follows `epoch` and the engine output instead of always saying "current survey"; `SceneStatus` announces errors as `role="alert"` and keeps `role="status"` for loading.
+- Gotchas: R3F keeps the canvas at the 300x150 default until its ResizeObserver runs, so the size assertion polls instead of reading the box once. The a11y scan runs with `reducedMotion: 'reduce'` (the app's own supported mode): `.rise` starts at opacity 0, and a mid-fade scan reports a false contrast failure, which is exactly what happened on the first CI run.
+- Not done: still no keyboard way to pick a point on the 3D map (unchanged from M7); the canvas is exposed as an image and the panels carry the data.
 
 ### 2026-10-20: M8 deploy check
 
