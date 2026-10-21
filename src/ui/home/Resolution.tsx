@@ -61,21 +61,21 @@ const PANELS = [
 
 export function Resolution() {
   return (
-    <section className="border-y border-line bg-bg-2">
-      <div className="mx-auto max-w-[1200px] px-6 py-20 lg:py-28">
-        <div className="reveal max-w-[44rem]">
-          <h2 className="cond text-[clamp(38px,4.4vw,58px)] leading-[0.95] font-bold text-ink">
-            The same pit, three ways of measuring it.
+    <section aria-labelledby="resolution-title" className="rule-section mt-14">
+      <div>
+        <div className="max-w-[44rem]">
+          <h2 id="resolution-title" className="section-title">
+            The same pit, three ways of measuring it
           </h2>
-          <p className="mt-5 text-[16px] leading-7 text-ink-dim">
+          <p className="mt-3 text-[15px] leading-7 text-ink-dim">
             A compliance check is only as sharp as the survey behind it. Free global elevation data
             is too coarse to check a 10 m bench. Mine-scale surveys are not.
           </p>
         </div>
 
-        <ul className="mt-12 grid gap-6 md:grid-cols-3">
+        <ul className="mt-8 grid gap-6 md:grid-cols-3">
           {PANELS.map((p) => (
-            <li key={p.title} className="reveal res-panel">
+            <li key={p.title} className="res-panel">
               <svg viewBox={`0 0 ${W} ${H}`} className="block w-full" aria-hidden="true">
                 {p.cols
                   ? p.cols.map((col, c) => (

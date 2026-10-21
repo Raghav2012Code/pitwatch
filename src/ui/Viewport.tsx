@@ -29,7 +29,12 @@ export function Viewport() {
     ' Drag to orbit, right-drag to pan, scroll to zoom.'
 
   return (
-    <main aria-label="3D mine view" className="viewport absolute inset-0">
+    <main
+      id="content"
+      tabIndex={-1}
+      aria-label="3D mine view"
+      className="viewport absolute inset-0"
+    >
       <Relief className="opacity-45" />
       <div
         className="scene-wrap absolute inset-0"

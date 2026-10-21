@@ -1,6 +1,6 @@
 # PitWatch 3D
 
-**Live demo: [pitwatch-3d.vercel.app](https://pitwatch-3d.vercel.app)** (home page), or [open the monitor](https://pitwatch-3d.vercel.app/#/monitor)
+**Live demo: [pitwatch-3d.vercel.app](https://pitwatch-3d.vercel.app)** (landing page), or [open the dashboard](https://pitwatch-3d.vercel.app/#/overview)
 
 A browser dashboard that helps a mining inspector check an open-pit mine against its permit from two terrain surveys. It shows the mine as a 3D model, measures what changed between a baseline and a current survey, and runs transparent rules that flag digging outside the lease, digging below the approved floor and dumping outside permitted zones.
 
@@ -10,8 +10,12 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
 
 ## What it does today
 
-- **Home page** (`#/`): a scroll story beside the live 3D model, which slowly turns. It shows the baseline survey, then the current survey, the measured change coloured on the terrain (rust cut, blue fill), and finally the findings with the lease line and a pin for each finding.
-- **Monitor** (`#/monitor`):
+- **Landing page** (`#/`): the live 3D model, slowly turning, with four buttons (Baseline, Current, Change, Findings) that switch what it shows: the baseline survey, the current survey, the measured change coloured on the terrain (rust cut, blue fill) and the findings with the lease line and a pin for each. No scrolling story; a short section on the three permit rules follows.
+- **Dashboard** with a sidebar (a slim icon rail on the 3D map, a drawer on phones):
+  - **Overview** (`#/overview`): the verdict, four headline figures, the result for each permit rule, the findings to look at first, and the survey, surface and lease facts.
+  - **Findings** (`#/findings`): every finding with its explanation and figures, and a Show on map button.
+  - **Permit rules** (`#/rules`), **Uncertainty** (`#/uncertainty`: the 2σ calculator and the resolution comparison) and **About the data** (`#/about`, with the keyboard shortcuts).
+- **3D map** (`#/monitor`):
   - 3D terrain of the current survey with a simulated aerial image draped over it. The block sides show a soil profile.
   - Optional elevation tint, with colours spread so the plateau's relief shows, and optional 5 m contours.
   - Vertical exaggeration from 1× to 3×.
@@ -19,7 +23,7 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
   - Click the terrain with the Inspect tool to read a point (elevation ± uncertainty, change, slope, lease and pit-floor status, findings there), or switch to Measure for distances, grade and an elevation profile of current against baseline. Without a mouse, type an easting and northing in the Inspector tab instead.
   - A survey slider on the timeline switches the map between the baseline and current surveys. Findings can be opened from their pins and flown to from the Findings tab.
   - Overlay layers: lease boundary, safety buffer, pit and dump zone outlines, measured change (excavated and filled, only beyond the noise threshold) and finding markers, all drawn from the engine output.
-  - Top-bar compliance status, an Overview tab with each rule's result, and a Findings tab where every finding comes with its explanation and figures.
+  - Header compliance status, and a details panel with a Findings tab (every finding with its explanation and figures) and an Inspector tab.
 - **Compliance engine** (`src/compliance/`): change detection, rules R1–R3, clustering into findings, severity and plain-English explanations. All of it is pure TypeScript and unit-tested.
 
 Everything planned for the monitor is built. See [Roadmap](#roadmap).
@@ -93,7 +97,7 @@ The browser checks run against the production build, so run `npx playwright inst
 
 ## Deploy
 
-The app is a static site on Vercel. The GitHub repo is connected to the `pitwatch-3d` project, so every push to `main` builds and publishes [pitwatch-3d.vercel.app](https://pitwatch-3d.vercel.app). Build settings live in [`vercel.json`](vercel.json) (`npm run build`, output `dist/`). Routing uses the URL hash (`#/monitor`), so no rewrites are needed.
+The app is a static site on Vercel. The GitHub repo is connected to the `pitwatch-3d` project, so every push to `main` builds and publishes [pitwatch-3d.vercel.app](https://pitwatch-3d.vercel.app). Build settings live in [`vercel.json`](vercel.json) (`npm run build`, output `dist/`). Routing uses the URL hash (`#/overview`, `#/monitor` and so on), so no rewrites are needed.
 
 To deploy by hand from a logged-in machine:
 

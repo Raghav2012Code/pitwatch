@@ -4,7 +4,9 @@ import { useAppStore } from '../../state/store'
 import { useTerrain } from '../../state/terrain'
 import { countText, GLYPH, RULE_NAMES, toneOf } from '../findings'
 import { CriticalGlyph, ViolationGlyph, WarningGlyph } from '../icons'
+import { navigate } from '../route'
 import { EmptyNote, Section } from './parts'
+
 const LEGEND = [
   {
     Glyph: WarningGlyph,
@@ -29,7 +31,9 @@ const LEGEND = [
 const n = (v: number, digits = 0) =>
   v.toLocaleString('en-GB', { minimumFractionDigits: digits, maximumFractionDigits: digits })
 
-function FindingCard({ f }: { f: ComplianceFinding }) {
+/** One finding. `level` is the heading level of its title: 4 inside a panel, 3 on a page. */
+export function FindingCard({ f, level = 4 }: { f: ComplianceFinding; level?: 3 | 4 }) {
+  const Title = `h${level}` as const
   const tone = toneOf(f)
   const Glyph = GLYPH[tone]
   const selected = useAppStore((s) => s.selectedFinding === f.id)
@@ -44,7 +48,7 @@ function FindingCard({ f }: { f: ComplianceFinding }) {
         <Glyph className="mt-0.5 h-[18px] w-[18px] shrink-0 text-(--tone)" />
         <div className="min-w-0 flex-1">
           <div className="flex items-baseline justify-between gap-2">
-            <h4 className="text-[13.5px] font-semibold text-ink">{RULE_NAMES[f.ruleId]}</h4>
+            <Title className="text-[13.5px] font-semibold text-ink">{RULE_NAMES[f.ruleId]}</Title>
             <span className="font-mono text-[11px] text-ink-faint">{f.id}</span>
           </div>
           <div className="text-[12px] text-(--tone)">
@@ -72,7 +76,10 @@ function FindingCard({ f }: { f: ComplianceFinding }) {
         <button
           type="button"
           className="text-[12px] font-semibold text-accent underline underline-offset-2"
-          onClick={() => selectFinding(f.id, f.centroid)}
+          onClick={() => {
+            selectFinding(f.id, f.centroid)
+            navigate('monitor')
+          }}
         >
           Show on map
         </button>
@@ -81,11 +88,41 @@ function FindingCard({ f }: { f: ComplianceFinding }) {
   )
 }
 
+/** How a cell comes to count as changed, with the σ the engine used. */
+export function ThresholdNote() {
+  const ready = useTerrain((s) => s.status === 'ready')
+  const sigma = useTerrain((s) => s.change?.sigma)
+  const cfg = COMPLIANCE_CONFIG
+  if (!ready || sigma === undefined) return null
+  return (
+    <p className="mt-3 text-[11.5px] leading-4 text-ink-faint">
+      A cell counts as changed when it moved more than {cfg.minChangeM} m plus {cfg.k}σ (σ ={' '}
+      {sigma.toFixed(2)} m for the two surveys combined). Smaller changes are treated as survey
+      noise.
+    </p>
+  )
+}
+
+/** What the three severity shapes mean. */
+export function SeverityLegend() {
+  return (
+    <ul className="space-y-2">
+      {LEGEND.map(({ Glyph, name, tone, meaning }) => (
+        <li key={name} className={`sev-row ${tone}`}>
+          <Glyph className="mt-0.5 h-[18px] w-[18px] shrink-0" />
+          <div>
+            <div className="text-[13px] font-semibold">{name}</div>
+            <div className="text-[12.5px] leading-5 text-ink-dim">{meaning}</div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 export function FindingsPanel() {
   const ready = useTerrain((s) => s.status === 'ready')
   const findings = useTerrain((s) => s.findings)
-  const sigma = useTerrain((s) => s.change?.sigma)
-  const cfg = COMPLIANCE_CONFIG
 
   return (
     <>
@@ -104,27 +141,11 @@ export function FindingsPanel() {
             ))}
           </ul>
         )}
-        {ready && sigma !== undefined && (
-          <p className="mt-3 text-[11.5px] leading-4 text-ink-faint">
-            A cell counts as changed when it moved more than {cfg.minChangeM} m plus {cfg.k}σ (σ ={' '}
-            {sigma.toFixed(2)} m for the two surveys combined). Smaller changes are treated as
-            survey noise.
-          </p>
-        )}
+        <ThresholdNote />
       </Section>
       <div className="divider" />
       <Section title="How findings are marked">
-        <ul className="space-y-2">
-          {LEGEND.map(({ Glyph, name, tone, meaning }) => (
-            <li key={name} className={`sev-row ${tone}`}>
-              <Glyph className="mt-0.5 h-[18px] w-[18px] shrink-0" />
-              <div>
-                <div className="text-[13px] font-semibold">{name}</div>
-                <div className="text-[12.5px] leading-5 text-ink-dim">{meaning}</div>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <SeverityLegend />
       </Section>
     </>
   )

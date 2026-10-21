@@ -2,7 +2,10 @@ import { create } from 'zustand'
 import type { Vec2 } from '../domain/types'
 import type { ViewRequest } from '../scene/presets'
 
-export type PanelTab = 'overview' | 'findings' | 'inspector' | 'about'
+/** Tabs of the details panel on the 3D map. Overview and About data are dashboard pages now. */
+export type PanelTab = 'findings' | 'inspector'
+/** Sidebar width: `auto` follows the screen (a slim rail on the 3D map, full width elsewhere). */
+export type SidebarMode = 'auto' | 'open' | 'rail'
 export type LayerId =
   'terrain' | 'tint' | 'contours' | 'lease' | 'buffer' | 'zones' | 'change' | 'findings'
 
@@ -16,6 +19,10 @@ export const EXAGGERATION = { min: 1, max: 3, initial: 1.5 } as const
 interface AppState {
   activeTab: PanelTab
   drawerOpen: boolean
+  /** The viewer's choice for the sidebar; `auto` until they use the collapse control. */
+  sidebar: SidebarMode
+  /** Phones: the navigation drawer. */
+  menuOpen: boolean
   /** Desktop only: panels collapsed to give the map more room. */
   layersHidden: boolean
   detailsHidden: boolean
@@ -35,6 +42,8 @@ interface AppState {
   view: { kind: ViewRequest; n: number }
   setActiveTab: (tab: PanelTab) => void
   setDrawerOpen: (open: boolean) => void
+  setSidebar: (mode: SidebarMode) => void
+  setMenuOpen: (open: boolean) => void
   toggleLayers: () => void
   toggleDetails: () => void
   toggleLayer: (id: LayerId) => void
@@ -47,11 +56,15 @@ interface AppState {
   clearPicks: () => void
   /** Selects a finding (or none), opens the Findings tab and optionally flies to it. */
   selectFinding: (id: string | null, at?: Vec2) => void
+  /** Forget camera requests when the map closes, so the next visit opens with the intro shot. */
+  leaveMap: () => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  activeTab: 'overview',
+  activeTab: 'findings',
   drawerOpen: false,
+  sidebar: 'auto',
+  menuOpen: false,
   layersHidden: false,
   detailsHidden: false,
   // Natural look by default: aerial image, no tint or contours; the lease line and the
@@ -77,6 +90,8 @@ export const useAppStore = create<AppState>((set) => ({
   view: { kind: 'intro', n: 0 },
   setActiveTab: (activeTab) => set({ activeTab }),
   setDrawerOpen: (drawerOpen) => set({ drawerOpen }),
+  setSidebar: (sidebar) => set({ sidebar }),
+  setMenuOpen: (menuOpen) => set({ menuOpen }),
   toggleLayers: () => set((s) => ({ layersHidden: !s.layersHidden })),
   toggleDetails: () => set((s) => ({ detailsHidden: !s.detailsHidden })),
   toggleLayer: (id) => set((s) => ({ layers: { ...s.layers, [id]: !s.layers[id] } })),
@@ -100,4 +115,5 @@ export const useAppStore = create<AppState>((set) => ({
       ...(id ? { activeTab: 'findings' as const } : {}),
       ...(at ? { focus: { p: at, n: (s.focus?.n ?? 0) + 1 } } : {}),
     })),
+  leaveMap: () => set({ focus: null, view: { kind: 'intro', n: 0 }, drawerOpen: false }),
 }))

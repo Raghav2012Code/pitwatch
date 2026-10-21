@@ -3,8 +3,20 @@ import { useAppStore } from './store'
 
 describe('app store', () => {
   it('switches the active panel tab', () => {
+    useAppStore.getState().setActiveTab('inspector')
+    expect(useAppStore.getState().activeTab).toBe('inspector')
     useAppStore.getState().setActiveTab('findings')
     expect(useAppStore.getState().activeTab).toBe('findings')
+  })
+
+  it('remembers the sidebar choice and the phone menu separately', () => {
+    const s = useAppStore.getState
+    expect([s().sidebar, s().menuOpen]).toEqual(['auto', false])
+    s().setSidebar('rail')
+    s().setMenuOpen(true)
+    expect([s().sidebar, s().menuOpen]).toEqual(['rail', true])
+    s().setSidebar('auto')
+    s().setMenuOpen(false)
   })
 
   it('collapses and restores each side panel independently', () => {
@@ -55,7 +67,7 @@ describe('picking and measuring', () => {
   it('reads a point with the inspect tool and opens the Inspector', () => {
     s().clearPicks()
     s().setTool('inspect')
-    s().setActiveTab('overview')
+    s().setActiveTab('findings')
     s().pickPoint(p1)
     expect(s().picked).toEqual(p1)
     expect(s().measureA).toBeNull()
@@ -80,7 +92,7 @@ describe('picking and measuring', () => {
   })
 
   it('selects a finding, opens its tab and asks the camera to fly there', () => {
-    s().setActiveTab('overview')
+    s().setActiveTab('inspector')
     const before = s().focus?.n ?? 0
     s().selectFinding('R1-1', p2)
     expect(s().selectedFinding).toBe('R1-1')
@@ -88,6 +100,16 @@ describe('picking and measuring', () => {
     expect(s().focus).toEqual({ p: p2, n: before + 1 })
     s().selectFinding(null)
     expect(s().selectedFinding).toBeNull()
+  })
+
+  it('forgets camera requests when the map closes', () => {
+    s().requestView('top')
+    s().selectFinding('R1-1', p2)
+    s().setDrawerOpen(true)
+    s().leaveMap()
+    expect(s().focus).toBeNull()
+    expect(s().view).toEqual({ kind: 'intro', n: 0 })
+    expect(s().drawerOpen).toBe(false)
   })
 
   it('switches the survey on the map', () => {

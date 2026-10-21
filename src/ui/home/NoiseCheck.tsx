@@ -23,13 +23,13 @@ export function NoiseCheck() {
   const pct = (v: number) => `${Math.min(100, (v / max) * 100)}%`
 
   return (
-    <section className="mx-auto max-w-[1200px] px-6 py-20 lg:py-28">
-      <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
-        <div className="reveal">
-          <h2 className="cond text-[clamp(38px,4.4vw,58px)] leading-[0.95] font-bold text-ink">
+    <section aria-labelledby="noise-title" className="rule-section">
+      <div className="grid gap-10 xl:grid-cols-[0.8fr_1.2fr] xl:gap-14">
+        <div>
+          <h2 id="noise-title" className="section-title">
             When is a change real?
           </h2>
-          <p className="mt-5 max-w-[26rem] text-[16px] leading-7 text-ink-dim">
+          <p className="mt-3 max-w-[30rem] text-[15px] leading-7 text-ink-dim">
             Every survey has error. Compare two of them and their errors add up: σ = √(σ1² + σ2²).
             PitWatch only reports a change larger than {K}σ. Move the sliders to see where that line
             falls.
@@ -52,7 +52,7 @@ export function NoiseCheck() {
           </div>
         </div>
 
-        <div className="noise reveal">
+        <div className="noise">
           <Slider
             id={`${id}-s1`}
             label="Baseline survey error (σ1)"

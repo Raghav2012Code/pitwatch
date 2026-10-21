@@ -8,15 +8,13 @@ const DAYS = BASELINE && CURRENT ? daysBetween(BASELINE.date, CURRENT.date) : 0
 const MONTHS = BASELINE && CURRENT ? monthTicks(BASELINE.date, CURRENT.date) : []
 
 /**
- * Date bar under the home model. Follows the scroll continuously: the marker slides, the
- * passed part of the track fills, and the readout counts the days. Between the two
- * surveys the model is a blend, and the bar says so.
+ * Date bar under the landing model. The marker slides as the model moves between the two
+ * surveys, and the readout counts the days. Between the surveys the model is a blend.
  */
 export function StoryClock() {
   const t = useStory((s) => s.t)
   if (!BASELINE || !CURRENT) return null
   const day = Math.round(t * DAYS)
-  const between = t > 0.001 && t < 0.999
 
   return (
     <div className="story-clock" style={{ '--t': t } as CSSProperties}>
@@ -44,13 +42,6 @@ export function StoryClock() {
           />
         ))}
         <span className="clock-marker" />
-      </div>
-      <div className="mt-1.5 text-center text-[11.5px] text-ink-faint" role="status">
-        {between
-          ? 'Model blended between the two surveys: an illustration, not a survey.'
-          : t >= 0.999
-            ? `${CURRENT.label} survey on the model.`
-            : `${BASELINE.label} survey on the model.`}
       </div>
     </div>
   )
