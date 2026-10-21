@@ -2,7 +2,7 @@
 
 3D mine monitoring and regulatory compliance demo. Frontend only, no backend. Every value is synthetic and labelled so.
 
-This is the main repo, `abivan100-stack/pitwatch-3d`; work is committed and pushed to `origin/main`. The fork `Raghav2012Code/pitwatch` did the work merged in PR #1 (2026-10-21); in a clone of the fork the parent is the `upstream` remote. Log entries from that work cite the fork's own issues as `Raghav2012Code/pitwatch#N`, since a bare `#N` here would point at this repo's tracker.
+Work is committed and pushed to `origin/main`. This checkout is the fork `Raghav2012Code/pitwatch`; the parent `abivan100-stack/pitwatch-3d` is fetched through the `upstream` remote (`git@github.com:abivan100-stack/pitwatch-3d.git`) and in the parent `origin` is the parent itself. The parent merged this fork's work in PR #1 (2026-10-21) and its own copy of this file calls the parent the main repo, so the header here states the fork's view; the parent's log entries are kept as it wrote them, and log entries from the fork's work cite its issues as `Raghav2012Code/pitwatch#N`.
 
 ## Working rules
 
@@ -49,6 +49,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-21: pulled the parent's redesign (fork `main` fast-forward to `f8a302a`)
+
+- The parent `abivan100-stack/pitwatch-3d` merged the `ui-redesign` branch as PR #2 (`38613ad`) and added `f8a302a`. This fork's `main` was an ancestor of `upstream/main`, so the pull was `git merge --ff-only upstream/main`: 12 commits, no conflict resolution, no rewritten history.
+- What came in: a landing page at `#/` (the live 3D model driven by four buttons, not a scroll story), a dashboard shell in `src/ui/shell/` (slate sidebar, header, load gate), pages in `src/ui/pages/` (`#/overview`, `#/findings`, `#/rules`, `#/uncertainty`, `#/about`), a schematic site plan on the Overview, the PitWatch logo and favicon set, and `STATUS.md` plus the competition improvement plan. `TopBar`, `PermitSheet`, `OverviewPanel` and `AboutDataPanel` are gone: their content moved to pages, not deleted.
+- The parent's `AGENTS.md` header calls the parent the main repo. In this fork that is wrong, so the header was restored to the fork's wording (origin is the fork, the parent is `upstream`); the parent's log entries are kept as it wrote them, and the fork-era issue citations keep the `Raghav2012Code/pitwatch#N` form, which is unambiguous in both repos.
+- Nothing else needed changing: `package.json` is identical to before the pull, so no dependency work; our `CoordinateEntry`, `zone.ts`, the layer drawer, the worker reuse and the retry path all survived the parent's merge of the fork's PR #1 untouched.
+- Checks after the pull: `npm run verify` passes (131 unit tests in 17 files) and `npm run test:e2e` passes all 51 Playwright checks against the production build. Browser review at 1440, 1100 and 800 px on the Overview and the 3D map: no horizontal overflow, no console errors, findings and pins render.
+- Known and left as upstream recorded them: the 3D map is tight at 1100 px with both side panels open, and the layers panel covers a lot of the model at 800 px.
 
 ### 2026-10-21: finding selection restores visible evidence (branch `ui-redesign`)
 
