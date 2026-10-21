@@ -1,5 +1,6 @@
 import { Canvas, useThree } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
+import { largestPitZone } from '../compliance/zone'
 import { centroidOf } from '../geo/polygon'
 import { useAppStore } from '../state/store'
 import { useTerrain } from '../state/terrain'
@@ -50,7 +51,10 @@ export default function TerrainScene() {
 
   const aim = useMemo(() => {
     if (!survey || !limits) return null
-    const zone = limits.pitZones[0]
+    // Frame the main pit by area, not by permit order: a small satellite zone listed first
+    // must not decide where the camera looks.
+    const zone = largestPitZone(limits.pitZones)
+    if (!zone) return null
     const c = centroidOf(zone.polygon)
     const [x, , z] = toScene(survey.grid, c, zone.approvedFloorElevation)
     return { pit: { x, y: z }, floorRL: zone.approvedFloorElevation }

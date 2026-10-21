@@ -206,14 +206,18 @@ export function OverlayKey() {
   }
   if (layers.zones) {
     const dashed = (dash: string) => swatch({ borderTop: `2px ${dash} ${OVERLAY.lease}` })
-    rows.push(
-      {
-        key: 'pit',
+    const many = limits.pitZones.length > 1
+    for (const zone of limits.pitZones) {
+      rows.push({
+        key: `pit-${zone.id}`,
         swatch: dashed('dashed'),
-        label: `Pit zone (floor ${limits.pitZones[0].approvedFloorElevation} m RL)`,
-      },
-      { key: 'dump', swatch: dashed('dotted'), label: 'Dump zone' },
-    )
+        // One row per zone, so a second pit's floor is never mistaken for the first's.
+        label: many
+          ? `Pit zone ${zone.id} (floor ${zone.approvedFloorElevation} m RL)`
+          : `Pit zone (floor ${zone.approvedFloorElevation} m RL)`,
+      })
+    }
+    rows.push({ key: 'dump', swatch: dashed('dotted'), label: 'Dump zone' })
   }
   if (layers.change && onCurrent) {
     const box = (c: string) => (

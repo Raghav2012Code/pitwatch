@@ -49,6 +49,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: every pit-zone floor is pinned to its zone (issue #14)
+
+- Depth reporting was zone-aware in the R2 rule and the Inspector, but three surfaces still read `limits.pitZones[0]`: the Overview's "Approved floor" row showed the first zone's floor as the only one, the Map key emitted one "Pit zone" row for the first zone, and the monitor camera aimed at the first zone's centroid. The "which zone governs this ground" rule also existed twice, in `readPoint` and in the Inspector's profile memo.
+- `src/compliance/zone.ts` (pure, lint-enforced) now owns it: `governingPitZone(zones, samples)` returns the zone whose floor the sampled ground is deepest below (samples outside every zone are ignored; the first zone wins a tie), `largestPitZone` picks the biggest polygon for camera framing, and `pitFloorRows` returns the display rows so the multi-zone shape is testable without React.
+- `readPoint` passes one sample, the Inspector profile passes its whole series, Overview renders `pitFloorRows`, the Map key emits one row per zone (the zone id appears in the label only when there are two or more, so the shipped screen is unchanged), and the camera frames `largestPitZone`. With the shipped one-zone fixture every label and figure reads the same as before.
+- A sample with no height (off the survey grid, or a gap in a profile) cannot be ranked by depth but still proves containment, so the helper falls back to the lowest-floor zone that contains it. That keeps the Inspector naming a floor for an off-grid point inside a pit zone — with the margin above it shown as unknown rather than the whole row disappearing.
+- Tests: `src/compliance/zones.test.ts` gains twelve (deeper zone in both array orders for one sample and for a series; outside samples ignored; gaps skipped for ranking but still naming the zone, in both array orders; first zone on a tie; no answer for an unrankable sample outside every zone; largest by area in both orders, and empty; exact single-zone label/value; one labelled row per zone; the off-grid-but-inside-a-zone reading). 127 unit tests, 19 browser checks.
+- Deliberate gap: with no pit zones at all the Overview now renders no approved-floor row (the old code threw on `pitZones[0]`). No Playwright spec can reach a two-zone site; the display shape is covered by the pure test instead.
+
 ### 2026-10-21: the inspector reads only what it shows
 
 - `InspectorPanel` destructured the whole terrain store twice with no selector, so every write to it — including plain `status`/`error`/`provider` changes from the new retry path — re-rendered the panel and defeated its memoised point reading.
