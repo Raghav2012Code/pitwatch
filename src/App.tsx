@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
-import { WorkerTerrainProvider } from './data/WorkerTerrainProvider'
+import { acquireTerrainProvider, releaseTerrainProvider } from './data/WorkerTerrainProvider'
 import { useAppStore } from './state/store'
 import { useTerrain } from './state/terrain'
 import { toggleFullscreen } from './ui/fullscreen'
 import { HomePage } from './ui/HomePage'
 import { LayerPanel } from './ui/LayerPanel'
-import { useRoute } from './ui/route'
+import { useRoute, plannedHash } from './ui/route'
 import { SidePanel } from './ui/SidePanel'
 import { TopBar } from './ui/TopBar'
 import { Viewport } from './ui/Viewport'
@@ -17,6 +17,20 @@ export default function App() {
     document.title = route === 'home' ? 'PitWatch 3D' : 'Monitor – PitWatch 3D'
   }, [route])
 
+  // An address that names no screen is rewritten to the home hash, so the address bar always
+  // describes what is on screen. `replaceState` keeps the correction out of the back history.
+  useEffect(() => {
+    const settle = () => {
+      const target = plannedHash(window.location.hash)
+      if (!target) return
+      const { pathname, search } = window.location
+      window.history.replaceState(null, '', `${pathname}${search}${target}`)
+    }
+    settle()
+    window.addEventListener('hashchange', settle)
+    return () => window.removeEventListener('hashchange', settle)
+  }, [])
+
   return route === 'home' ? <HomePage /> : <Monitor />
 }
 
@@ -25,9 +39,11 @@ function Monitor() {
   const layersHidden = useAppStore((s) => s.layersHidden)
   const detailsHidden = useAppStore((s) => s.detailsHidden)
 
-  // Build the synthetic surveys once, in a worker, the first time the monitor opens.
+  // Build the synthetic surveys once, in a worker, the first time the monitor opens. The
+  // provider is shared with the home page, so moving between screens neither rebuilds nor leaks.
   useEffect(() => {
-    void useTerrain.getState().load(new WorkerTerrainProvider())
+    void useTerrain.getState().load(acquireTerrainProvider())
+    return () => releaseTerrainProvider()
   }, [])
 
   // [ and ] collapse the side panels, F toggles full screen, R resets the view.

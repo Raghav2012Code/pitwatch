@@ -75,17 +75,21 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
-| Command                           | What it does                                 |
-| --------------------------------- | -------------------------------------------- |
-| `npm run dev`                     | Dev server with hot reload                   |
-| `npm run typecheck`               | TypeScript, strict                           |
-| `npm run lint`                    | ESLint                                       |
-| `npm test`                        | Vitest, once (`npm run test:watch` to watch) |
-| `npm run build`                   | Typecheck and production build into `dist/`  |
-| `npm run preview`                 | Serve the production build                   |
-| `npm run format` / `format:check` | Prettier                                     |
+| Command                           | What it does                                   |
+| --------------------------------- | ---------------------------------------------- |
+| `npm run dev`                     | Dev server with hot reload                     |
+| `npm run typecheck`               | TypeScript, strict                             |
+| `npm run lint`                    | ESLint                                         |
+| `npm test`                        | Vitest, once (`npm run test:watch` to watch)   |
+| `npm run test:e2e`                | Playwright checks against the production build |
+| `npm run verify`                  | Typecheck, lint, format check and unit tests   |
+| `npm run build`                   | Typecheck and production build into `dist/`    |
+| `npm run preview`                 | Serve the production build                     |
+| `npm run format` / `format:check` | Prettier                                       |
 
 The terrain (two 257 × 257 surveys at 8 m plus their aerial images) is generated in a Web Worker when the page opens. This takes about a second and a half.
+
+The browser checks run against the production build, so run `npx playwright install chromium` once before the first `npm run test:e2e`. CI (GitHub Actions) runs `npm run verify`, the build and the Playwright suite on every push to `main` and every pull request, and uploads the report when a run fails.
 
 ## Deploy
 
@@ -154,4 +158,4 @@ Vite, React 19, TypeScript (strict), three.js with @react-three/fiber and drei, 
 | M7  | Polish: accessibility, performance, share metadata                          | done   |
 | M8  | Deployment config (Vercel) and final checks                                 | done   |
 
-`CLAUDE.md` keeps a detailed log of every change.
+`AGENTS.md` keeps a detailed log of every change (Claude Code reads it through `CLAUDE.md`).

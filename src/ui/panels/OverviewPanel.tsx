@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { pitFloorRows } from '../../compliance/zone'
 import { MINE_INFO, SURVEY_EPOCHS } from '../../data/fixtures/mine'
 import { MINE } from '../../data/fixtures/scenario'
 import { polygonArea } from '../../geo/polygon'
@@ -118,11 +119,13 @@ export function OverviewPanel() {
             provenance="derived"
           />
           <Row label="Safety buffer" value={limits ? `${limits.safetyBufferMetres} m` : '—'} />
-          <Row
-            label="Approved floor"
-            value={limits ? `${limits.pitZones[0].approvedFloorElevation} m RL` : '—'}
-            mono
-          />
+          {limits ? (
+            pitFloorRows(limits.pitZones).map((row) => (
+              <Row key={row.label} label={row.label} value={row.value} mono />
+            ))
+          ) : (
+            <Row label="Approved floor" value="—" mono />
+          )}
           <Row
             label="Grid origin"
             value={`${formatLat(m.originLatLon.lat)}, ${formatLon(m.originLatLon.lon)}`}

@@ -1,9 +1,12 @@
 import { useRef, type JSX, type KeyboardEvent } from 'react'
 import { useAppStore, type PanelTab } from '../state/store'
+import { useTerrain } from '../state/terrain'
+import { LayerSwitches } from './LayerControls'
 import { AboutDataPanel } from './panels/AboutDataPanel'
 import { FindingsPanel } from './panels/FindingsPanel'
 import { InspectorPanel } from './panels/InspectorPanel'
 import { OverviewPanel } from './panels/OverviewPanel'
+import { ExaggerationSlider } from './viewport/MapHud'
 
 const TABS: { id: PanelTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -24,6 +27,7 @@ export function SidePanel() {
   const setActiveTab = useAppStore((s) => s.setActiveTab)
   const drawerOpen = useAppStore((s) => s.drawerOpen)
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const ready = useTerrain((s) => s.status === 'ready')
   const Content = CONTENT[activeTab]
 
   // Arrow keys move between tabs (WAI-ARIA tabs pattern).
@@ -64,15 +68,29 @@ export function SidePanel() {
           )
         })}
       </div>
-      <div
-        role="tabpanel"
-        id="details-tabpanel"
-        aria-labelledby={`tab-${activeTab}`}
-        tabIndex={0}
-        className="min-h-0 flex-1 overflow-y-auto"
-      >
-        <div key={activeTab} className="tab-in">
-          <Content />
+      {/* One scroll area under the tabs: the layer block and the tab content scroll together,
+          so a capped block cannot clip a switch row in half on a short phone. */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {/* Below `md` the floating Map card is hidden, so its switches live here instead: same
+            component, one placement at a time, no duplicate controls at any width. */}
+        <section aria-label="Map layers" className="md:hidden border-b border-line px-3 pt-3 pb-2">
+          <LayerSwitches />
+          {ready && (
+            <div className="mt-3 border-t border-line pt-3">
+              <ExaggerationSlider />
+            </div>
+          )}
+        </section>
+
+        <div
+          role="tabpanel"
+          id="details-tabpanel"
+          aria-labelledby={`tab-${activeTab}`}
+          tabIndex={0}
+        >
+          <div key={activeTab} className="tab-in">
+            <Content />
+          </div>
         </div>
       </div>
     </aside>

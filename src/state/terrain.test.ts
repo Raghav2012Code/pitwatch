@@ -5,7 +5,13 @@ import { useTerrain } from './terrain'
 
 describe('terrain store', () => {
   beforeEach(() =>
-    useTerrain.setState({ status: 'idle', surveys: {}, findings: [], error: undefined }),
+    useTerrain.setState({
+      status: 'idle',
+      surveys: {},
+      findings: [],
+      error: undefined,
+      provider: undefined,
+    }),
   )
 
   it('loads mine, limits and both surveys from the provider', async () => {
@@ -31,5 +37,42 @@ describe('terrain store', () => {
     }
     await useTerrain.getState().load(broken)
     expect(useTerrain.getState()).toMatchObject({ status: 'error', error: 'no data' })
+  })
+
+  it('refuses a second load once the surveys are built', async () => {
+    await useTerrain.getState().load(new SyntheticTerrainProvider())
+    const before = useTerrain.getState().surveys.current
+
+    await useTerrain.getState().load(new SyntheticTerrainProvider())
+    expect(useTerrain.getState().surveys.current).toBe(before)
+  }, 30_000)
+
+  it('retries a failed load on the provider that is already in play', async () => {
+    const real = new SyntheticTerrainProvider()
+    let attempts = 0
+    // Fails the first time, then behaves like the real provider.
+    const flaky: TerrainProvider = {
+      getMine: () => real.getMine(),
+      getLimits: () => real.getLimits(),
+      listSurveys: () => real.listSurveys(),
+      getSurvey: (id) => {
+        attempts++
+        return attempts === 1 ? Promise.reject(new Error('worker died')) : real.getSurvey(id)
+      },
+    }
+
+    await useTerrain.getState().load(flaky)
+    expect(useTerrain.getState()).toMatchObject({ status: 'error', error: 'worker died' })
+
+    await useTerrain.getState().retry()
+    const s = useTerrain.getState()
+    expect(s.status).toBe('ready')
+    expect(s.error).toBeUndefined()
+    expect(s.findings.filter((f) => f.status === 'violation')).toHaveLength(2)
+  }, 30_000)
+
+  it('retry does nothing when there is nothing to retry', async () => {
+    await useTerrain.getState().retry()
+    expect(useTerrain.getState().status).toBe('idle')
   })
 })

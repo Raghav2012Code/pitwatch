@@ -59,3 +59,47 @@ describe('point reading', () => {
     expect(r.findingIds).toEqual([])
   })
 })
+
+describe('finding lookup by cell', () => {
+  it('matches a linear scan for every finding cell', () => {
+    for (const f of findings) {
+      const cell = f.cells[0]
+      const p = centerOfIndex(current.grid, cell)
+      const expected = findings.filter((g) => g.cells.includes(cell)).map((g) => g.id)
+      expect(readPoint(p, baseline, current, limits, findings).findingIds).toEqual(expected)
+    }
+  })
+
+  it('lists every finding on a shared cell, in findings order', () => {
+    const cell = findings[0]!.cells[0]
+    const template = findings[0]!
+    // The seeded scenario has no shared cells, so this is the case the index has to get right.
+    const shared: ComplianceFinding[] = [
+      { ...template, id: 'S-1', cells: [cell, 7] },
+      { ...template, id: 'S-2', cells: [cell] },
+    ]
+    const r = readPoint(centerOfIndex(current.grid, cell), baseline, current, limits, shared)
+    expect(r.findingIds).toEqual(['S-1', 'S-2'])
+  })
+
+  it('keeps finding order rather than cell order', () => {
+    const cell = findings[0]!.cells[0]
+    const expected = findings.filter((f) => f.cells.includes(cell)).map((f) => f.id)
+    const r = readPoint(centerOfIndex(current.grid, cell), baseline, current, limits, findings)
+    expect(r.findingIds).toEqual(expected)
+    // A fresh findings array gets its own index and the same answer.
+    expect(
+      readPoint(centerOfIndex(current.grid, cell), baseline, current, limits, [...findings])
+        .findingIds,
+    ).toEqual(expected)
+  })
+
+  it('returns nothing on quiet ground and off the grid', () => {
+    expect(readPoint({ x: 400, y: 400 }, baseline, current, limits, findings).findingIds).toEqual(
+      [],
+    )
+    expect(readPoint({ x: -50, y: 100 }, baseline, current, limits, findings).findingIds).toEqual(
+      [],
+    )
+  })
+})

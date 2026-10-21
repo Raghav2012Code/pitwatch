@@ -3,7 +3,7 @@ import { SURVEY_EPOCHS } from '../data/fixtures/mine'
 import { daysBetween, formatDate } from './format'
 import { PitMark } from './icons'
 import { ProvenanceTag } from './ProvenanceTag'
-import { WorkerTerrainProvider } from '../data/WorkerTerrainProvider'
+import { acquireTerrainProvider, releaseTerrainProvider } from '../data/WorkerTerrainProvider'
 import { useStory } from '../state/story'
 import { useTerrain } from '../state/terrain'
 import { countText } from './findings'
@@ -42,11 +42,15 @@ export function HomePage() {
   const [storyVisible, setStoryVisible] = useState(true)
   const rootRef = useRef<HTMLDivElement>(null)
   const findings = useTerrain((s) => s.findings)
-  const ready = useTerrain((s) => s.status === 'ready')
+  const status = useTerrain((s) => s.status)
+  const error = useTerrain((s) => s.error)
+  const retry = useTerrain((s) => s.retry)
+  const ready = status === 'ready'
 
-  // Build the same simulated surveys the monitor uses (once, in a worker).
+  // Build the same simulated surveys the monitor uses (once, in a worker shared with the monitor).
   useEffect(() => {
-    void useTerrain.getState().load(new WorkerTerrainProvider())
+    void useTerrain.getState().load(acquireTerrainProvider())
+    return () => releaseTerrainProvider()
   }, [])
 
   // The step whose block crosses a line 65% down the screen drives the map (below the pinned map on phones).
@@ -126,8 +130,8 @@ export function HomePage() {
           </span>
           <span className="cond text-[20px] font-bold text-ink">PitWatch</span>
         </a>
-        <div className="home-corner">
-          <span className="stamp hidden sm:inline-flex">
+        <div className="home-corner max-sm:flex-col max-sm:items-end">
+          <span className="stamp inline-flex">
             <span className="stamp-dot" aria-hidden="true" />
             SIMULATED DATA
           </span>
@@ -138,6 +142,23 @@ export function HomePage() {
       </header>
 
       <main>
+        {/* The map below is decorative and hidden from assistive technology, so a failure has to
+            be reported here, in flow, with a real control. */}
+        {status === 'error' && (
+          <div
+            role="alert"
+            className="card mx-auto mt-24 w-[min(440px,calc(100%-40px))] p-4 text-center"
+          >
+            <p className="cond text-[16px] font-bold text-violation">Surveys unavailable</p>
+            <p className="mt-1 text-[12.5px] leading-5 text-ink-dim">
+              The simulated surveys could not be built: {error}
+            </p>
+            <button type="button" className="btn mt-3" onClick={() => void retry()}>
+              Try again
+            </button>
+          </div>
+        )}
+
         <div className="story">
           {/* ---------- Pinned map ---------- */}
           <div className="story-stage" aria-hidden="true">
@@ -152,6 +173,8 @@ export function HomePage() {
                       <HomeScene step={step} active={storyVisible} />
                     </Suspense>
                   </SceneErrorBoundary>
+                ) : status === 'error' ? (
+                  <p className="plan-status">The simulated surveys could not be built.</p>
                 ) : (
                   <p className="plan-status">Building the simulated surveys…</p>
                 )}

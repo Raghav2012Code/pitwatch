@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
+import { useEffect, useId, useMemo, useRef, type CSSProperties } from 'react'
 import { SURFACE_KEY } from '../../data/orthophoto'
 import { useCameraState } from '../../scene/cameraState'
 import { COMPLIANCE_CONFIG } from '../../compliance/config'
@@ -206,14 +206,18 @@ export function OverlayKey() {
   }
   if (layers.zones) {
     const dashed = (dash: string) => swatch({ borderTop: `2px ${dash} ${OVERLAY.lease}` })
-    rows.push(
-      {
-        key: 'pit',
+    const many = limits.pitZones.length > 1
+    for (const zone of limits.pitZones) {
+      rows.push({
+        key: `pit-${zone.id}`,
         swatch: dashed('dashed'),
-        label: `Pit zone (floor ${limits.pitZones[0].approvedFloorElevation} m RL)`,
-      },
-      { key: 'dump', swatch: dashed('dotted'), label: 'Dump zone' },
-    )
+        // One row per zone, so a second pit's floor is never mistaken for the first's.
+        label: many
+          ? `Pit zone ${zone.id} (floor ${zone.approvedFloorElevation} m RL)`
+          : `Pit zone (floor ${zone.approvedFloorElevation} m RL)`,
+      })
+    }
+    rows.push({ key: 'dump', swatch: dashed('dotted'), label: 'Dump zone' })
   }
   if (layers.change && onCurrent) {
     const box = (c: string) => (
@@ -267,18 +271,21 @@ export function OverlayKey() {
 export function ExaggerationSlider() {
   const exaggeration = useAppStore((s) => s.exaggeration)
   const setExaggeration = useAppStore((s) => s.setExaggeration)
+  // The slider appears in the Map card and in the mobile drawer; each instance needs its own id
+  // or the label only associates with whichever comes first in the document.
+  const id = useId()
   return (
     <div>
       <div className="flex items-baseline justify-between">
-        <label htmlFor="exaggeration" className="text-[12.5px] text-ink-dim">
+        <label htmlFor={id} className="text-[12.5px] text-ink-dim">
           Vertical exaggeration
         </label>
-        <output htmlFor="exaggeration" className="font-mono text-[12px] text-ink">
+        <output htmlFor={id} className="font-mono text-[12px] text-ink">
           {exaggeration.toFixed(1)}×
         </output>
       </div>
       <input
-        id="exaggeration"
+        id={id}
         type="range"
         min={EXAGGERATION.min}
         max={EXAGGERATION.max}
@@ -308,9 +315,11 @@ export function ScaleBar() {
     return useCameraState.subscribe(draw)
   }, [])
 
+  // Decorative, so it never takes a click. Below `xl` the stage is too narrow to hold this chip
+  // and the camera group in one row, so it drops under the timeline instead of covering a button.
   return (
     <div
-      className="map-chip enter-down absolute top-4 left-4 flex items-center gap-2.5"
+      className="map-chip enter-down pointer-events-none absolute top-4 left-4 flex items-center gap-2.5 max-xl:top-auto max-xl:bottom-24"
       style={delay(1.2)}
       aria-hidden="true"
     >
@@ -323,14 +332,27 @@ export function ScaleBar() {
 }
 
 /** Shown while the surfaces are generated or the 3D engine downloads, or if loading failed. */
-export function SceneStatus({ error, label }: { error?: string; label: string }) {
+export function SceneStatus({
+  error,
+  label,
+  onRetry,
+}: {
+  error?: string
+  label: string
+  onRetry?: () => void
+}) {
   return (
-    <div className="absolute inset-0 grid place-items-center" role="status">
+    <div className="absolute inset-0 grid place-items-center" role={error ? 'alert' : 'status'}>
       <div className="card w-[260px] p-4 text-center">
         {error ? (
           <>
             <div className="cond text-[17px] font-bold text-violation">Terrain unavailable</div>
             <p className="mt-1 text-[12.5px] leading-5 text-ink-dim">{error}</p>
+            {onRetry && (
+              <button type="button" className="btn mt-3" onClick={onRetry}>
+                Try again
+              </button>
+            )}
           </>
         ) : (
           <>
