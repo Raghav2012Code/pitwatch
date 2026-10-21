@@ -2,7 +2,7 @@
 
 3D mine monitoring and regulatory compliance demo. Frontend only, no backend. Every value is synthetic and labelled so.
 
-`origin` (`Raghav2012Code/pitwatch`) is a fork of `abivan100-stack/pitwatch-3d`. Work is committed and pushed to `origin/main`; the parent is fetched through the `upstream` remote (`git@github.com:abivan100-stack/pitwatch-3d.git`) and there is no CI on the parent.
+Work is committed and pushed to `origin/main`. The project began as a fork: `Raghav2012Code/pitwatch` forks `abivan100-stack/pitwatch-3d`, so in the fork the parent is fetched through the `upstream` remote (`git@github.com:abivan100-stack/pitwatch-3d.git`) and in the parent `origin` is the parent itself.
 
 ## Working rules
 
