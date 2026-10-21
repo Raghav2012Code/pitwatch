@@ -11,6 +11,29 @@ import { changeThreshold } from './change'
 import { COMPLIANCE_CONFIG, type ComplianceConfig } from './config'
 import { combinedSigma } from './uncertainty'
 
+/**
+ * Cell → finding ids, built once per findings array. Findings are replaced wholesale when a load
+ * finishes, so caching on the array identity means one build and a constant-time lookup per pick,
+ * instead of scanning every finding's cell list again.
+ */
+const cellIndex = new WeakMap<readonly ComplianceFinding[], Map<number, string[]>>()
+
+function findingIdsAt(findings: readonly ComplianceFinding[], cell: number): string[] {
+  let index = cellIndex.get(findings)
+  if (!index) {
+    index = new Map<number, string[]>()
+    for (const f of findings) {
+      for (const c of f.cells) {
+        const list = index.get(c)
+        if (list) list.push(f.id)
+        else index.set(c, [f.id])
+      }
+    }
+    cellIndex.set(findings, index)
+  }
+  return index.get(cell) ?? []
+}
+
 /** Everything the inspector shows about one picked point. */
 export interface PointReading {
   p: Vec2
@@ -95,6 +118,6 @@ export function readPoint(
           above: elevation === null ? null : elevation - zone.approvedFloorElevation,
         }
       : null,
-    findingIds: index < 0 ? [] : findings.filter((f) => f.cells.includes(index)).map((f) => f.id),
+    findingIds: index < 0 ? [] : findingIdsAt(findings, index),
   }
 }

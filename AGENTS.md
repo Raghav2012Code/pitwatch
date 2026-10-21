@@ -48,6 +48,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: finding lookup at a point is indexed
+
+- `readPoint` answered "which findings cover this cell" with `findings.filter(f => f.cells.includes(cell))`, a scan over every finding's cell list on every pick, so the cost grew with findings × cells while the visitor waited.
+- `src/compliance/inspect.ts` now keeps a `WeakMap` from the findings array to a cell → ids map, built on first use. Findings are replaced wholesale when a load finishes, so the key is stable and the index is built once; lookups are a map get. Order still follows the findings array, so the inspector's links read the same.
+- Tests: `inspect.test.ts` gains three (the index matches a linear scan for every finding cell; a shared cell lists both findings in findings order, using constructed findings since the seeded scenario has no shared cell; quiet ground and off-grid still return nothing). 115 unit tests, 19 browser checks.
+
 ### 2026-10-21: the depth rule knows which pit zone it is in
 
 - R2 looped the zones and overwrote each cell's status, so with overlapping zones the **last** zone in the array decided the verdict while exceedance and volume took the maximum. A warning could therefore carry an exceedance past the violation band. The explanation always quoted `pitZones[0]` whatever zone produced the verdict, and the inspector and profile chart also used the first matching zone, so a two-zone site would have reported a floor that did not cause the finding.
