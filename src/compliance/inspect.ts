@@ -1,4 +1,10 @@
-import type { ComplianceFinding, PermittedLimits, TerrainSurvey, Vec2 } from '../domain/types'
+import type {
+  ComplianceFinding,
+  PermittedLimits,
+  PitZone,
+  TerrainSurvey,
+  Vec2,
+} from '../domain/types'
 import { cellAt, indexOf, sampleBilinear } from '../geo/grid'
 import { distanceToBoundary, pointInPolygon } from '../geo/polygon'
 import { changeThreshold } from './change'
@@ -56,7 +62,18 @@ export function readPoint(
 
   const insideLease = pointInPolygon(p, limits.leaseBoundary)
   const leaseDistance = distanceToBoundary(p, limits.leaseBoundary)
-  const zone = limits.pitZones.find((z) => pointInPolygon(p, z.polygon))
+  // Overlapping zones: report the one that governs this point, the same way the depth rule picks
+  // it (deepest below its own floor), rather than whichever happens to be first in the list.
+  const zone = limits.pitZones
+    .filter((z) => pointInPolygon(p, z.polygon))
+    .reduce<PitZone | undefined>((best, z) => {
+      if (!best) return z
+      if (elevation === null)
+        return z.approvedFloorElevation < best.approvedFloorElevation ? z : best
+      const below = z.approvedFloorElevation - elevation
+      const bestBelow = best.approvedFloorElevation - elevation
+      return below > bestBelow ? z : best
+    }, undefined)
 
   const cell = cellAt(g, p)
   const index = cell ? indexOf(g, cell.col, cell.row) : -1

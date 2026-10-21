@@ -48,6 +48,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: the depth rule knows which pit zone it is in
+
+- R2 looped the zones and overwrote each cell's status, so with overlapping zones the **last** zone in the array decided the verdict while exceedance and volume took the maximum. A warning could therefore carry an exceedance past the violation band. The explanation always quoted `pitZones[0]` whatever zone produced the verdict, and the inspector and profile chart also used the first matching zone, so a two-zone site would have reported a floor that did not cause the finding.
+- `ruleDepth` now records, per cell, the zone that produced its verdict, keeps the **worse** status, and on a tie keeps the deeper exceedance, so status, exceedance and volume always describe the same breach. `toFindings` tags a depth finding with `pitZoneId` (that zone, the one behind its deepest cell) and `explain` quotes that zone's approved floor.
+- The inspector's pit reading and the profile chart's floor line pick the governing zone by the same rule (deepest below its own floor) instead of the first match.
+- Tests: `src/compliance/zones.test.ts` (6 tests) with two zones over one cell — worse status in both array orders, floor quoted from the deeper zone in both orders, exceedance and floor agreeing, single-zone behaviour unchanged, and the inspector reporting the governing floor. The seeded five-finding snapshot did not move. 111 unit tests, 19 browser checks.
+- Not done: the monitor camera still frames `pitZones[0]` when a fly-to has no finding to aim at; that is camera framing, not a reported figure.
+
 ### 2026-10-21: layer controls reach the phone drawer
 
 - Below `md` the floating Map card is `display: none`, so a phone had no way to change what the map draws. The switch list moved into `src/ui/LayerControls.tsx` (`LayerSwitches`) and now renders in the Details drawer below `md`, above the tabs. `md:hidden` on that section keeps exactly one set of controls at every width: the drawer below `md`, the floating card from `md` up.

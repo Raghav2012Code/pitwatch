@@ -30,6 +30,8 @@ interface RuleMarks {
   exceedance: Float32Array
   /** Value summed into the finding volume for each cell, m. */
   volumeDepth: Float32Array
+  /** For R2, the index into `limits.pitZones` that produced the cell's verdict; −1 otherwise. */
+  zone?: Int16Array
 }
 
 function marks(ruleId: RuleId, n: number): RuleMarks {
@@ -67,19 +69,32 @@ export function ruleBoundary(change: ExcavationState, limits: PermittedLimits): 
  * than k·σ is a violation; below it but within k·σ, a warning (the survey cannot confirm
  * it). σ here is the current survey's own uncertainty, since the floor is a fixed level
  * rather than a second survey. Volume counts only the material below the floor.
+ *
+ * A cell can sit inside more than one zone. It then carries the worse verdict of the two
+ * (a violation is never hidden by zone order), and the exceedance, volume and explanation
+ * all come from the same zone: the one whose floor the cell is deepest below.
  */
 export function ruleDepth(current: TerrainSurvey, limits: PermittedLimits, k: number): RuleMarks {
   const g = current.grid
   const n = current.elevations.length
   const m = marks('R2', n)
+  m.zone = new Int16Array(n).fill(-1)
+  const zones = limits.pitZones
   const band = k * current.verticalUncertainty
-  for (const zone of limits.pitZones) {
+  for (let zi = 0; zi < zones.length; zi++) {
+    const zone = zones[zi]
     for (let i = 0; i < n; i++) {
       const below = zone.approvedFloorElevation - current.elevations[i]
       if (below <= 0 || !pointInPolygon(centerOfIndex(g, i), zone.polygon)) continue
-      m.status[i] = below > band ? VIOLATION : WARNING
-      m.exceedance[i] = Math.max(m.exceedance[i], below)
-      m.volumeDepth[i] = m.exceedance[i]
+      const status = below > band ? VIOLATION : WARNING
+      // Worse status wins. On the same status the deeper exceedance wins, so the numbers and
+      // the quoted floor always describe the same breach.
+      const worse = status > m.status[i] || (status === m.status[i] && below > m.exceedance[i])
+      if (!worse) continue
+      m.status[i] = status
+      m.exceedance[i] = below
+      m.volumeDepth[i] = below
+      m.zone[i] = zi
     }
   }
   return m
@@ -139,6 +154,8 @@ interface ExplainInput {
   band: number
   k: number
   limits: PermittedLimits
+  /** For R2, the approved floor of the zone this finding breaches (not just the first zone). */
+  pitZoneFloor?: number
 }
 
 /** Plain-English reason for a finding: the rule and the numbers behind it. */
@@ -151,7 +168,8 @@ export function explain(f: ExplainInput): string {
         ? `Excavated ${area} outside the lease boundary; deepest cut ${num(f.maxExceedance, 1)} m ${pm}. About ${roughVolume(f.volumeM3)} m³ removed.`
         : `Excavated ${area} inside the ${num(f.limits.safetyBufferMetres)} m safety buffer, within the lease; deepest cut ${num(f.maxExceedance, 1)} m ${pm}.`
     case 'R2': {
-      const floor = num(f.limits.pitZones[0]?.approvedFloorElevation ?? 0)
+      // The zone this finding is in. Falls back to the first zone for callers that pass no zone.
+      const floor = num(f.pitZoneFloor ?? f.limits.pitZones[0]?.approvedFloorElevation ?? 0)
       return f.status === 'violation'
         ? `Ground is up to ${num(f.maxExceedance, 1)} m below the approved floor (RL ${floor} m) over ${area}, more than the survey uncertainty of ${pm}. About ${roughVolume(f.volumeM3)} m³ below the floor.`
         : `Ground is up to ${num(f.maxExceedance, 2)} m below the approved floor (RL ${floor} m) over ${area}. That is within the survey uncertainty of ${pm}, so it cannot be confirmed.`
@@ -188,6 +206,18 @@ function toFindings(
     }
     const areaM2 = cells.length * a
     const centroid: Vec2 = { x: cx / cells.length, y: cy / cells.length }
+    // The zone this cluster breaches most: the one behind its deepest cell.
+    let zoneIndex = -1
+    let deepest = -1
+    if (m.zone) {
+      for (const i of cells) {
+        if (m.zone[i] >= 0 && m.exceedance[i] > deepest) {
+          deepest = m.exceedance[i]
+          zoneIndex = m.zone[i]
+        }
+      }
+    }
+    const pitZone = zoneIndex >= 0 ? limits.pitZones[zoneIndex] : undefined
     return {
       ruleId: m.ruleId,
       type: TYPE[m.ruleId][status],
@@ -198,6 +228,7 @@ function toFindings(
       volumeM3: volume,
       maxExceedance,
       centroid,
+      ...(pitZone ? { pitZoneId: pitZone.id } : {}),
       explanation: explain({
         ruleId: m.ruleId,
         status,
@@ -207,6 +238,7 @@ function toFindings(
         band,
         k: cfg.k,
         limits,
+        pitZoneFloor: pitZone?.approvedFloorElevation,
       }),
       provenance: 'derived',
     }

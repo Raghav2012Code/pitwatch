@@ -167,6 +167,8 @@ export interface ComplianceFinding {
   /** Largest exceedance of the limit, metres. */
   maxExceedance: number
   centroid: Vec2
+  /** For a depth finding, the pit zone whose approved floor the finding breaches most. */
+  pitZoneId?: string
   explanation: string
   provenance: 'derived'
 }

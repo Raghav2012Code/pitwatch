@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { COMPLIANCE_CONFIG } from '../../compliance/config'
 import { changeThreshold } from '../../compliance/change'
 import { readPoint } from '../../compliance/inspect'
+import type { PitZone } from '../../domain/types'
 import { localToLatLon } from '../../geo/latlon'
 import { measureOnSurface } from '../../geo/measure'
 import { pointInPolygon } from '../../geo/polygon'
@@ -148,7 +149,26 @@ function Measurement() {
         : null,
     [current, baseline, a, b],
   )
-  const zone = limits?.pitZones[0]
+  // Overlapping pit zones: the chart uses the zone the line is deepest below, which is the same
+  // zone the depth rule would blame, rather than whichever zone happens to come first.
+  const zone = useMemo(() => {
+    if (!limits || !profile) return undefined
+    const heights = profile.series[0] ?? []
+    let best: PitZone | undefined
+    let deepest = -Infinity
+    for (const candidate of limits.pitZones) {
+      for (let i = 0; i < profile.points.length; i++) {
+        const h = heights[i]
+        if (!Number.isFinite(h) || !pointInPolygon(profile.points[i], candidate.polygon)) continue
+        const below = candidate.approvedFloorElevation - h
+        if (below > deepest) {
+          deepest = below
+          best = candidate
+        }
+      }
+    }
+    return best
+  }, [limits, profile])
   const inPit = useMemo(
     () => profile?.points.map((p) => (zone ? pointInPolygon(p, zone.polygon) : false)) ?? [],
     [profile, zone],
