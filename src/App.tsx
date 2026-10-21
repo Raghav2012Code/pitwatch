@@ -5,7 +5,7 @@ import { useTerrain } from './state/terrain'
 import { toggleFullscreen } from './ui/fullscreen'
 import { HomePage } from './ui/HomePage'
 import { LayerPanel } from './ui/LayerPanel'
-import { useRoute } from './ui/route'
+import { useRoute, plannedHash } from './ui/route'
 import { SidePanel } from './ui/SidePanel'
 import { TopBar } from './ui/TopBar'
 import { Viewport } from './ui/Viewport'
@@ -16,6 +16,20 @@ export default function App() {
   useEffect(() => {
     document.title = route === 'home' ? 'PitWatch 3D' : 'Monitor – PitWatch 3D'
   }, [route])
+
+  // An address that names no screen is rewritten to the home hash, so the address bar always
+  // describes what is on screen. `replaceState` keeps the correction out of the back history.
+  useEffect(() => {
+    const settle = () => {
+      const target = plannedHash(window.location.hash)
+      if (!target) return
+      const { pathname, search } = window.location
+      window.history.replaceState(null, '', `${pathname}${search}${target}`)
+    }
+    settle()
+    window.addEventListener('hashchange', settle)
+    return () => window.removeEventListener('hashchange', settle)
+  }, [])
 
   return route === 'home' ? <HomePage /> : <Monitor />
 }

@@ -48,6 +48,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: unknown addresses rewritten to the home hash
+
+- `plannedHash` in `src/ui/route.ts` (pure, tested): the empty hash, `#/` and `#/monitor` are left alone; every other hash is sent to `#/`. The empty hash is deliberately untouched so the root URL stays the root URL instead of growing a `#/`.
+- `App` runs it on mount and on every `hashchange`, rewriting with `history.replaceState` so the correction does not land in the back history. Before this, `#/typo` or `#/monitor/extra` rendered the home page while the address bar claimed otherwise.
+- New `e2e/routing.spec.ts` covers a typo hash and a deeper monitor path. Seven browser checks now.
+
 ### 2026-10-21: required Node version declared
 
 - `package.json` gains `engines.node` `^20.19.0 || >=22.12.0`, the same range Vite 8 declares about itself, so a wrong toolchain gets npm's `EBADENGINE` warning and Vite's own early "requires Node.js" error instead of an opaque build failure later. Local Node is 24.18.0; CI pins 22.
