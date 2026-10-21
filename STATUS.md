@@ -6,7 +6,7 @@ Updated 2026-10-21. This records the state of the `ui-redesign` branch and its r
 
 - Branch: `ui-redesign`, based on `main` at `72e34ba`. The redesign is not on `main` or the live site yet.
 - The landing page, dashboard shell, site plan, responsive map controls, branding, and competition improvement plan are committed on this branch.
-- The site-plan and map-layout batch is verified. The detailed plan for the next competition improvements is in [`docs/competition-ui-ux-improvement-plan.md`](docs/competition-ui-ux-improvement-plan.md); it remains a proposal and does not authorize implementation.
+- The site-plan and map-layout batch and the first P0 from [`docs/competition-ui-ux-improvement-plan.md`](docs/competition-ui-ux-improvement-plan.md) are verified on this branch. Later plan features remain proposed.
 - Pull request: [#2, `ui-redesign` → `main`](https://github.com/abivan100-stack/pitwatch-3d/pull/2), opened after the verified branch was pushed.
 - Local preview: `npx vite --port 5179 --strictPort`, then open http://localhost:5179.
 
@@ -18,20 +18,22 @@ Updated 2026-10-21. This records the state of the `ui-redesign` branch and its r
 4. On the map, vertical exaggeration stays above the key, and the key starts folded on short screens while remaining user-controlled. The landing hero uses available width on ultra-wide displays, and coarse-pointer controls receive 44 px targets.
 5. The competition improvement sequence and acceptance criteria are recorded in `docs/competition-ui-ux-improvement-plan.md`.
 
+6. **Finding selection reveals its evidence** (first P0, complete): selecting a finding from the Findings page, Overview or map restores the current terrain and finding overlay, frames and highlights the chosen result, and keeps selection synchronized. On phones, the details drawer closes after the selection and reopens with that finding retained.
+
 ## Verification completed
 
-| Check              | Result | Evidence                                                                                                                                                                |
-| ------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run verify`   | Pass   | Typecheck, ESLint, Prettier, and all 130 unit tests across 17 files. Vitest is capped at two workers so synthetic terrain setup does not time out under CPU contention. |
-| `npm run test:e2e` | Pass   | All 49 Playwright checks passed against the production build, including the four site-plan/map-layout regression checks.                                                |
-| Browser review     | Pass   | Overview at 1440, 1100, 800, and 390 px; map at 1366×768; landing page at 2560×1440; phone drawer with touch input. No horizontal overflow or browser errors observed.  |
-| `git diff --check` | Pass   | No whitespace errors in the reviewed changes.                                                                                                                           |
+| Check              | Result | Evidence                                                                                                                                                                        |
+| ------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run verify`   | Pass   | Typecheck, ESLint, Prettier, and all 131 unit tests across 17 files. Vitest is capped at two workers so synthetic terrain setup does not time out under CPU contention.         |
+| `npm run test:e2e` | Pass   | All 51 Playwright checks passed against the production build, including baseline selection, layer restoration, camera framing, cross-page selection, and phone drawer coverage. |
+| Browser review     | Pass   | Selected map and Overview views at 1440, 1100, 800, and 390 px; map at 1366×768; landing at 2560×1440; phone drawer with touch. No horizontal overflow or browser errors.       |
+| `git diff --check` | Pass   | No whitespace errors in the reviewed changes.                                                                                                                                   |
 
 The browser review also confirmed five labelled finding pins, site-plan navigation, keyboard selection, the short-screen exaggeration control, manual key folding, and phone touch targets. The touch-height rule applies to the specified coarse-pointer controls; site-plan SVG pin dimensions remain governed by their SVG hit area.
 
 ## Remaining work
 
-1. Review and merge pull request [#2](https://github.com/abivan100-stack/pitwatch-3d/pull/2); deployment to the live site follows the merge.
+1. Push the completed first P0 feature to pull request [#2](https://github.com/abivan100-stack/pitwatch-3d/pull/2), then review and merge it; deployment to the live site follows the merge.
 2. The 3D map remains tight around 1100 px when both side panels are open, and the layers panel covers a substantial part of the model at 800 px. These are recorded as follow-up items in the competition plan.
 3. The first-visit map hint, visible tooltips for the icon rail, and desktop dragging of the landing model remain unstarted ideas. They are not required for this branch's current verification.
 4. The redesign is not merged or deployed to the live site. Do not describe it as live until a merge and deployment are confirmed.
@@ -39,4 +41,4 @@ The browser review also confirmed five labelled finding pins, site-plan navigati
 ## Context
 
 - PR #1 from the fork was merged into `main` as `31f28f6`; the main branch's follow-up commit is `72e34ba`.
-- The competition plan is a proposal. Implement its features one at a time under the repository's feature workflow, and update this status as delivery changes.
+- Only the first P0 from the competition plan has been implemented. Later features remain proposals and should be taken one at a time under the repository's feature workflow.

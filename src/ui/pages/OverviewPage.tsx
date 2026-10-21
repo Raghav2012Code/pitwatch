@@ -204,10 +204,11 @@ function Attention() {
 function AttentionRow({ f }: { f: ComplianceFinding }) {
   const tone = toneOf(f)
   const Glyph = GLYPH[tone]
+  const selected = useAppStore((s) => s.selectedFinding === f.id)
   const selectFinding = useAppStore((s) => s.selectFinding)
 
   return (
-    <li className={`attention tone-${tone}`}>
+    <li className={`attention tone-${tone}`} data-selected={selected || undefined}>
       <Glyph className="mt-0.5 h-[20px] w-[20px] shrink-0 text-(--tone)" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-3">

@@ -1180,6 +1180,12 @@ body {
     padding: 16px 0;
     border-bottom: 1px solid var(--color-line);
   }
+  .attention[data-selected] {
+    padding-inline: 12px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--color-accent) 7%, transparent);
+    box-shadow: inset 3px 0 var(--color-accent);
+  }
   .attention > .min-w-0 {
     flex: 1 1 260px;
   }
@@ -1386,7 +1392,8 @@ body {
     transform-origin: center;
     scale: 1.35;
   }
-  .plan-pin:focus-visible .plan-pin-ring {
+  .plan-pin:focus-visible .plan-pin-ring,
+  .plan-pin[aria-pressed='true'] .plan-pin-ring {
     opacity: 1;
   }
   .plan-key {

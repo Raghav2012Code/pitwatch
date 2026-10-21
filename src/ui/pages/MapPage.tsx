@@ -34,9 +34,16 @@ export function MapPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // Leaving the map forgets old camera requests, so coming back opens with the intro shot
-  // instead of replaying the last fly-to.
-  useEffect(() => () => useAppStore.getState().leaveMap(), [])
+  // Leaving the map forgets old camera requests. Defer cleanup by one microtask so React
+  // StrictMode's development-only effect replay does not erase a finding selected on entry.
+  useEffect(
+    () => () => {
+      queueMicrotask(() => {
+        if (!document.querySelector('.monitor')) useAppStore.getState().leaveMap()
+      })
+    },
+    [],
+  )
 
   return (
     <div

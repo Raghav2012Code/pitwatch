@@ -50,6 +50,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: finding selection restores visible evidence (branch `ui-redesign`)
+
+- Selecting a finding now returns the map to the current survey, enables terrain and the findings overlay, opens the Findings tab, restores the desktop details panel, and closes the phone drawer so the terrain is visible. Reopening Details retains the selected item.
+- The Overview's attention row and SVG site-plan pin reflect the same selection as the findings list and 3D map. The map's accessible description reports terrain and finding-layer visibility and names the selected finding; it no longer says findings are marked when the layer is hidden or the baseline survey is active.
+- Fixed a StrictMode effect replay that cleared a finding's camera request when the map mounted in development. Selection now frames the chosen pin; the pin grows on the 3D map and is visibly outlined on the site plan.
+- Verification: `npm run verify` passes (131 unit tests in 17 files); `npm run test:e2e` passes all 51 checks. Browser review of the selected map and Overview at 1440, 1100, 800, and 390 px found no horizontal overflow or browser errors. The development probe confirmed the camera request survives StrictMode and the selected pin is framed.
+- The first P0 is complete on `ui-redesign`; remaining competition-plan features stay proposed until the user directs the next one.
+
 ### 2026-10-21: site plan and short-screen map controls verified (branch `ui-redesign`)
 
 - The Overview site plan renders the lease, permitted zone, changed cells and five findings from the existing survey and compliance output. Finding pins navigate to the matching selected finding on the 3D map; added Playwright coverage for all five findings, Enter and Space activation, and phone tap/navigation.

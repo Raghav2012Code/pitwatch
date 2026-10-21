@@ -112,7 +112,15 @@ export const useAppStore = create<AppState>((set) => ({
   selectFinding: (id, at) =>
     set((s) => ({
       selectedFinding: id,
-      ...(id ? { activeTab: 'findings' as const } : {}),
+      ...(id
+        ? {
+            activeTab: 'findings' as const,
+            drawerOpen: false,
+            detailsHidden: false,
+            epoch: 'current' as const,
+            layers: { ...s.layers, terrain: true, findings: true },
+          }
+        : {}),
       ...(at ? { focus: { p: at, n: (s.focus?.n ?? 0) + 1 } } : {}),
     })),
   leaveMap: () => set({ focus: null, view: { kind: 'intro', n: 0 }, drawerOpen: false }),

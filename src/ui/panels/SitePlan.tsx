@@ -48,6 +48,7 @@ export function SitePlan() {
   const change = useTerrain((s) => s.change)
   const limits = useTerrain((s) => s.limits)
   const findings = useTerrain((s) => s.findings)
+  const selectedFinding = useAppStore((s) => s.selectedFinding)
   const selectFinding = useAppStore((s) => s.selectFinding)
 
   // One pixel per grid cell: rust where ground was removed, blue where it was added.
@@ -176,6 +177,7 @@ export function SitePlan() {
                   role="button"
                   tabIndex={0}
                   className="plan-pin"
+                  aria-pressed={selectedFinding === f.id}
                   aria-label={`${f.id}, ${RULE_NAMES[f.ruleId]}, ${f.status}, ${f.severity} severity. Show on the map`}
                   onClick={() => open(f)}
                   onKeyDown={(e) => onKey(e, f)}

@@ -1,6 +1,8 @@
 # Competition UI/UX Improvement Plan
 
-**Status:** Proposed
+**Status:** First P0 complete on `ui-redesign`; priorities after it remain proposed.
+
+**Completed feature:** P0 — Finding selection reveals its evidence.
 
 **Based on:** PitWatch 3D interface audit, 21 October 2026
 
@@ -10,11 +12,13 @@
 
 Keep the current limestone and slate palette, mine-specific graphics, live terrain, severity glyphs, and report-style pages. Improve the evidence flow first, then align explanations with the compliance engine, open up the map at laptop widths, and refine mobile and presentation details.
 
-Deliver one feature at a time. For each feature, run the repository checks, update the AGENTS.md Update log, commit using Conventional Commits, push to origin/main, and ask the user before starting the next feature. Keep the task list accurate while work is underway. This document is a proposed sequence, not approval to start implementation.
+Deliver one feature at a time. For each feature, run the repository checks, update the AGENTS.md Update log, commit using Conventional Commits, and push the active review branch. Stop for the user's direction before starting the next feature. Only the first P0 is authorized; the remaining sequence is proposed.
 
 ## Priority and sequence
 
 ### P0 — Finding selection reveals its evidence
+
+**Status:** Complete on `ui-redesign`.
 
 **Outcome:** Choosing “Show on map” always puts the visitor on a map state where that finding can be seen and understood.
 
@@ -179,6 +183,6 @@ For each feature, use the repository’s required checks:
 npm run verify && npm run test:e2e
 ```
 
-Then review the browser at 1440, 1100, and 800 px as required by AGENTS.md; include 390 px for phone work. Capture the updated screen, inspect the relevant interaction, add an Update log entry, commit, push to origin/main, and stop for the user’s direction before starting the next feature.
+Then review the browser at 1440, 1100, and 800 px as required by AGENTS.md; include 390 px for phone work. Capture the updated screen, inspect the relevant interaction, add an Update log entry, commit, push the active review branch, and stop for the user’s direction before starting the next feature. This redesign is under review in PR #2, so its feature commits belong on `ui-redesign` until that PR is merged.
 
-The last audit passed typecheck, lint, formatting, and all 130 unit tests on a repeat. The production browser run built but had three timeouts alongside 42 passes, so begin the first feature with a clean, focused browser baseline and record whether those cases reproduce before attributing them to the UI.
+The completed feature passes `npm run verify` (131 unit tests across 17 files) and `npm run test:e2e` (51 production browser checks). Screenshots and interaction review at 1440, 1100, 800, and 390 px confirmed visible selected evidence, closed and reopened phone details, no horizontal overflow, and no browser errors. A development browser probe also confirmed that React StrictMode no longer clears the finding camera request on map entry.

@@ -102,6 +102,28 @@ describe('picking and measuring', () => {
     expect(s().selectedFinding).toBeNull()
   })
 
+  it('restores the survey, layers, and detail access needed to inspect a finding', () => {
+    const state = useAppStore.getState()
+    useAppStore.setState({
+      epoch: 'baseline',
+      layers: { ...state.layers, terrain: false, findings: false },
+      detailsHidden: true,
+      drawerOpen: true,
+      activeTab: 'inspector',
+    })
+
+    useAppStore.getState().selectFinding('R2-1', p2)
+    const selected = useAppStore.getState()
+
+    expect(selected.selectedFinding).toBe('R2-1')
+    expect(selected.epoch).toBe('current')
+    expect(selected.layers.terrain).toBe(true)
+    expect(selected.layers.findings).toBe(true)
+    expect(selected.detailsHidden).toBe(false)
+    expect(selected.drawerOpen).toBe(false)
+    expect(selected.activeTab).toBe('findings')
+  })
+
   it('forgets camera requests when the map closes', () => {
     s().requestView('top')
     s().selectFinding('R1-1', p2)

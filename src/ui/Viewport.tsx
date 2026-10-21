@@ -19,13 +19,25 @@ export function Viewport() {
   const error = useTerrain((s) => s.error)
   const findings = useTerrain((s) => s.findings)
   const epoch = useAppStore((s) => s.epoch)
+  const terrainVisible = useAppStore((s) => s.layers.terrain)
+  const findingsVisible = useAppStore((s) => s.layers.findings)
+  const selectedFinding = useAppStore((s) => s.selectedFinding)
   const ready = status === 'ready'
   const tool = useAppStore((s) => s.tool)
-  // The label follows the survey on screen and the engine's output, so a screen reader
-  // hears what the map currently shows rather than a stale sentence.
+  const overlayDescription =
+    epoch === 'baseline'
+      ? 'Findings are not shown on the baseline survey.'
+      : findingsVisible
+        ? `Findings overlay is on, with ${findings.length} findings marked.`
+        : 'Findings overlay is off.'
+  // Describe the survey and visibility state a screen reader can actually see, not just the
+  // available findings in the engine.
   const sceneLabel =
     `3D terrain of the fictional Venthar Ridge pit, ${epoch} survey.` +
-    (ready ? ` ${findings.length} findings marked.` : '') +
+    (ready
+      ? ` Terrain is ${terrainVisible ? 'visible' : 'hidden'}. ${overlayDescription}` +
+        (selectedFinding ? ` Finding ${selectedFinding} selected.` : '')
+      : '') +
     ' Drag to orbit, right-drag to pan, scroll to zoom.'
 
   return (
