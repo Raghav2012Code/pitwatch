@@ -2,6 +2,7 @@ import { Line } from '@react-three/drei'
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import type { TerrainSurvey, Vec2 } from '../domain/types'
+import { sampleBilinear } from '../geo/grid'
 import { profileAlong } from '../geo/profile'
 import { useAppStore } from '../state/store'
 import { onGround } from './overlayGeometry'
@@ -78,6 +79,10 @@ export function PickLayer({ survey }: { survey: TerrainSurvey }) {
 
   const line = useMemo(() => {
     if (!a || !b) return null
+    // An end outside the survey has no elevation to drape the line on, and the profile must not
+    // be built for it.
+    if (sampleBilinear(survey.grid, survey.elevations, a) === null) return null
+    if (sampleBilinear(survey.grid, survey.elevations, b) === null) return null
     const { points } = profileAlong(survey.grid, a, b)
     return points.map((p) => onGround(survey, p, ex, 5))
   }, [survey, a, b, ex])

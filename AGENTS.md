@@ -50,6 +50,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: a measurement cannot ask for unbounded work (fork #18)
+
+- The coordinate form accepts any finite local metres, but the profile along the line was sampled every half cell with no cap: `profileAlong` (`src/geo/profile.ts`) asked for `length / 4` samples, so a typed line of a million kilometres wanted 250 million of them. Two callers paid that cost — the Inspector's profile and the map's draped line (`src/scene/PickLayer.tsx`) — and the Inspector built the profile _before_ it checked whether an end was off the grid, so a line that could not be measured was still profiled in full.
+- `profileAlong` now caps the samples at `MAX_PROFILE_SAMPLES` (2000) and says what it did: `step` is the spacing actually used and `limited` is true when the half-cell step had to be widened. A line that fits the cap is unchanged.
+- The real saving is upstream of that: the Inspector only builds a profile when both ends have an elevation (`measureOnSurface` first), and the map line is not drawn at all when an end is off the grid, because `onGround` falls back to the base level and the line sinks out of sight. An off-grid end now costs nothing.
+- When a profile is limited the Inspector says so under the chart, with the spacing it used.
+- Tests: `src/geo/profile.test.ts` gains three (the half-cell step is kept for a line that fits; a 100 km line stays inside the cap and reports the coarser step). `e2e/keyboard.spec.ts` gains one: Measure, then A at E 0 / N 0 and B at a million kilometres east, and the panel must say the line is outside the survey area, offer no measurement and leave the page alive. That check was run against the old code first — it times out there, so it really catches the regression. 133 unit tests, 52 browser checks.
+- Browser check at 1100 px: a 200 m measurement still shows the markers, the draped line, the profile chart and the four rows.
+
 ### 2026-10-21: the parent's nine open issues, copied here and planned
 
 - The parent `abivan100-stack/pitwatch-3d` has nine open issues (#3–#11). They were copied into this fork as **#17–#25** (`gh issue create`, one per issue), each body byte-identical to the parent's, plus one line saying where it came from. Labels carried over (`bug`, `enhancement`, `ready-for-agent`); both trackers have the same label set. Mapping: parent #3→fork #17, #4→#18, #5→#19, #6→#20, #7→#21, #8→#22, #9→#23, #10→#24, #11→#25. The parent's tracker keeps the originals; these are the fork's working copies.
