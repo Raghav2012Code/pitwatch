@@ -2,7 +2,7 @@
 
 3D mine monitoring and regulatory compliance demo. Frontend only, no backend. Every value is synthetic and labelled so.
 
-`origin` (`Raghav2012Code/pitwatch`) is a fork of `abivan100-stack/pitwatch-3d`. Work is committed and pushed to `origin/main`; there is no `upstream` remote and no CI on the parent.
+`origin` (`Raghav2012Code/pitwatch`) is a fork of `abivan100-stack/pitwatch-3d`. Work is committed and pushed to `origin/main`; the parent is fetched through the `upstream` remote (`git@github.com:abivan100-stack/pitwatch-3d.git`) and there is no CI on the parent.
 
 ## Working rules
 
@@ -48,6 +48,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-21: merged the parent repo
+
+- The parent `abivan100-stack/pitwatch-3d` had one commit since the fork point (6b84f2a): `e62f9b9 feat(monitor): go-to-position form as a keyboard route to point picking`. The `upstream` remote now exists, so `git fetch upstream` works.
+- It is the **same feature as issue #15**, implemented twice: upstream added a `GoTo` form inside `InspectorPanel.tsx`, we shipped `CoordinateEntry` (a separate component, prefilled from the current pick, a live region, off-grid points applied and explained, four browser checks). Upstream's version had no prefill, rejected out-of-grid coordinates outright, and had no tests.
+- Conflicts and how they were settled: `CLAUDE.md` (we renamed the file to `AGENTS.md` and left `CLAUDE.md` as an import pointer; upstream had appended a log entry to the old file) → kept our pointer, and upstream's entry is already covered by the issue #15 entry below. `src/ui/panels/InspectorPanel.tsx` → kept our `CoordinateEntry`, dropped upstream's `GoTo` and its now-unused imports.
+- `README.md` auto-merged: upstream's line "Without a mouse, type an easting and northing in the Inspector tab instead." is true of our form too, so it was kept.
+- The merge changed no behaviour: `git diff HEAD` after the merge is the README line only.
 
 ### 2026-10-21: a point can be inspected without a mouse (issue #15)
 
