@@ -1345,7 +1345,7 @@ body {
   }
   @media (width >= 64rem) {
     .hero {
-      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.25fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
       gap: 56px;
       align-items: center;
       min-height: calc(100vh - 69px);
@@ -1360,9 +1360,9 @@ body {
     color: var(--color-ink);
   }
   .hero-facts {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 14px 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 32px;
     max-width: 36rem;
     margin-top: 44px;
     padding-top: 16px;
