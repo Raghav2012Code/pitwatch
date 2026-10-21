@@ -11,6 +11,7 @@ import { countText, GLYPH, RULE_NAMES, toneOf, worstTone } from '../findings'
 import { daysBetween, formatDate, formatLat, formatLon } from '../format'
 import { ArrowRightIcon } from '../icons'
 import { Row } from '../panels/parts'
+import { SitePlan } from '../panels/SitePlan'
 import { ProvenanceTag } from '../ProvenanceTag'
 import { navigate, ROUTE_HREF } from '../route'
 import { LoadGate } from '../shell/LoadGate'
@@ -32,7 +33,10 @@ export function OverviewPage() {
             <RuleResults />
             <Attention />
           </div>
-          <Facts />
+          <div className="space-y-10">
+            <SitePlan />
+            <Facts />
+          </div>
         </div>
       </LoadGate>
     </Page>
