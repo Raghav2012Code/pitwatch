@@ -126,8 +126,8 @@ export function HomePage() {
           </span>
           <span className="cond text-[20px] font-bold text-ink">PitWatch</span>
         </a>
-        <div className="home-corner">
-          <span className="stamp hidden sm:inline-flex">
+        <div className="home-corner max-sm:flex-col max-sm:items-end">
+          <span className="stamp inline-flex">
             <span className="stamp-dot" aria-hidden="true" />
             SIMULATED DATA
           </span>

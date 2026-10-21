@@ -48,6 +48,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: the honesty badge shows on phones
+
+- The home page dropped its SIMULATED DATA badge below `sm` (`hidden sm:inline-flex`). The reason it was hidden is geometric: `.home-corner` is a fixed row at the top right holding the badge and the monitor CTA, and at 390 px that row starts around x=78 while the floating brand ends around x=140.
+- Fix is to stack the corner below `sm` (`max-sm:flex-col max-sm:items-end`) and show the badge at every width, with the full label rather than an abbreviation. No change from `sm` up, where badge and CTA still sit in one row.
+- New `e2e/badge.spec.ts`: at 390, 800 and 1440 px it asserts the badge is visible on home *and* monitor, and that its box does not intersect the brand's on home. Fourteen browser checks now.
+
 ### 2026-10-21: the scale bar stops eating camera clicks
 
 - `ScaleBar` gets `pointer-events-none`: it is decorative and `aria-hidden`, so it should never have taken a click. The utility wins over `.stage > *` because that rule lives in `@layer components` and utilities come after it — the same idiom `Timeline` already uses.
