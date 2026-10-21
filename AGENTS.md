@@ -25,9 +25,10 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 ## Design
 
-- Monitor layout: full-screen 3D canvas on a survey-paper backdrop (`--color-backdrop`, faint `<Relief />` contours, soft vignette; fog uses the same colour); a `ViewOffset` shifts the projection so the model centres in `.stage` (the area the side cards leave free, click-through except its controls). Left "Map" card (layers, key, exaggeration), right details card (tabs), camera presets + compass top-right, scale bar top-left from `xl` up and just above the timeline below that (a stage under ~437 px cannot hold the chip and the camera group in one row), timeline pill bottom-centre. Soft `.card` surfaces (8 px radius, shadow); strata stripes only in the top-bar rule and the home page.
-- Each fact appears once: mine name in the top bar, survey dates in the timeline and the Surveys section, nothing duplicated in map overlays.
-- Home page is a scroll story beside the live 3D model of the simulated surveys (`#/`), monitor at `#/monitor`. Topographic look: limestone paper, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity only (never status).
+- App structure: landing page (`#/`) and a dashboard shell (`src/ui/shell/`: slate sidebar with a vertical drill-core strip, header with page title, status and SIMULATED DATA badge). Pages in `src/ui/pages/`: Overview, 3D map (`#/monitor`), Findings, Permit rules, Uncertainty, About the data. The sidebar is a 64 px icon rail on the 3D map by default (`sidebar: 'auto'`), full width elsewhere, a drawer below `lg`. Dashboard pages are ruled report sections, not stacks of identical cards.
+- 3D map layout: full-screen 3D canvas on a survey-paper backdrop (`--color-backdrop`, faint `<Relief />` contours, soft vignette; fog uses the same colour); a `ViewOffset` shifts the projection so the model centres in `.stage` (the area the side cards leave free, click-through except its controls). Left "Map" card (layers, key, exaggeration), right details card (Findings and Inspector tabs), camera presets + compass top-right, scale bar top-left from `xl` up and just above the timeline below that (a stage under ~437 px cannot hold the chip and the camera group in one row), timeline pill bottom-centre. Soft `.card` surfaces (8 px radius, shadow); strata stripes only on the sidebar edge, the landing bar and footer.
+- Each fact appears once: mine name in the sidebar, survey dates in the timeline and the Surveys section, nothing duplicated in map overlays.
+- Landing page (`#/`) shows the live 3D model of the simulated surveys, driven by four buttons, not by scroll. Topographic look: limestone paper, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity only (never status).
 - Type: Archivo variable; `.cond` (font-stretch 72%) for headings and big figures. JetBrains Mono for coordinates and dates.
 - All colours are tokens in `@theme`; components use `var(--color-*)` or `color-mix(...)`. Never hardcode a colour in a component.
 - Severity colour always pairs with a glyph shape: warning = triangle, violation = octagon, critical = diamond.
@@ -48,6 +49,46 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-21: finding selection restores visible evidence (branch `ui-redesign`)
+
+- Selecting a finding now returns the map to the current survey, enables terrain and the findings overlay, opens the Findings tab, restores the desktop details panel, and closes the phone drawer so the terrain is visible. Reopening Details retains the selected item.
+- The Overview's attention row and SVG site-plan pin reflect the same selection as the findings list and 3D map. The map's accessible description reports terrain and finding-layer visibility and names the selected finding; it no longer says findings are marked when the layer is hidden or the baseline survey is active.
+- Fixed a StrictMode effect replay that cleared a finding's camera request when the map mounted in development. Selection now frames the chosen pin; the pin grows on the 3D map and is visibly outlined on the site plan.
+- Verification: `npm run verify` passes (131 unit tests in 17 files); `npm run test:e2e` passes all 51 checks. Browser review of the selected map and Overview at 1440, 1100, 800, and 390 px found no horizontal overflow or browser errors. The development probe confirmed the camera request survives StrictMode and the selected pin is framed.
+- The first P0 is complete on `ui-redesign`; remaining competition-plan features stay proposed until the user directs the next one.
+
+### 2026-10-21: site plan and short-screen map controls verified (branch `ui-redesign`)
+
+- The Overview site plan renders the lease, permitted zone, changed cells and five findings from the existing survey and compliance output. Finding pins navigate to the matching selected finding on the 3D map; added Playwright coverage for all five findings, Enter and Space activation, and phone tap/navigation.
+- The map's exaggeration slider remains visible at 1366×768, and the legend can be opened and closed without losing the slider. The landing hero and coarse-pointer controls were reviewed at wide and phone sizes.
+- Verification: `npm run verify` passes (130 unit tests in 17 files); `npm run test:e2e` passes all 49 checks. Browser review: Overview at 1440, 1100, 800 and 390 px; map at 1366×768; landing at 2560×1440; phone drawer with touch input. No horizontal overflow or browser errors observed.
+- `vite.config.ts` caps Vitest at two workers because the full synthetic survey setup timed out once under CPU contention and passed when isolated. The default full verify then passed without relaxing test limits. Replaced a hardcoded white hover color on the site-plan pin with the existing background token.
+- `STATUS.md` now reflects the verified branch state. The competition improvement plan is committed on this branch and remains proposed; no plan feature has been started here.
+
+### 2026-10-21: landing page made one piece (branch `ui-redesign`)
+
+- The lower landing page read as separate blocks. Every section now opens the same way (`.landing-head`: heading left, one paragraph right) and is wired to the hero: "From two surveys to a verdict" is a real sequence (1, 2, 3) and each step has **Show on the model**, which scrolls the hero into view and switches the model (`showOnModel` in `HomePage.tsx`); the rule columns show the live engine result per rule (glyph and count, from `findings`); the top bar has "How it works" and "What it checks" buttons that scroll (buttons, not `#` links, because the hash router owns the hash).
+- The page now ends in a slate band that matches the dashboard sidebar (`.landing-close`, `btn-light`, `btn-outline-light`, `chip-dark`) holding the CTAs and the honesty note; the old footer is gone. Headings use `text-wrap: balance`; step links and rule results sit at the foot of their column so paragraph length never staggers them; the hero text column is wider so the three facts sit on one row.
+- Checked by eye at 1440, 1100, 800 and 390 px; browser tests for the landing page, axe, badge and dashboard pass.
+
+### 2026-10-21: dashboard redesign (branch `ui-redesign`)
+
+- Why: the scroll story was hard to demo. Now a landing page, then a dashboard with a sidebar. All features kept; nothing removed, only moved.
+- **Landing** (`HomePage.tsx`): hero with the live `HomeScene` and four buttons (Baseline, Current, Change, Findings; `tweenStory` in `state/story.ts` slides the date bar), a live result line, rule summary, honesty section. Opens on Findings.
+- **Shell** (`src/ui/shell/`): `AppShell`, `Sidebar`, `Header`, `LoadGate`, `nav.ts`. Store gains `sidebar` (`auto|open|rail`), `menuOpen` and `leaveMap` (clears fly-to and camera request so the map opens with the intro shot). Skip link is a button (a `#content` hash link would hit the hash router).
+- **Routes** (`ui/route.ts`): `#/`, `#/overview`, `#/monitor`, `#/findings`, `#/rules`, `#/uncertainty`, `#/about`; anything else is rewritten to `#/`. The terrain provider is acquired once in `App`.
+- **Moved, not lost:** the Overview tab is the Overview page, About data is the About page (plus provenance legend and keyboard shortcuts), the permit sheet is Permit rules (with the live result per rule), the noise calculator and resolution panels are the Uncertainty page. The details panel keeps Findings and Inspector tabs. `FindingCard` / `SeverityLegend` / `ThresholdNote` are exported from `FindingsPanel` and reused by the Findings page; Show on map navigates to the map.
+- Removed `TopBar`, `PermitSheet`, `OverviewPanel`, `AboutDataPanel` and the scroll-story CSS. Tokens `--color-side*` and `--color-accent-bright` added for the sidebar.
+- Tests: 130 unit; e2e gained `dashboard.spec.ts`, per-page axe scans, landing and routing checks. Fixes found by axe: `.prov-measured` contrast, the scrolling page main is focusable.
+- Not done: the 3D map at 1100 px is tight with both panels open (hide one with `[` or `]`); `og.png` still shows the old home page.
+
+### 2026-10-21: a consistent PitWatch logo and favicon
+
+- Replaced the thin pit-section placeholder with a geometric mark: nested terraced pit contours form an observing eye around a survey point. Home and monitor use the same mark alongside the existing Archivo wordmark, with colour inherited from the ink token.
+- Generated the visual direction, then redrew it as scalable paths in `public/logo.svg` and `PitMark`. The original transparent PNG and exact generation prompt are in `docs/brand/`. The favicon uses the same geometry in limestone on a slate tile, with a 32 px PNG fallback and an opaque 180 px Apple touch icon linked in `index.html`.
+- Browser review covers 1440, 1100, 800 and 390 px, with no brand/badge overlap. All four public icon assets return 200 and decode; inspected the favicon at 16, 32 and 48 px. Typecheck, lint and formatting pass; all 127 unit tests pass with two workers and a 30 s setup allowance after the default run hit setup/test timeouts under concurrent browser load. The first production browser run reported passes for all 23 cases but did not exit; a repeat hit timeouts in existing camera/keyboard checks and was stopped. The default combined check sequence is therefore not a clean pass.
+- Delivery limitation: this session's sandbox makes `.git` read-only; staging failed because `.git/index.lock` could not be created. These changes remain local and uncommitted.
 
 ### 2026-10-21: PR #1 merged, review follow-ups
 

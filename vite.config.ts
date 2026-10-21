@@ -9,5 +9,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],
+    // Several suites build full synthetic surveys; bound CPU contention on demo laptops.
+    maxWorkers: 2,
   },
 })

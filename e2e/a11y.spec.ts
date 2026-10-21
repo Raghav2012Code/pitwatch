@@ -17,7 +17,29 @@ async function seriousViolations(page: Page) {
 
 test('home has no critical or serious accessibility violations', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('link', { name: 'Open the monitor' }).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Open the dashboard' }).first()).toBeVisible()
+
+  expect(await seriousViolations(page)).toEqual([])
+})
+
+// Every dashboard page, once the engine has reported, so the scan sees real content.
+for (const route of ['overview', 'findings', 'rules', 'uncertainty', 'about']) {
+  test(`${route} has no critical or serious accessibility violations`, async ({ page }) => {
+    await page.goto(`/#/${route}`)
+    await expect(page.getByRole('banner').getByText('2 violations, 3 warnings')).toBeVisible({
+      timeout: 30_000,
+    })
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+
+    expect(await seriousViolations(page)).toEqual([])
+  })
+}
+
+test('the phone navigation drawer is clean', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/#/overview')
+  await page.getByRole('button', { name: 'Menu' }).click()
+  await expect(page.getByRole('navigation', { name: 'Dashboard' })).toBeVisible()
 
   expect(await seriousViolations(page)).toEqual([])
 })

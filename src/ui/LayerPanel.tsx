@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { useTerrain } from '../state/terrain'
 import { LayerSwitches } from './LayerControls'
 import { ExaggerationSlider, MapKey, OverlayKey } from './viewport/MapHud'
@@ -6,6 +6,9 @@ import { ExaggerationSlider, MapKey, OverlayKey } from './viewport/MapHud'
 /** Map controls: what is drawn, what the colours mean, and the vertical scale. */
 export function LayerPanel() {
   const ready = useTerrain((s) => s.status === 'ready')
+  // The key is reference material: open it where there is room, fold it away on a short laptop
+  // screen so the controls under it are not pushed off the card.
+  const [keyOpen] = useState(() => window.innerHeight >= 880)
 
   return (
     <nav
@@ -20,15 +23,17 @@ export function LayerPanel() {
       {ready && (
         <>
           <section className="border-t border-line px-4 py-3">
-            <h2 className="panel-title mb-2">Key</h2>
-            <MapKey />
-            <div className="mt-3 border-t border-line pt-3 empty:hidden">
-              <OverlayKey />
-            </div>
-          </section>
-          <section className="border-t border-line px-4 py-3">
             <ExaggerationSlider />
           </section>
+          <details className="key-details border-t border-line" open={keyOpen}>
+            <summary className="panel-title">Key</summary>
+            <div className="px-4 pb-3">
+              <MapKey />
+              <div className="mt-3 border-t border-line pt-3 empty:hidden">
+                <OverlayKey />
+              </div>
+            </div>
+          </details>
         </>
       )}
 

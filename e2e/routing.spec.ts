@@ -14,3 +14,11 @@ test('a deeper monitor path is rewritten to the home hash', async ({ page }) => 
   await expect(page).toHaveURL(/#\/$/)
   await expect(page.getByRole('main')).toBeVisible()
 })
+
+for (const route of ['overview', 'monitor', 'findings', 'rules', 'uncertainty', 'about']) {
+  test(`#/${route} is left as it is`, async ({ page }) => {
+    await page.goto(`/#/${route}`)
+    await expect(page.getByRole('main')).toBeVisible()
+    await expect(page).toHaveURL(new RegExp(`#/${route}$`))
+  })
+}

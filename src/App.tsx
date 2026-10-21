@@ -1,21 +1,34 @@
 import { useEffect } from 'react'
 import { acquireTerrainProvider, releaseTerrainProvider } from './data/WorkerTerrainProvider'
-import { useAppStore } from './state/store'
 import { useTerrain } from './state/terrain'
-import { toggleFullscreen } from './ui/fullscreen'
 import { HomePage } from './ui/HomePage'
-import { LayerPanel } from './ui/LayerPanel'
-import { useRoute, plannedHash } from './ui/route'
-import { SidePanel } from './ui/SidePanel'
-import { TopBar } from './ui/TopBar'
-import { Viewport } from './ui/Viewport'
+import { AboutPage } from './ui/pages/AboutPage'
+import { FindingsPage } from './ui/pages/FindingsPage'
+import { MapPage } from './ui/pages/MapPage'
+import { OverviewPage } from './ui/pages/OverviewPage'
+import { RulesPage } from './ui/pages/RulesPage'
+import { UncertaintyPage } from './ui/pages/UncertaintyPage'
+import { plannedHash, useRoute, type Route } from './ui/route'
+import { AppShell } from './ui/shell/AppShell'
+
+const PAGES: Record<Exclude<Route, 'home'>, () => React.JSX.Element> = {
+  overview: OverviewPage,
+  monitor: MapPage,
+  findings: FindingsPage,
+  rules: RulesPage,
+  uncertainty: UncertaintyPage,
+  about: AboutPage,
+}
 
 export default function App() {
   const route = useRoute()
 
+  // Build the synthetic surveys once, in a worker, as soon as the app opens. Every screen reads
+  // them from the store, so moving between screens neither rebuilds nor leaks the worker.
   useEffect(() => {
-    document.title = route === 'home' ? 'PitWatch 3D' : 'Monitor – PitWatch 3D'
-  }, [route])
+    void useTerrain.getState().load(acquireTerrainProvider())
+    return () => releaseTerrainProvider()
+  }, [])
 
   // An address that names no screen is rewritten to the home hash, so the address bar always
   // describes what is on screen. `replaceState` keeps the correction out of the back history.
@@ -31,56 +44,15 @@ export default function App() {
     return () => window.removeEventListener('hashchange', settle)
   }, [])
 
-  return route === 'home' ? <HomePage /> : <Monitor />
-}
-
-/** Full-bleed map view with paper panels floating above it. */
-function Monitor() {
-  const layersHidden = useAppStore((s) => s.layersHidden)
-  const detailsHidden = useAppStore((s) => s.detailsHidden)
-
-  // Build the synthetic surveys once, in a worker, the first time the monitor opens. The
-  // provider is shared with the home page, so moving between screens neither rebuilds nor leaks.
   useEffect(() => {
-    void useTerrain.getState().load(acquireTerrainProvider())
-    return () => releaseTerrainProvider()
-  }, [])
+    if (route === 'home') document.title = 'PitWatch 3D'
+  }, [route])
 
-  // [ and ] collapse the side panels, F toggles full screen, R resets the view.
-  // Ignored while typing.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey) return
-      if ((e.target as HTMLElement).closest('input, textarea, select, [contenteditable]')) return
-      const { toggleLayers, toggleDetails, requestView, setTool, clearPicks } =
-        useAppStore.getState()
-      if (e.key === '[') toggleLayers()
-      else if (e.key === ']') toggleDetails()
-      else if (e.key === 'm' || e.key === 'M')
-        setTool(useAppStore.getState().tool === 'measure' ? 'inspect' : 'measure')
-      else if (e.key === 'Escape') clearPicks()
-      else if (e.key === 'f' || e.key === 'F') toggleFullscreen()
-      else if ((e.key === 'r' || e.key === 'R') && useTerrain.getState().status === 'ready')
-        requestView('oblique')
-      else return
-      e.preventDefault()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
-
+  if (route === 'home') return <HomePage />
+  const Page = PAGES[route]
   return (
-    <div
-      className="monitor flex h-full flex-col"
-      data-layers={layersHidden ? 'hidden' : undefined}
-      data-details={detailsHidden ? 'hidden' : undefined}
-    >
-      <TopBar />
-      <div className="relative min-h-0 flex-1 overflow-hidden">
-        <Viewport />
-        <LayerPanel />
-        <SidePanel />
-      </div>
-    </div>
+    <AppShell route={route}>
+      <Page />
+    </AppShell>
   )
 }

@@ -1,1 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#0a0e14"/><path d="M4 10h24l-4 4H8zM8 16h16l-4 4h-8zM12 22h8l-2 3h-4z" fill="#22d3ee"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#23262b"/>
+  <g transform="translate(2 13.25) scale(.9375)" fill="#f8f7f3">
+    <path fill-rule="evenodd" d="M2 20 22 6h20l20 14-20 14H22Zm6 0 15 10.5h18L56 20 41 9.5H23Z"/>
+    <path fill-rule="evenodd" d="M12 20 25 11.5h14L52 20 39 28.5H25Zm5.5 0L26 25.5h12l8.5-5.5-8.5-5.5H26Z"/>
+    <path d="m28 20 4-4 4 4-4 4Z"/>
+  </g>
+</svg>

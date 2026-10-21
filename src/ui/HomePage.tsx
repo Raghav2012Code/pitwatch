@@ -1,319 +1,410 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+  type SVGProps,
+} from 'react'
+import { COMPLIANCE_CONFIG } from '../compliance/config'
+import type { RuleId } from '../domain/types'
 import { SURVEY_EPOCHS } from '../data/fixtures/mine'
-import { daysBetween, formatDate } from './format'
-import { PitMark } from './icons'
-import { ProvenanceTag } from './ProvenanceTag'
-import { acquireTerrainProvider, releaseTerrainProvider } from '../data/WorkerTerrainProvider'
-import { useStory } from '../state/story'
+import { tweenStory, useStory } from '../state/story'
 import { useTerrain } from '../state/terrain'
-import { countText } from './findings'
-import { MONITOR_HREF } from './route'
-import { NoiseCheck } from './home/NoiseCheck'
-import { PermitSheet } from './home/PermitSheet'
-import { Resolution } from './home/Resolution'
+import { countText, GLYPH, worstTone } from './findings'
+import { daysBetween, formatDate } from './format'
 import { StoryClock } from './home/StoryClock'
-import { SceneErrorBoundary } from './viewport/SceneErrorBoundary'
+import { ArrowRightIcon, BoundaryIcon, FloorIcon, PitMark, TerrainIcon } from './icons'
+import { MONITOR_HREF, OVERVIEW_HREF, ROUTE_HREF } from './route'
 import { Relief } from './schematic'
+import { SceneErrorBoundary } from './viewport/SceneErrorBoundary'
 
 /*
- * The home page is one scroll story told on a pinned map:
- * baseline survey -> current survey -> measured change -> permit check -> monitor.
- * The map is the 3D model of the simulated surveys, coloured by the rule engine's output.
+ * The landing page: what PitWatch does, shown on the live 3D model of the simulated surveys,
+ * and one click into the dashboard. The model is driven by four buttons, and the sections
+ * below it are wired back to the model, so the page reads as one demonstration.
  */
 
-// three.js is large; fetch it only for the home model.
+// three.js is large; fetch it only for the landing model.
 const HomeScene = lazy(() => import('../scene/HomeScene'))
 
 const [BASELINE, CURRENT] = SURVEY_EPOCHS
 const DAYS = BASELINE && CURRENT ? daysBetween(BASELINE.date, CURRENT.date) : 0
 
-const STEPS = [
-  'Start',
-  'Baseline survey',
-  'Current survey',
-  'Measured change',
-  'Permit check',
-  'Monitor',
+/** What the model shows. `id` is the scene step: 1 baseline, 2 current, 3 change, 4 findings. */
+const VIEWS = [
+  {
+    id: 1,
+    label: 'Baseline',
+    t: 0,
+    title: `Baseline survey, ${BASELINE ? formatDate(BASELINE.date) : ''}`,
+    text: 'The ground as it was: every bench, ramp and floor of the pit, from a drone survey.',
+  },
+  {
+    id: 2,
+    label: 'Current',
+    t: 1,
+    title: `Current survey, ${CURRENT ? formatDate(CURRENT.date) : ''}`,
+    text: `The same ground ${DAYS} days later. The west wall has been pushed back, a new cut has opened on the east side and the floor is a bench deeper.`,
+  },
+  {
+    id: 3,
+    label: 'Change',
+    t: 1,
+    title: 'Measured change',
+    text: 'Rust where rock was removed, blue where material was added. Anything smaller than the survey noise is ignored.',
+  },
+  {
+    id: 4,
+    label: 'Findings',
+    t: 1,
+    title: 'Held against the permit',
+    text: 'Each pin is a place that breaks the lease. Red cells are violations, purple the most severe ones, amber cells warnings.',
+  },
 ] as const
 
+type View = (typeof VIEWS)[number]
+
+/** The method, in order. Each step can be shown on the model above. */
+const STEPS: { title: string; text: string; view: View }[] = [
+  {
+    title: 'Survey the ground twice',
+    text: `A drone maps the pit surface on two dates, ${DAYS} days apart, to within a few centimetres.`,
+    view: VIEWS[0],
+  },
+  {
+    title: 'Keep only real change',
+    text: `Subtract one survey from the other. A change counts only when it is bigger than the survey noise: more than ${COMPLIANCE_CONFIG.minChangeM} m plus ${COMPLIANCE_CONFIG.k}σ.`,
+    view: VIEWS[2],
+  },
+  {
+    title: 'Check it against the permit',
+    text: 'Every changed cell is tested against the lease. Failures become findings, ranked by how serious they are.',
+    view: VIEWS[3],
+  },
+]
+
+const RULES: {
+  rule: RuleId
+  Icon: ComponentType<SVGProps<SVGSVGElement>>
+  title: string
+  text: string
+}[] = [
+  {
+    rule: 'R1',
+    Icon: BoundaryIcon,
+    title: 'Stay inside the lease',
+    text: 'No ground may be excavated outside the lease boundary, or inside the safety buffer along its inner edge.',
+  },
+  {
+    rule: 'R2',
+    Icon: FloorIcon,
+    title: 'Stop at the approved floor',
+    text: 'The pit may not be taken deeper than the floor level approved on the mine plan.',
+  },
+  {
+    rule: 'R3',
+    Icon: TerrainIcon,
+    title: 'Dump only where allowed',
+    text: 'Waste rock may only be placed inside the dump zones approved in the mine plan.',
+  },
+]
+
+const PROVENANCE = ['measured', 'derived', 'simulated', 'unverified'] as const
+
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
 export function HomePage() {
-  const [step, setStep] = useState(0)
-  // The 3D model only renders while the story is on screen.
-  const [storyVisible, setStoryVisible] = useState(true)
-  const rootRef = useRef<HTMLDivElement>(null)
+  const [view, setView] = useState<View['id']>(4)
+  // The model only renders while it is on screen.
+  const [stageVisible, setStageVisible] = useState(true)
+  const stageRef = useRef<HTMLDivElement>(null)
   const findings = useTerrain((s) => s.findings)
   const status = useTerrain((s) => s.status)
   const error = useTerrain((s) => s.error)
   const retry = useTerrain((s) => s.retry)
   const ready = status === 'ready'
+  const current = VIEWS.find((v) => v.id === view)!
 
-  // Build the same simulated surveys the monitor uses (once, in a worker shared with the monitor).
+  // The first view is the findings on the current survey, so the model starts at "current".
   useEffect(() => {
-    void useTerrain.getState().load(acquireTerrainProvider())
-    return () => releaseTerrainProvider()
+    useStory.setState({ t: 1 })
   }, [])
 
-  // The step whose block crosses a line 65% down the screen drives the map (below the pinned map on phones).
   useEffect(() => {
-    const root = rootRef.current
-    if (!root) return
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) setStep(Number((e.target as HTMLElement).dataset.step))
-        }
-      },
-      { root, rootMargin: '-65% 0px -35% 0px' },
-    )
-    root.querySelectorAll('[data-step]').forEach((el) => io.observe(el))
-
-    const story = root.querySelector('.story')
-    const visible = new IntersectionObserver(([e]) => setStoryVisible(e.isIntersecting), { root })
-    if (story) visible.observe(story)
-
-    // Sections below the story rise into view once.
-    const reveal = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (!e.isIntersecting) continue
-          e.target.classList.add('shown')
-          reveal.unobserve(e.target)
-        }
-      },
-      { root, rootMargin: '0px 0px -15% 0px' },
-    )
-    root.querySelectorAll('.reveal').forEach((el) => reveal.observe(el))
-
-    // Time between the surveys follows the scroll: 0 while the baseline block sits on the
-    // activation line, 1 once the current-survey block reaches it, smooth in between.
-    const first = root.querySelector<HTMLElement>('[data-step="1"]')
-    const second = root.querySelector<HTMLElement>('[data-step="2"]')
-    let frame = 0
-    const track = () => {
-      frame = 0
-      if (!first || !second) return
-      const top = root.getBoundingClientRect().top
-      const line = root.clientHeight * 0.65
-      const centre = (el: HTMLElement) => {
-        const r = el.getBoundingClientRect()
-        return r.top - top + r.height / 2
-      }
-      const c1 = centre(first)
-      const c2 = centre(second)
-      const t = Math.min(1, Math.max(0, (c1 - line) / (c1 - c2)))
-      if (Math.abs(t - useStory.getState().t) > 0.0005) useStory.setState({ t })
-    }
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(track)
-    }
-    track()
-    root.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
-
-    return () => {
-      io.disconnect()
-      visible.disconnect()
-      reveal.disconnect()
-      root.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-      cancelAnimationFrame(frame)
-    }
+    const el = stageRef.current
+    if (!el) return
+    const io = new IntersectionObserver(([e]) => setStageVisible(e!.isIntersecting))
+    io.observe(el)
+    return () => io.disconnect()
   }, [])
+
+  const show = (next: View) => {
+    setView(next.id)
+    tweenStory(next.t)
+  }
+
+  /** Switches the model and brings it into view, so a step below answers on the screen above. */
+  const showOnModel = (next: View) => {
+    show(next)
+    stageRef.current?.scrollIntoView({
+      block: 'center',
+      behavior: reducedMotion() ? 'auto' : 'smooth',
+    })
+  }
+
+  const goTo = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({
+      block: 'start',
+      behavior: reducedMotion() ? 'auto' : 'smooth',
+    })
 
   return (
-    <div ref={rootRef} className="home h-full overflow-y-auto">
-      {/* Floating corner marks instead of a nav bar. */}
-      <header>
-        <a href="#/" className="home-brand" aria-label="PitWatch home">
+    <div className="landing h-full overflow-y-auto">
+      <header className="landing-bar">
+        <a href={ROUTE_HREF.home} className="landing-brand" aria-label="PitWatch home">
           <span className="brand-mark">
-            <PitMark className="h-5 w-5" />
+            <PitMark className="h-6 w-[38px]" />
           </span>
-          <span className="cond text-[20px] font-bold text-ink">PitWatch</span>
+          <span className="cond text-[22px] font-bold text-ink">PitWatch</span>
         </a>
-        <div className="home-corner max-sm:flex-col max-sm:items-end">
-          <span className="stamp inline-flex">
+        <nav aria-label="On this page" className="landing-nav">
+          <button type="button" onClick={() => goTo('how')}>
+            How it works
+          </button>
+          <button type="button" onClick={() => goTo('checks')}>
+            What it checks
+          </button>
+        </nav>
+        <div className="ml-auto flex items-center gap-3">
+          <span className="stamp">
             <span className="stamp-dot" aria-hidden="true" />
             SIMULATED DATA
           </span>
-          <a href={MONITOR_HREF} className="btn-primary">
-            Open the monitor
+          <a href={OVERVIEW_HREF} className="btn-primary max-sm:hidden">
+            Open the dashboard
           </a>
         </div>
       </header>
 
-      <main>
-        {/* The map below is decorative and hidden from assistive technology, so a failure has to
-            be reported here, in flow, with a real control. */}
-        {status === 'error' && (
-          <div
-            role="alert"
-            className="card mx-auto mt-24 w-[min(440px,calc(100%-40px))] p-4 text-center"
-          >
-            <p className="cond text-[16px] font-bold text-violation">Surveys unavailable</p>
-            <p className="mt-1 text-[12.5px] leading-5 text-ink-dim">
-              The simulated surveys could not be built: {error}
+      <main id="content" tabIndex={-1}>
+        <section className="hero">
+          <div className="hero-copy">
+            <h1 className="cond hero-title">See where the digging broke the permit.</h1>
+            <p className="mt-6 max-w-[34rem] text-[18px] leading-8 text-ink-dim">
+              PitWatch compares two drone surveys of an open-pit mine in 3D and checks every change
+              against the lease: the boundary, the approved depth and the permitted dump zones.
             </p>
-            <button type="button" className="btn mt-3" onClick={() => void retry()}>
-              Try again
-            </button>
-          </div>
-        )}
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a href={OVERVIEW_HREF} className="btn-primary btn-lg">
+                Open the dashboard
+              </a>
+              <a href={MONITOR_HREF} className="btn btn-lg">
+                Explore the 3D map
+              </a>
+            </div>
 
-        <div className="story">
-          {/* ---------- Pinned map ---------- */}
-          <div className="story-stage" aria-hidden="true">
-            <Relief className="opacity-70" />
-            <div className="story-frame">
-              <div className="plan-box">
-                {ready ? (
-                  <SceneErrorBoundary
-                    fallback={() => <p className="plan-status">The 3D model could not start.</p>}
-                  >
-                    <Suspense fallback={<p className="plan-status">Loading the 3D model…</p>}>
-                      <HomeScene step={step} active={storyVisible} />
-                    </Suspense>
-                  </SceneErrorBoundary>
-                ) : status === 'error' ? (
-                  <p className="plan-status">The simulated surveys could not be built.</p>
-                ) : (
-                  <p className="plan-status">Building the simulated surveys…</p>
-                )}
+            {status === 'error' && (
+              <div role="alert" className="load-card mt-8 max-w-[28rem]">
+                <p className="cond text-[18px] font-bold text-violation">Surveys unavailable</p>
+                <p className="mt-1 text-[13.5px] leading-6 text-ink-dim">
+                  The simulated surveys could not be built: {error}
+                </p>
+                <button type="button" className="btn mt-3" onClick={() => void retry()}>
+                  Try again
+                </button>
               </div>
+            )}
 
+            <dl className="hero-facts">
+              <div>
+                <dt>Between the two surveys</dt>
+                <dd>{DAYS} days</dd>
+              </div>
+              <div>
+                <dt>Permit rules checked</dt>
+                <dd>3</dd>
+              </div>
+              <div>
+                <dt>Result on this demo</dt>
+                <dd>{ready ? countText(findings) : 'Building the surveys…'}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div ref={stageRef} className="hero-stage">
+            <Relief className="opacity-60" />
+            <div className="hero-model" aria-hidden="true">
+              {ready ? (
+                <SceneErrorBoundary
+                  fallback={() => <p className="plan-status">The 3D model could not start.</p>}
+                >
+                  <Suspense fallback={<p className="plan-status">Loading the 3D model…</p>}>
+                    <HomeScene step={view} active={stageVisible} />
+                  </Suspense>
+                </SceneErrorBoundary>
+              ) : status === 'error' ? (
+                <p className="plan-status">The simulated surveys could not be built.</p>
+              ) : (
+                <p className="plan-status">Building the simulated surveys…</p>
+              )}
+            </div>
+
+            <div className="hero-controls">
+              <div role="group" aria-label="What the model shows" className="seg seg-fill">
+                {VIEWS.map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    aria-pressed={v.id === view}
+                    onClick={() => show(v)}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+              <div role="status" className="mt-3">
+                <h2 className="cond text-[17px] font-bold text-ink">{current.title}</h2>
+                <p className="mt-1 text-[13.5px] leading-6 text-ink-dim">{current.text}</p>
+              </div>
               <StoryClock />
             </div>
           </div>
+        </section>
 
-          {/* ---------- Scrolling text ---------- */}
-          <div className="story-steps">
-            <section
-              data-step="0"
-              className={`story-step story-intro ${step === 0 ? 'active' : ''}`}
-            >
-              <h1 className="cond rise text-[clamp(64px,10vw,150px)] leading-[0.85] font-bold text-ink">
-                Pit
-                <br />
-                Watch
-              </h1>
-              <p className="rise rise-2 mt-6 max-w-[26rem] text-[19px] leading-7 text-ink-dim">
-                Compare two surveys of an open-pit mine and see, on the map, where the digging broke
-                its permit.
-              </p>
-              <div className="rise rise-3 scroll-cue mt-10">Scroll to compare the surveys</div>
-            </section>
-
-            <Step
-              n={1}
-              step={step}
-              label={`${BASELINE?.label} survey, ${BASELINE && formatDate(BASELINE.date)}`}
-              title="First, the ground as it was."
-            >
-              A drone survey records the pit surface: every bench, ramp and floor, to within a few
-              centimetres.
-            </Step>
-
-            <Step
-              n={2}
-              step={step}
-              label={`${CURRENT?.label} survey, ${CURRENT && formatDate(CURRENT.date)}`}
-              title="Then, the ground as it is."
-            >
-              The same grid surveyed again {DAYS} days later. The west wall has been pushed back, a
-              new cut has opened on the east side and the floor is a bench deeper. Scroll slowly and
-              the model moves through the days between the two surveys.
-            </Step>
-
-            <Step n={3} step={step} label="Measured change" title="Subtract one from the other.">
-              Where the two surfaces differ by more than half a metre plus twice their combined
-              uncertainty, something really changed: rust where rock was removed, blue where
-              material was added. Anything smaller could be survey noise, so it is ignored.
-            </Step>
-
-            <Step n={4} step={step} label="Permit check" title="Hold it against the permit.">
-              PitWatch checks three things: digging outside the lease or its safety buffer, digging
-              below the approved floor, and dumping outside permitted zones. Each pin is a finding;
-              red cells are violations, purple the most severe ones, amber cells warnings. Here the
-              east cut crosses the lease line.
-              <span className="mt-4 block text-[13px] text-ink-faint">
-                {ready
-                  ? `This is the rule engine's result on the simulated surveys: ${countText(findings).toLowerCase()}.`
-                  : 'The rule engine runs as soon as the surveys are built.'}
-              </span>
-            </Step>
-
-            <section data-step="5" className={`story-step ${step === 5 ? 'active' : ''}`}>
-              <div className="step-label">The monitor</div>
-              <h2 className="cond mt-3 text-[clamp(38px,4.6vw,60px)] leading-[0.95] font-bold text-ink">
-                Venthar Ridge is waiting.
+        <section id="how" aria-labelledby="how-title" className="landing-section">
+          <div className="landing-inner">
+            <div className="landing-head">
+              <h2 id="how-title" className="cond section-big">
+                From two surveys to a verdict
               </h2>
-              <p className="mt-4 max-w-[30rem] text-[17px] leading-7 text-ink-dim">
-                The mine is fictional and every survey is synthetic. Each value in the monitor says
-                where it came from:
+              <p>
+                Three steps, the same ones the dashboard runs. Each can be shown on the model above.
               </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <ProvenanceTag value="measured" />
-                <ProvenanceTag value="derived" />
-                <ProvenanceTag value="simulated" />
-                <ProvenanceTag value="unverified" />
-              </div>
-              <a href={MONITOR_HREF} className="btn-primary btn-lg mt-9 self-start">
-                Open the monitor
-              </a>
-            </section>
-            {/* Depth gauge: which part of the story the map shows. */}
-            <ol className="story-gauge" aria-hidden="true">
+            </div>
+            <ol className="step-list">
               {STEPS.map((s, i) => (
-                <li key={s} className={i === step ? 'on' : ''}>
-                  {s}
+                <li key={s.title} className="step">
+                  <span className="step-n cond" aria-hidden="true">
+                    {i + 1}
+                  </span>
+                  <h3 className="cond text-[24px] leading-tight font-bold text-ink">{s.title}</h3>
+                  <p className="mt-2 text-[15px] leading-7 text-ink-dim">{s.text}</p>
+                  <button type="button" className="link-arrow" onClick={() => showOnModel(s.view)}>
+                    Show on the model
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </button>
                 </li>
               ))}
             </ol>
           </div>
-        </div>
+        </section>
 
-        <PermitSheet />
-        <NoiseCheck />
-        <Resolution />
-      </main>
-
-      <footer className="home-footer">
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-end justify-between gap-6 px-6 py-14">
-          <div>
-            <div className="cond text-[40px] leading-none font-bold text-ink">PitWatch</div>
-            <p className="mt-3 max-w-[30rem] text-[14px] leading-6 text-ink-dim">
-              A demo. Venthar Ridge, Ardent Ore Works and every survey here are fictional and
-              synthetic. Findings point inspectors at places to look; they do not prove a breach.
-            </p>
+        <section
+          id="checks"
+          aria-labelledby="checks-title"
+          className="landing-section landing-band"
+        >
+          <div className="landing-inner">
+            <div className="landing-head">
+              <h2 id="checks-title" className="cond section-big">
+                Three conditions in every mining lease
+              </h2>
+              <p>
+                PitWatch tests every 8 m cell of the ground against each one. The result under each
+                rule is what the engine found on this demo.
+              </p>
+            </div>
+            <ul className="rule-cols">
+              {RULES.map(({ rule, Icon, title, text }) => {
+                const own = findings.filter((f) => f.ruleId === rule)
+                const tone = own.length ? worstTone(own) : 'clear'
+                const Glyph = tone === 'clear' ? null : GLYPH[tone]
+                return (
+                  <li key={rule} className="rule-col">
+                    <span className="rule-icon">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <h3 className="cond mt-4 text-[24px] leading-tight font-bold text-ink">
+                      {title}
+                    </h3>
+                    <p className="mt-2 text-[15px] leading-7 text-ink-dim">{text}</p>
+                    <p
+                      className={`rule-result-line ${ready ? `tone-${tone}` : ''}`}
+                      aria-live="polite"
+                    >
+                      {ready ? (
+                        <>
+                          {Glyph ? (
+                            <Glyph className="h-[18px] w-[18px]" />
+                          ) : (
+                            <span className="status-led" data-tone="clear" aria-hidden="true" />
+                          )}
+                          {own.length ? countText(own) : 'Clear on this demo'}
+                        </>
+                      ) : (
+                        'Evaluating…'
+                      )}
+                    </p>
+                  </li>
+                )
+              })}
+            </ul>
+            <a href={ROUTE_HREF.rules} className="link-arrow mt-10">
+              How each rule is tested
+              <ArrowRightIcon className="h-4 w-4" />
+            </a>
           </div>
-          <a href={MONITOR_HREF} className="btn-primary btn-lg">
-            Open the monitor
-          </a>
-        </div>
-      </footer>
-    </div>
-  )
-}
+        </section>
 
-function Step({
-  n,
-  step,
-  label,
-  title,
-  children,
-}: {
-  n: number
-  step: number
-  label: string
-  title: string
-  children: ReactNode
-}) {
-  return (
-    <section data-step={n} className={`story-step ${step === n ? 'active' : ''}`}>
-      <div className="step-label">{label}</div>
-      <h2 className="cond mt-3 text-[clamp(34px,4vw,52px)] leading-[0.98] font-bold text-ink">
-        {title}
-      </h2>
-      <p className="mt-4 max-w-[30rem] text-[17px] leading-7 text-ink-dim">{children}</p>
-    </section>
+        <section aria-labelledby="close-title" className="landing-close">
+          <div className="landing-inner">
+            <div className="close-grid">
+              <div>
+                <h2 id="close-title" className="cond close-title">
+                  Open the dashboard and look for yourself.
+                </h2>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <a href={OVERVIEW_HREF} className="btn-light btn-lg">
+                    Open the dashboard
+                  </a>
+                  <a href={MONITOR_HREF} className="btn-outline-light btn-lg">
+                    Explore the 3D map
+                  </a>
+                </div>
+              </div>
+              <div className="close-note">
+                <p className="text-[16px] leading-7">
+                  Everything here is simulated, and it says so. Venthar Ridge and Ardent Ore Works
+                  are fictional, and both surveys are generated from a fixed seed. Findings point an
+                  inspector at places to look; they do not prove a breach.
+                </p>
+                <p className="mt-5 text-[14px]">
+                  Every value carries a tag for where it came from:
+                </p>
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {PROVENANCE.map((p) => (
+                    <li key={p} className="chip-dark">
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+                <a href={ROUTE_HREF.about} className="link-arrow-light mt-5">
+                  About the data
+                  <ArrowRightIcon className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+            <div className="close-foot">
+              <span className="brand-mark">
+                <PitMark className="h-5 w-8" />
+              </span>
+              <span>PitWatch, a demo of permit compliance monitoring for open-pit mines.</span>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
   )
 }

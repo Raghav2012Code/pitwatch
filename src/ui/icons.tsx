@@ -56,11 +56,16 @@ export const FullscreenIcon = (p: IconProps) => (
   </Svg>
 )
 
-/** Brand mark: open-pit cross-section with stepped benches. */
+/** Terraced pit contours around a survey point; geometry matches public/logo.svg. */
 export function PitMark(props: IconProps) {
   return (
-    <Svg viewBox="0 0 24 24" {...props}>
-      <path d="M1 7h4l2 3h3l1.5 3h1l1.5-3h3l2-3h4" />
+    <Svg viewBox="0 0 64 40" fill="currentColor" stroke="none" {...props}>
+      <path fillRule="evenodd" d="M2 20 22 6h20l20 14-20 14H22Zm6 0 15 10.5h18L56 20 41 9.5H23Z" />
+      <path
+        fillRule="evenodd"
+        d="M12 20 25 11.5h14L52 20 39 28.5H25Zm5.5 0L26 25.5h12l8.5-5.5-8.5-5.5H26Z"
+      />
+      <path d="m28 20 4-4 4 4-4 4Z" />
     </Svg>
   )
 }
@@ -160,5 +165,79 @@ export const CriticalGlyph = (p: IconProps) => (
 export const PendingGlyph = (p: IconProps) => (
   <Svg {...p}>
     <circle cx="10" cy="10" r="7" strokeDasharray="2.2 2.2" />
+  </Svg>
+)
+
+/* Navigation and chrome. */
+export const OverviewIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3" y="3" width="5.5" height="7" rx="1" />
+    <rect x="11.5" y="3" width="5.5" height="4" rx="1" />
+    <rect x="3" y="13" width="5.5" height="4" rx="1" />
+    <rect x="11.5" y="10" width="5.5" height="7" rx="1" />
+  </Svg>
+)
+
+export const CubeIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M10 2.5l6.5 3.5v8L10 17.5 3.5 14V6z" />
+    <path d="M3.5 6L10 9.5 16.5 6M10 9.5v8" />
+  </Svg>
+)
+
+export const RulesIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5.5 2.5H12l3.5 3.5v11.5h-10z" />
+    <path d="M12 2.5V6h3.5M7.5 10h5M7.5 13.2h5" />
+  </Svg>
+)
+
+export const SigmaIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M14 4.5H6l4.5 5.5L6 15.5h8" />
+  </Svg>
+)
+
+export const InfoIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="10" cy="10" r="7.25" />
+    <path d="M10 9.2v4.6M10 6.2v.1" />
+  </Svg>
+)
+
+export const MenuIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 5.5h14M3 10h14M3 14.5h14" />
+  </Svg>
+)
+
+export const CloseIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5 5l10 10M15 5L5 15" />
+  </Svg>
+)
+
+export const ChevronLeftIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 4.5L6.5 10l5.5 5.5" />
+  </Svg>
+)
+
+export const ArrowRightIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M4 10h12M11 5l5 5-5 5" />
+  </Svg>
+)
+
+export const HomeIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 9.5l7-6 7 6V16.5h-4.5v-4h-5v4H3z" />
+  </Svg>
+)
+
+export const LayersIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M10 3l7 3.8-7 3.8-7-3.8z" />
+    <path d="M3 10.2l7 3.8 7-3.8M3 13.6l7 3.8 7-3.8" />
   </Svg>
 )

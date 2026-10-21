@@ -2,24 +2,18 @@ import { useRef, type JSX, type KeyboardEvent } from 'react'
 import { useAppStore, type PanelTab } from '../state/store'
 import { useTerrain } from '../state/terrain'
 import { LayerSwitches } from './LayerControls'
-import { AboutDataPanel } from './panels/AboutDataPanel'
 import { FindingsPanel } from './panels/FindingsPanel'
 import { InspectorPanel } from './panels/InspectorPanel'
-import { OverviewPanel } from './panels/OverviewPanel'
 import { ExaggerationSlider } from './viewport/MapHud'
 
 const TABS: { id: PanelTab; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
   { id: 'findings', label: 'Findings' },
   { id: 'inspector', label: 'Inspector' },
-  { id: 'about', label: 'About data' },
 ]
 
 const CONTENT: Record<PanelTab, () => JSX.Element> = {
-  overview: OverviewPanel,
   findings: FindingsPanel,
   inspector: InspectorPanel,
-  about: AboutDataPanel,
 }
 
 export function SidePanel() {
