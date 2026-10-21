@@ -1374,7 +1374,7 @@ body {
     transition: fill 0.15s;
   }
   .plan-pin:hover .plan-pin-disc {
-    fill: #fff;
+    fill: var(--color-bg-2);
   }
   .plan-pin-ring {
     fill: none;

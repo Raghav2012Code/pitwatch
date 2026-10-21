@@ -50,6 +50,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: site plan and short-screen map controls verified (branch `ui-redesign`)
+
+- The Overview site plan renders the lease, permitted zone, changed cells and five findings from the existing survey and compliance output. Finding pins navigate to the matching selected finding on the 3D map; added Playwright coverage for all five findings, Enter and Space activation, and phone tap/navigation.
+- The map's exaggeration slider remains visible at 1366×768, and the legend can be opened and closed without losing the slider. The landing hero and coarse-pointer controls were reviewed at wide and phone sizes.
+- Verification: `npm run verify` passes (130 unit tests in 17 files); `npm run test:e2e` passes all 49 checks. Browser review: Overview at 1440, 1100, 800 and 390 px; map at 1366×768; landing at 2560×1440; phone drawer with touch input. No horizontal overflow or browser errors observed.
+- `vite.config.ts` caps Vitest at two workers because the full synthetic survey setup timed out once under CPU contention and passed when isolated. The default full verify then passed without relaxing test limits. Replaced a hardcoded white hover color on the site-plan pin with the existing background token.
+- `STATUS.md` now reflects the verified branch state. The competition improvement plan is committed on this branch and remains proposed; no plan feature has been started here.
+
 ### 2026-10-21: landing page made one piece (branch `ui-redesign`)
 
 - The lower landing page read as separate blocks. Every section now opens the same way (`.landing-head`: heading left, one paragraph right) and is wired to the hero: "From two surveys to a verdict" is a real sequence (1, 2, 3) and each step has **Show on the model**, which scrolls the hero into view and switches the model (`showOnModel` in `HomePage.tsx`); the rule columns show the live engine result per rule (glyph and count, from `findings`); the top bar has "How it works" and "What it checks" buttons that scroll (buttons, not `#` links, because the hash router owns the hash).
