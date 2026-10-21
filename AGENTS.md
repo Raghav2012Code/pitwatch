@@ -2,7 +2,7 @@
 
 3D mine monitoring and regulatory compliance demo. Frontend only, no backend. Every value is synthetic and labelled so.
 
-Work is committed and pushed to `origin/main`. The project began as a fork: `Raghav2012Code/pitwatch` forks `abivan100-stack/pitwatch-3d`, so in the fork the parent is fetched through the `upstream` remote (`git@github.com:abivan100-stack/pitwatch-3d.git`) and in the parent `origin` is the parent itself.
+This is the main repo, `abivan100-stack/pitwatch-3d`; work is committed and pushed to `origin/main`. The fork `Raghav2012Code/pitwatch` did the work merged in PR #1 (2026-10-21); in a clone of the fork the parent is the `upstream` remote. Log entries from that work cite the fork's own issues as `Raghav2012Code/pitwatch#N`, since a bare `#N` here would point at this repo's tracker.
 
 ## Working rules
 
@@ -49,15 +49,23 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: PR #1 merged, review follow-ups
+
+- Merged PR #1 from the fork (merge commit `31f28f6`): the fork's `CoordinateEntry` replaces this repo's `GoTo` form from `e62f9b9` (it also applies off-grid points, prefills, has a live region and browser checks).
+- CI: `permissions: contents: read` so the workflow token is read-only on pushes too, and each action pinned to a commit SHA with its version in a comment (checkout v7.0.1, setup-node v7.1.0, upload-artifact v7.0.2).
+- Created the four missing triage labels on this repo (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`; `wontfix` already existed), so `docs/agents/triage-labels.md` matches the tracker.
+- The note at the top of this file now describes this repo as the main one, and the fork-era log entries cite the fork's issues as `Raghav2012Code/pitwatch#N` (a bare `#1` here is PR #1).
+- `CLAUDE.md` only imports `AGENTS.md`, so a change to `AGENTS.md` changes agent instructions: review PRs that touch it like code.
+
 ### 2026-10-21: merged the parent repo
 
 - The parent `abivan100-stack/pitwatch-3d` had one commit since the fork point (6b84f2a): `e62f9b9 feat(monitor): go-to-position form as a keyboard route to point picking`. The `upstream` remote now exists, so `git fetch upstream` works.
-- It is the **same feature as issue #15**, implemented twice: upstream added a `GoTo` form inside `InspectorPanel.tsx`, we shipped `CoordinateEntry` (a separate component, prefilled from the current pick, a live region, off-grid points applied and explained, four browser checks). Upstream's version had no prefill, rejected out-of-grid coordinates outright, and had no tests.
-- Conflicts and how they were settled: `CLAUDE.md` (we renamed the file to `AGENTS.md` and left `CLAUDE.md` as an import pointer; upstream had appended a log entry to the old file) → kept our pointer, and upstream's entry is already covered by the issue #15 entry below. `src/ui/panels/InspectorPanel.tsx` → kept our `CoordinateEntry`, dropped upstream's `GoTo` and its now-unused imports.
+- It is the **same feature as issue Raghav2012Code/pitwatch#15**, implemented twice: upstream added a `GoTo` form inside `InspectorPanel.tsx`, we shipped `CoordinateEntry` (a separate component, prefilled from the current pick, a live region, off-grid points applied and explained, four browser checks). Upstream's version had no prefill, rejected out-of-grid coordinates outright, and had no tests.
+- Conflicts and how they were settled: `CLAUDE.md` (we renamed the file to `AGENTS.md` and left `CLAUDE.md` as an import pointer; upstream had appended a log entry to the old file) → kept our pointer, and upstream's entry is already covered by the issue Raghav2012Code/pitwatch#15 entry below. `src/ui/panels/InspectorPanel.tsx` → kept our `CoordinateEntry`, dropped upstream's `GoTo` and its now-unused imports.
 - `README.md` auto-merged: upstream's line "Without a mouse, type an easting and northing in the Inspector tab instead." is true of our form too, so it was kept.
 - The merge changed no behaviour: `git diff HEAD` after the merge is the README line only.
 
-### 2026-10-21: a point can be inspected without a mouse (issue #15)
+### 2026-10-21: a point can be inspected without a mouse (issue Raghav2012Code/pitwatch#15)
 
 - Every figure in the Inspector was reachable from a panel, but **choosing** the point was not: the terrain only emitted a pick on a pointer click, so a keyboard user could not inspect an arbitrary location or set measurement A and B. The panel said "click the terrain" and offered no other route.
 - `src/ui/panels/CoordinateEntry.tsx` is a small form at the top of the Inspector tab, rendered in both the nothing-selected and point-selected states. Two labelled number inputs (East, North; local metres, same origin as the Position row) and a **Read point** submit button, prefilled from the current pick (`picked` in Inspect; the latest of B then A in Measure) and empty with placeholder hints otherwise. Enter in either field submits, and the fields follow a later map pick or measure step without an effect.
@@ -67,7 +75,7 @@ Newest first.
 - Review fix on top of the implementation: off-grid reading was previously unreachable, and the panel underneath the form still claimed "No significant change (threshold ±0.64 m)" when it had measured nothing. The reading now says "No reading here: the point is outside the survey grid." for a null change, and the off-grid browser check asserts the false sentence is gone rather than only that the form's own note is present.
 - Deliberate gaps: the form renders only once the surveys are ready, since the grid bounds for the out-of-grid message are not known before then; there are no new unit tests because no new pure logic was introduced (validation and the grid test stay in the component); the position is still read from the current survey, as a click is, and horizontal position error remains unmodelled.
 
-### 2026-10-21: every pit-zone floor is pinned to its zone (issue #14)
+### 2026-10-21: every pit-zone floor is pinned to its zone (issue Raghav2012Code/pitwatch#14)
 
 - Depth reporting was zone-aware in the R2 rule and the Inspector, but three surfaces still read `limits.pitZones[0]`: the Overview's "Approved floor" row showed the first zone's floor as the only one, the Map key emitted one "Pit zone" row for the first zone, and the monitor camera aimed at the first zone's centroid. The "which zone governs this ground" rule also existed twice, in `readPoint` and in the Inspector's profile memo.
 - `src/compliance/zone.ts` (pure, lint-enforced) now owns it: `governingPitZone(zones, samples)` returns the zone whose floor the sampled ground is deepest below (samples outside every zone are ignored; the first zone wins a tie), `largestPitZone` picks the biggest polygon for camera framing, and `pitFloorRows` returns the display rows so the multi-zone shape is testable without React.
@@ -153,14 +161,14 @@ Newest first.
 
 ### 2026-10-21: narrow-screens spec from the browser audit
 
-- Playwright-driven UI/UX audit (screenshots, pointer probes, keyboard, zoom, drag at 390–1440 px) published as issue #2 with `ready-for-agent`: scale-bar chip eats camera-button clicks at 1024 and below, SIMULATED badge hidden on phones, no layer controls on mobile.
-- Worker-leak count from the same audit (8 created, 0 terminated across repeated navigation) stays in issue #1.
+- Playwright-driven UI/UX audit (screenshots, pointer probes, keyboard, zoom, drag at 390–1440 px) published as issue Raghav2012Code/pitwatch#2 with `ready-for-agent`: scale-bar chip eats camera-button clicks at 1024 and below, SIMULATED badge hidden on phones, no layer controls on mobile.
+- Worker-leak count from the same audit (8 created, 0 terminated across repeated navigation) stays in issue Raghav2012Code/pitwatch#1.
 
 ### 2026-10-21: agent-skills setup (issue tracker, labels, domain docs)
 
 - Enabled GitHub Issues on the fork (`has_issues` was off) and created the five triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`; `wontfix` was already inherited from the fork defaults).
 - `docs/agents/issue-tracker.md` (GitHub via `gh`), `triage-labels.md` (1:1 defaults), `domain.md` (single-context), plus the `## Agent skills` block in `CLAUDE.md`.
-- Published the audit spec as issue #1 with `ready-for-agent`.
+- Published the audit spec as issue Raghav2012Code/pitwatch#1 with `ready-for-agent`.
 
 ### 2026-10-20: one instruction file for every agent
 
