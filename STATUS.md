@@ -7,7 +7,7 @@ Updated 2026-10-21. This records the state of the `ui-redesign` branch and its r
 - Branch: `ui-redesign`, based on `main` at `72e34ba`. The redesign is not on `main` or the live site yet.
 - The landing page, dashboard shell, site plan, responsive map controls, branding, and competition improvement plan are committed on this branch.
 - The site-plan and map-layout batch is verified. The detailed plan for the next competition improvements is in [`docs/competition-ui-ux-improvement-plan.md`](docs/competition-ui-ux-improvement-plan.md); it remains a proposal and does not authorize implementation.
-- Pull request: to be opened after this verification update is pushed.
+- Pull request: [#2, `ui-redesign` → `main`](https://github.com/abivan100-stack/pitwatch-3d/pull/2), opened after the verified branch was pushed.
 - Local preview: `npx vite --port 5179 --strictPort`, then open http://localhost:5179.
 
 ## Delivered on `ui-redesign`
@@ -31,7 +31,7 @@ The browser review also confirmed five labelled finding pins, site-plan navigati
 
 ## Remaining work
 
-1. Push the completed verification update and open the `ui-redesign` → `main` pull request for review.
+1. Review and merge pull request [#2](https://github.com/abivan100-stack/pitwatch-3d/pull/2); deployment to the live site follows the merge.
 2. The 3D map remains tight around 1100 px when both side panels are open, and the layers panel covers a substantial part of the model at 800 px. These are recorded as follow-up items in the competition plan.
 3. The first-visit map hint, visible tooltips for the icon rail, and desktop dragging of the landing model remain unstarted ideas. They are not required for this branch's current verification.
 4. The redesign is not merged or deployed to the live site. Do not describe it as live until a merge and deployment are confirmed.
