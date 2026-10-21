@@ -46,6 +46,11 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: keyboard route to point picking
+
+- Inspector tab gets a "Go to position" form (Easting, Northing, native number inputs, `GoTo` in `InspectorPanel.tsx`). Submit acts like a map click for the active tool via `pickPoint` (Inspect reads the point, Measure sets A then B). Positions outside the survey grid (`extent`, `cellAt`) show an alert with the valid range. Closes the M7 gap "no keyboard way to pick a point".
+- Checked in the browser at 1440 px (valid point, out-of-range error) and axe on the Inspector tab: 0 violations. Not done: picks still hit the current surface while the baseline is shown.
+
 ### 2026-10-20: M8 deploy check
 
 - Final pass, no code changes. `vercel.json` pins the Vite build; the repo is connected, so pushes to `main` redeploy. Live site returns 200 and serves `og.png`, `favicon.svg` and the Open Graph tags from M7. README already has the Mermaid architecture diagram and Deploy section. Netlify config skipped: Vercel is the one target. Roadmap tables updated, all milestones M1–M8 done.

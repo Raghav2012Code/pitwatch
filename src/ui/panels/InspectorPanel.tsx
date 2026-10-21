@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { COMPLIANCE_CONFIG } from '../../compliance/config'
 import { changeThreshold } from '../../compliance/change'
 import { readPoint } from '../../compliance/inspect'
 import { localToLatLon } from '../../geo/latlon'
+import { cellAt, extent } from '../../geo/grid'
 import { measureOnSurface } from '../../geo/measure'
 import { pointInPolygon } from '../../geo/polygon'
 import { profileAlong } from '../../geo/profile'
@@ -34,6 +35,62 @@ const WAYS = [
 const n = (v: number, d = 0) =>
   v.toLocaleString('en-GB', { minimumFractionDigits: d, maximumFractionDigits: d })
 const signed = (v: number, d = 1) => `${v < 0 ? '−' : '+'}${n(Math.abs(v), d)}`
+
+/**
+ * Keyboard route to the map tools: type a position instead of clicking the 3D view. Acts like a
+ * click for the active tool (Inspect reads the point, Measure sets A, then B).
+ */
+function GoTo() {
+  const pickPoint = useAppStore((s) => s.pickPoint)
+  const tool = useAppStore((s) => s.tool)
+  const grid = useTerrain((s) => s.surveys.current?.grid)
+  const [error, setError] = useState('')
+  if (!grid) return null
+  const { min, max } = extent(grid)
+
+  const submit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const data = new FormData(e.currentTarget)
+    const east = String(data.get('e'))
+    const north = String(data.get('n'))
+    const p = { x: Number(east), y: Number(north) }
+    if (east === '' || north === '' || !cellAt(grid, p)) {
+      setError(
+        `Enter a position inside the survey: E ${n(min.x)} to ${n(max.x)} m, N ${n(min.y)} to ${n(max.y)} m.`,
+      )
+      return
+    }
+    setError('')
+    pickPoint(p)
+  }
+
+  return (
+    <Section title="Go to position">
+      <form onSubmit={submit} noValidate className="flex flex-wrap items-end gap-2">
+        {(['e', 'n'] as const).map((k) => (
+          <label key={k} className="flex flex-col gap-1 text-[12.5px] text-ink-faint">
+            {k === 'e' ? 'Easting (m)' : 'Northing (m)'}
+            <input
+              name={k}
+              type="number"
+              step="any"
+              inputMode="decimal"
+              className="w-[104px] rounded-[3px] border border-line-strong bg-white px-2 py-1 font-mono text-[12px] text-ink"
+            />
+          </label>
+        ))}
+        <button type="submit" className="btn text-[12.5px] text-accent underline">
+          {tool === 'inspect' ? 'Inspect' : 'Set measure point'}
+        </button>
+      </form>
+      {error && (
+        <p role="alert" className="mt-2 text-[12.5px] leading-5 text-violation">
+          {error}
+        </p>
+      )}
+    </Section>
+  )
+}
 
 function Point() {
   const p = useAppStore((s) => s.picked)!
@@ -224,25 +281,29 @@ export function InspectorPanel() {
             {a && <Measurement />}
           </>
         )}
+        <GoTo />
       </>
     )
   }
 
   return (
-    <Section title="Nothing selected">
-      <ul className="space-y-2">
-        {WAYS.map(({ Icon, title, text }) => (
-          <li key={title} className="hint-row">
-            <span className="hint-icon">
-              <Icon className="h-[18px] w-[18px]" />
-            </span>
-            <div>
-              <div className="text-[13px] font-medium text-ink">{title}</div>
-              <div className="text-[12.5px] leading-5 text-ink-dim">{text}</div>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Section>
+    <>
+      <Section title="Nothing selected">
+        <ul className="space-y-2">
+          {WAYS.map(({ Icon, title, text }) => (
+            <li key={title} className="hint-row">
+              <span className="hint-icon">
+                <Icon className="h-[18px] w-[18px]" />
+              </span>
+              <div>
+                <div className="text-[13px] font-medium text-ink">{title}</div>
+                <div className="text-[12.5px] leading-5 text-ink-dim">{text}</div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </Section>
+      {ready && <GoTo />}
+    </>
   )
 }
