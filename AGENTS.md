@@ -48,6 +48,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: the inspector reads only what it shows
+
+- `InspectorPanel` destructured the whole terrain store twice with no selector, so every write to it — including plain `status`/`error`/`provider` changes from the new retry path — re-rendered the panel and defeated its memoised point reading.
+- Both reads now select the slices they use (`surveys`, `limits`, `findings`, `mine`). Figures are unchanged; the memoised `readPoint` stops being invalidated by unrelated writes.
+- The audit's stated cause was camera movement, and that premise is wrong: camera state is a separate transient store read imperatively by the HUD, so orbiting re-renders no React component at all. The real over-subscription was this whole-store read; no test encodes the false premise.
+- Enforced from now on by lint rather than a test: an ESLint `no-restricted-syntax` rule over `src/**/*.tsx` rejects a zero-argument `useTerrain()` call and names the fix. `npm run lint` (part of `verify`) covers every panel, not just this one.
+
 ### 2026-10-21: finding lookup at a point is indexed
 
 - `readPoint` answered "which findings cover this cell" with `findings.filter(f => f.cells.includes(cell))`, a scan over every finding's cell list on every pick, so the cost grew with findings × cells while the visitor waited.

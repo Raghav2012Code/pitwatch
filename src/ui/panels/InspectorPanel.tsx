@@ -40,7 +40,12 @@ function Point() {
   const p = useAppStore((s) => s.picked)!
   const clear = useAppStore((s) => s.clearPicks)
   const selectFinding = useAppStore((s) => s.selectFinding)
-  const { surveys, limits, findings, mine } = useTerrain()
+  // Read only what this panel renders. A whole-store subscription re-rendered the inspector on
+  // every write, including plain status changes it does not show.
+  const surveys = useTerrain((s) => s.surveys)
+  const limits = useTerrain((s) => s.limits)
+  const findings = useTerrain((s) => s.findings)
+  const mine = useTerrain((s) => s.mine)
   const { baseline, current } = surveys
   const r = useMemo(
     () =>
@@ -135,7 +140,8 @@ function Measurement() {
   const a = useAppStore((s) => s.measureA)!
   const b = useAppStore((s) => s.measureB)
   const clear = useAppStore((s) => s.clearPicks)
-  const { surveys, limits } = useTerrain()
+  const surveys = useTerrain((s) => s.surveys)
+  const limits = useTerrain((s) => s.limits)
   const { baseline, current } = surveys
 
   const m = useMemo(

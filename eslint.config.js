@@ -27,5 +27,20 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Subscribing to a whole zustand store re-renders on every write, including state the
+    // component never reads. Select the slices instead.
+    files: ['src/**/*.tsx'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.name='useTerrain'][arguments.length=0]",
+          message:
+            'Read only the slices you use: useTerrain((s) => s.surveys), not the whole store.',
+        },
+      ],
+    },
+  },
   prettier,
 )
