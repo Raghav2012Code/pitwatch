@@ -3,7 +3,7 @@ import { SURVEY_EPOCHS } from '../data/fixtures/mine'
 import { daysBetween, formatDate } from './format'
 import { PitMark } from './icons'
 import { ProvenanceTag } from './ProvenanceTag'
-import { WorkerTerrainProvider } from '../data/WorkerTerrainProvider'
+import { acquireTerrainProvider, releaseTerrainProvider } from '../data/WorkerTerrainProvider'
 import { useStory } from '../state/story'
 import { useTerrain } from '../state/terrain'
 import { countText } from './findings'
@@ -44,9 +44,10 @@ export function HomePage() {
   const findings = useTerrain((s) => s.findings)
   const ready = useTerrain((s) => s.status === 'ready')
 
-  // Build the same simulated surveys the monitor uses (once, in a worker).
+  // Build the same simulated surveys the monitor uses (once, in a worker shared with the monitor).
   useEffect(() => {
-    void useTerrain.getState().load(new WorkerTerrainProvider())
+    void useTerrain.getState().load(acquireTerrainProvider())
+    return () => releaseTerrainProvider()
   }, [])
 
   // The step whose block crosses a line 65% down the screen drives the map (below the pinned map on phones).

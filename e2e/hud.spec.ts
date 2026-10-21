@@ -33,7 +33,9 @@ for (const width of WIDTHS) {
       })
       expect(onTop).toBe(preset)
 
-      await button.click({ timeout: 5_000 })
+      // A generous budget: the suite runs many software-WebGL browsers at once, and the click
+      // action itself (not the assertion above) is what gets starved of main-thread time.
+      await button.click({ timeout: 15_000 })
     }
 
     // The chip is decorative and aria-hidden, but the reading must still be on screen.

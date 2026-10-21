@@ -48,6 +48,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: one terrain worker for the whole page
+
+- The leak was structural: every mount built a `WorkerTerrainProvider`, whose constructor eagerly started a Web Worker, and the store then refused the second load, so each navigation after the first orphaned a worker nothing could shut down (the audit counted 8 created, 0 terminated).
+- `WorkerTerrainProvider` now starts its worker on the first survey request instead of in the constructor, and has a real `dispose()` that terminates the worker and fails anything in flight. `acquireTerrainProvider` / `releaseTerrainProvider` share one provider for the page, ref-counted.
+- Release defers the shutdown by one tick and cancels it if a screen acquires again. A route change unmounts the old screen and mounts the next in the same task, so the count does hit zero mid-navigation; without the deferral, a quick home-to-monitor hop during the first load would dispose the provider and fail the load.
+- Measured in a browser by wrapping `window.Worker`: home, then monitor, then three round trips gives **1 created, 0 terminated**, and the seeded findings still report. Because the deferral cancels, `dispose` in practice only runs when the app itself unmounts (HMR, page teardown); that is the honest reading, and it is why the count stays at one.
+- Tests: `src/data/WorkerTerrainProvider.test.ts` (lazy start, one worker for both surveys, dispose terminates and rejects late callers, idempotent dispose, shared instance, last-consumer shutdown, and the cancelled-shutdown case). 102 unit tests.
+- Also raised the per-click budget in `hud.spec.ts` from 5 s to 15 s: with 14 software-WebGL browsers in parallel, Playwright's click action can be starved of main-thread time. The `elementFromPoint` assertion is the real guard, not the click.
+
 ### 2026-10-21: each terrain surface owns its layer uniforms
 
 - The contour and tint uniforms lived in a module-level `surfaceUniforms` object that every surface material merged into its own shader. So the layer effect wrote state shared by all materials and by both canvases: whichever mounted last won, and the values survived a navigation instead of following the store.

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { WorkerTerrainProvider } from './data/WorkerTerrainProvider'
+import { acquireTerrainProvider, releaseTerrainProvider } from './data/WorkerTerrainProvider'
 import { useAppStore } from './state/store'
 import { useTerrain } from './state/terrain'
 import { toggleFullscreen } from './ui/fullscreen'
@@ -39,9 +39,11 @@ function Monitor() {
   const layersHidden = useAppStore((s) => s.layersHidden)
   const detailsHidden = useAppStore((s) => s.detailsHidden)
 
-  // Build the synthetic surveys once, in a worker, the first time the monitor opens.
+  // Build the synthetic surveys once, in a worker, the first time the monitor opens. The
+  // provider is shared with the home page, so moving between screens neither rebuilds nor leaks.
   useEffect(() => {
-    void useTerrain.getState().load(new WorkerTerrainProvider())
+    void useTerrain.getState().load(acquireTerrainProvider())
+    return () => releaseTerrainProvider()
   }, [])
 
   // [ and ] collapse the side panels, F toggles full screen, R resets the view.
