@@ -1,16 +1,15 @@
 # PitWatch 3D: UI redesign status
 
-Updated 2026-10-21. This records the state of the `ui-redesign` branch and its review. See `README.md` for product features and `AGENTS.md` for the project update log and working rules.
+Updated 2026-10-21 after PR #2 merged. See `README.md` for product features and `AGENTS.md` for the project update log and working rules.
 
 ## Current state
 
-- Branch: `ui-redesign`, based on `main` at `72e34ba`. The redesign is not on `main` or the live site yet.
-- The landing page, dashboard shell, site plan, responsive map controls, branding, and competition improvement plan are committed on this branch.
-- The site-plan and map-layout batch and the first P0 from [`docs/competition-ui-ux-improvement-plan.md`](docs/competition-ui-ux-improvement-plan.md) are verified on this branch. Later plan features remain proposed.
-- Pull request: [#2, `ui-redesign` → `main`](https://github.com/abivan100-stack/pitwatch-3d/pull/2), opened after the verified branch was pushed.
+- The `ui-redesign` branch was merged into `main` through [PR #2](https://github.com/abivan100-stack/pitwatch-3d/pull/2) at merge commit `38613ad` (2026-10-21).
+- The landing page, dashboard shell, site plan, responsive map controls, branding, competition improvement plan, and first P0 are on `main`.
+- The merged changes passed CI and the Vercel preview checks before merge. Post-merge CI is running; production deployment is not yet confirmed. Later plan features remain proposed.
 - Local preview: `npx vite --port 5179 --strictPort`, then open http://localhost:5179.
 
-## Delivered on `ui-redesign`
+## Delivered in the redesign
 
 1. The landing page and dashboard redesign (`b2525ca`, `2342bf9`, `9e64591`) provide the routes `#/`, `#/overview`, `#/monitor`, `#/findings`, `#/rules`, `#/uncertainty`, and `#/about`. Findings can be opened on the map from the landing page, Overview, and Findings page. The shell keeps the synthetic-data badge visible.
 2. The logo, favicon, touch icon, and link-preview image match the limestone-and-slate survey identity.
@@ -33,12 +32,11 @@ The browser review also confirmed five labelled finding pins, site-plan navigati
 
 ## Remaining work
 
-1. Push the completed first P0 feature to pull request [#2](https://github.com/abivan100-stack/pitwatch-3d/pull/2), then review and merge it; deployment to the live site follows the merge.
+1. Confirm the post-merge CI and production deployment before describing the redesign as live.
 2. The 3D map remains tight around 1100 px when both side panels are open, and the layers panel covers a substantial part of the model at 800 px. These are recorded as follow-up items in the competition plan.
-3. The first-visit map hint, visible tooltips for the icon rail, and desktop dragging of the landing model remain unstarted ideas. They are not required for this branch's current verification.
-4. The redesign is not merged or deployed to the live site. Do not describe it as live until a merge and deployment are confirmed.
+3. The first-visit map hint, visible tooltips for the icon rail, and desktop dragging of the landing model remain unstarted ideas. They are not required for the merged work's verification.
 
 ## Context
 
-- PR #1 from the fork was merged into `main` as `31f28f6`; the main branch's follow-up commit is `72e34ba`.
+- PR #1 from the fork was merged into `main` as `31f28f6`; PR #2 merged the redesign at `38613ad`.
 - Only the first P0 from the competition plan has been implemented. Later features remain proposals and should be taken one at a time under the repository's feature workflow.
