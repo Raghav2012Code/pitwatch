@@ -50,6 +50,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: the map gives the model room at laptop widths (fork #21)
+
+- Both floating panels were open on arrival, and the stage reserved a fixed 272 px and 392 px for them, so at 1100 px the model had a 372 px slot between them: the complaint in the issue, confirmed by measurement in the browser.
+- The findings panel now starts closed below 1280 px. The map card stays open, because it holds the exaggeration control and the key, and the header's Details panel button brings the findings back with one click. At 1100 px the stage grows from 372 px to 764 px.
+- The visitor's own choice wins: `detailsUserSet` in the store records that the panel was toggled or opened to show a selected finding, and the width rule stops deciding after that. The store grew one action, `setDetailsHidden`, which sets the panel without claiming the visitor asked for it.
+- Tests: `e2e/map-width.spec.ts` is new and checks both ends of the rule — at 1100 px the panel starts closed, the stage is at least 600 px wide, the map card is there and the visible button opens the panel and takes the room back; at 1440 px the panel is open on arrival.
+- A trap worth recording: `vite preview` serves the built files from memory, so a preview server left running from an earlier build serves the old bundle. Playwright reuses an existing preview server, which made the first run of this check fail against stale code.
+
 ### 2026-10-21: a measurement cannot ask for unbounded work (fork #18)
 
 - The coordinate form accepts any finite local metres, but the profile along the line was sampled every half cell with no cap: `profileAlong` (`src/geo/profile.ts`) asked for `length / 4` samples, so a typed line of a million kilometres wanted 250 million of them. Two callers paid that cost — the Inspector's profile and the map's draped line (`src/scene/PickLayer.tsx`) — and the Inspector built the profile _before_ it checked whether an end was off the grid, so a line that could not be measured was still profiled in full.
