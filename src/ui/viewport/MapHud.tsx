@@ -325,7 +325,15 @@ export function ScaleBar() {
 }
 
 /** Shown while the surfaces are generated or the 3D engine downloads, or if loading failed. */
-export function SceneStatus({ error, label }: { error?: string; label: string }) {
+export function SceneStatus({
+  error,
+  label,
+  onRetry,
+}: {
+  error?: string
+  label: string
+  onRetry?: () => void
+}) {
   return (
     <div className="absolute inset-0 grid place-items-center" role={error ? 'alert' : 'status'}>
       <div className="card w-[260px] p-4 text-center">
@@ -333,6 +341,11 @@ export function SceneStatus({ error, label }: { error?: string; label: string })
           <>
             <div className="cond text-[17px] font-bold text-violation">Terrain unavailable</div>
             <p className="mt-1 text-[12.5px] leading-5 text-ink-dim">{error}</p>
+            {onRetry && (
+              <button type="button" className="btn mt-3" onClick={onRetry}>
+                Try again
+              </button>
+            )}
           </>
         ) : (
           <>

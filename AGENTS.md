@@ -48,6 +48,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: a failed load can be retried in place
+
+- The store only loaded from `idle`, so one failure was permanent and the only way out was a reload. `load` now also runs from `error` when forced, remembers the provider it used, and a `retry` action re-runs it on that same provider. Loading and ready still refuse a second load.
+- The provider had two reasons to make retry pointless, both fixed: a rejected survey stayed in its cache (so a retry replayed the same rejection), and a crashed worker stayed in place. Failures now evict the cache entry, and a worker error terminates the worker so the next request spawns a fresh one.
+- Both screens report the failure honestly. The monitor's error card gains a **Try again** button. The home page previously spun on "Building the simulated surveys…" for ever; it now says the surveys could not be built, and because its map is `aria-hidden` decoration, the error and the button live in a `role="alert"` card in the document flow instead.
+- Tests: three new store tests (second load refused once ready, retry recovers a flaky provider, retry is a no-op when there is nothing to retry) and `e2e/retry.spec.ts`, which fails the first `new Worker(...)` via an init script and then recovers through the button on both screens. 105 unit tests, 16 browser checks.
+
 ### 2026-10-21: one terrain worker for the whole page
 
 - The leak was structural: every mount built a `WorkerTerrainProvider`, whose constructor eagerly started a Web Worker, and the store then refused the second load, so each navigation after the first orphaned a worker nothing could shut down (the audit counted 8 created, 0 terminated).

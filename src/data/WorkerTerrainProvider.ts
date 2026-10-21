@@ -64,6 +64,9 @@ export class WorkerTerrainProvider implements TerrainProvider {
       for (const p of this.pending.values())
         p.fail(new Error(e.message || 'Terrain worker crashed'))
       this.pending.clear()
+      // A crashed worker cannot answer again, so drop it: the next request starts a fresh one.
+      worker.terminate()
+      if (this.worker === worker) this.worker = null
     }
     this.worker = worker
     return worker
@@ -83,15 +86,18 @@ export class WorkerTerrainProvider implements TerrainProvider {
 
   getSurvey(surveyId: string): Promise<TerrainSurvey> {
     if (this.shut) return Promise.reject(new Error('Terrain provider was shut down'))
-    let p = this.cache.get(surveyId)
-    if (!p) {
-      p = new Promise<TerrainSurvey>((ok, fail) => {
-        const id = this.next++
-        this.pending.set(id, { ok, fail })
-        this.channel.postMessage({ id, surveyId })
-      })
-      this.cache.set(surveyId, p)
-    }
+    const cached = this.cache.get(surveyId)
+    if (cached) return cached
+    const p: Promise<TerrainSurvey> = new Promise<TerrainSurvey>((ok, fail) => {
+      const id = this.next++
+      this.pending.set(id, { ok, fail })
+      this.channel.postMessage({ id, surveyId })
+    })
+    // A failed request must not stay in the cache, or a retry would replay the same rejection.
+    p.catch(() => {
+      if (this.cache.get(surveyId) === p) this.cache.delete(surveyId)
+    })
+    this.cache.set(surveyId, p)
     return p
   }
 

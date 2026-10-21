@@ -54,6 +54,7 @@ export function Viewport() {
           <SceneStatus
             label="Building the terrain model"
             error={status === 'error' ? `Could not load the survey: ${error}` : undefined}
+            onRetry={status === 'error' ? () => void useTerrain.getState().retry() : undefined}
           />
         )}
 
