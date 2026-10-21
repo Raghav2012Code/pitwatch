@@ -48,6 +48,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: layer controls reach the phone drawer
+
+- Below `md` the floating Map card is `display: none`, so a phone had no way to change what the map draws. The switch list moved into `src/ui/LayerControls.tsx` (`LayerSwitches`) and now renders in the Details drawer below `md`, above the tabs. `md:hidden` on that section keeps exactly one set of controls at every width: the drawer below `md`, the floating card from `md` up.
+- The Map card keeps its key and exaggeration; the drawer gets the switches plus the exaggeration slider. No store or state change — both placements call the same `toggleLayer`/`setExaggeration`.
+- Fixed a real bug the move exposed: both `ExaggerationSlider` instances used `id="exaggeration"`, and since a label associates with the first element carrying that id, the drawer's slider was unlabelled (duplicate ids are invalid too). It now uses `useId`.
+- Tests: `e2e/mobile-layers.spec.ts` (at 390 px every one of the eight switches is visible in the drawer, toggles, and the slider sets 2×; at 800 px the drawer carries none and the card carries all eight), plus a phone-width axe scan with the drawer open in `a11y.spec.ts`. 19 browser checks, 105 unit tests.
+
 ### 2026-10-21: a failed load can be retried in place
 
 - The store only loaded from `idle`, so one failure was permanent and the only way out was a reload. `load` now also runs from `error` when forced, remembers the provider it used, and a `retry` action re-runs it on that same provider. Loading and ready still refuse a second load.

@@ -1,9 +1,12 @@
 import { useRef, type JSX, type KeyboardEvent } from 'react'
 import { useAppStore, type PanelTab } from '../state/store'
+import { useTerrain } from '../state/terrain'
+import { LayerSwitches } from './LayerControls'
 import { AboutDataPanel } from './panels/AboutDataPanel'
 import { FindingsPanel } from './panels/FindingsPanel'
 import { InspectorPanel } from './panels/InspectorPanel'
 import { OverviewPanel } from './panels/OverviewPanel'
+import { ExaggerationSlider } from './viewport/MapHud'
 
 const TABS: { id: PanelTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -24,6 +27,7 @@ export function SidePanel() {
   const setActiveTab = useAppStore((s) => s.setActiveTab)
   const drawerOpen = useAppStore((s) => s.drawerOpen)
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const ready = useTerrain((s) => s.status === 'ready')
   const Content = CONTENT[activeTab]
 
   // Arrow keys move between tabs (WAI-ARIA tabs pattern).
@@ -64,6 +68,20 @@ export function SidePanel() {
           )
         })}
       </div>
+      {/* Below `md` the floating Map card is hidden, so its switches live here instead: same
+          component, one placement at a time, no duplicate controls at any width. */}
+      <section
+        aria-label="Map layers"
+        className="md:hidden border-b border-line px-3 pt-3 pb-2 max-h-[45%] overflow-y-auto"
+      >
+        <LayerSwitches />
+        {ready && (
+          <div className="mt-3 border-t border-line pt-3">
+            <ExaggerationSlider />
+          </div>
+        )}
+      </section>
+
       <div
         role="tabpanel"
         id="details-tabpanel"

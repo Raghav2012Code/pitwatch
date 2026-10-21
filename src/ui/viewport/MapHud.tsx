@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
+import { useEffect, useId, useMemo, useRef, type CSSProperties } from 'react'
 import { SURFACE_KEY } from '../../data/orthophoto'
 import { useCameraState } from '../../scene/cameraState'
 import { COMPLIANCE_CONFIG } from '../../compliance/config'
@@ -267,18 +267,21 @@ export function OverlayKey() {
 export function ExaggerationSlider() {
   const exaggeration = useAppStore((s) => s.exaggeration)
   const setExaggeration = useAppStore((s) => s.setExaggeration)
+  // The slider appears in the Map card and in the mobile drawer; each instance needs its own id
+  // or the label only associates with whichever comes first in the document.
+  const id = useId()
   return (
     <div>
       <div className="flex items-baseline justify-between">
-        <label htmlFor="exaggeration" className="text-[12.5px] text-ink-dim">
+        <label htmlFor={id} className="text-[12.5px] text-ink-dim">
           Vertical exaggeration
         </label>
-        <output htmlFor="exaggeration" className="font-mono text-[12px] text-ink">
+        <output htmlFor={id} className="font-mono text-[12px] text-ink">
           {exaggeration.toFixed(1)}×
         </output>
       </div>
       <input
-        id="exaggeration"
+        id={id}
         type="range"
         min={EXAGGERATION.min}
         max={EXAGGERATION.max}

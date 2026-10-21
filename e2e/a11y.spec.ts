@@ -31,3 +31,15 @@ test('monitor has no critical or serious accessibility violations', async ({ pag
 
   expect(await seriousViolations(page)).toEqual([])
 })
+
+test('the phone monitor and its open drawer are clean', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/#/monitor')
+  await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible({ timeout: 30_000 })
+
+  // The drawer holds the layer switches below `md`; it has to be open to be scanned.
+  await page.getByRole('button', { name: 'Details' }).click()
+  await expect(page.getByRole('complementary', { name: 'Details' })).toBeVisible()
+
+  expect(await seriousViolations(page)).toEqual([])
+})
