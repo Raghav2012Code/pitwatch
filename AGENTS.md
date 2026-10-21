@@ -24,7 +24,7 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 ## Design
 
-- Monitor layout: full-screen 3D canvas on a survey-paper backdrop (`--color-backdrop`, faint `<Relief />` contours, soft vignette; fog uses the same colour); a `ViewOffset` shifts the projection so the model centres in `.stage` (the area the side cards leave free, click-through except its controls). Left "Map" card (layers, key, exaggeration), right details card (tabs), camera presets + compass top-right, scale bar top-left, timeline pill bottom-centre. Soft `.card` surfaces (8 px radius, shadow); strata stripes only in the top-bar rule and the home page.
+- Monitor layout: full-screen 3D canvas on a survey-paper backdrop (`--color-backdrop`, faint `<Relief />` contours, soft vignette; fog uses the same colour); a `ViewOffset` shifts the projection so the model centres in `.stage` (the area the side cards leave free, click-through except its controls). Left "Map" card (layers, key, exaggeration), right details card (tabs), camera presets + compass top-right, scale bar top-left from `xl` up and just above the timeline below that (a stage under ~437 px cannot hold the chip and the camera group in one row), timeline pill bottom-centre. Soft `.card` surfaces (8 px radius, shadow); strata stripes only in the top-bar rule and the home page.
 - Each fact appears once: mine name in the top bar, survey dates in the timeline and the Surveys section, nothing duplicated in map overlays.
 - Home page is a scroll story beside the live 3D model of the simulated surveys (`#/`), monitor at `#/monitor`. Topographic look: limestone paper, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity only (never status).
 - Type: Archivo variable; `.cond` (font-stretch 72%) for headings and big figures. JetBrains Mono for coordinates and dates.
@@ -47,6 +47,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-21: the scale bar stops eating camera clicks
+
+- `ScaleBar` gets `pointer-events-none`: it is decorative and `aria-hidden`, so it should never have taken a click. The utility wins over `.stage > *` because that rule lives in `@layer components` and utilities come after it — the same idiom `Timeline` already uses.
+- Position: top-left as before from `xl` up; below `xl` it moves above the timeline (`max-xl:top-auto max-xl:bottom-24`), because the stage is only 360 px wide at 1024 px and cannot hold a 208 px chip and the ~215 px camera group in one row. The collision threshold is a stage narrower than about 437 px, which is every viewport under ~1100 px.
+- New `e2e/hud.spec.ts`: at 390, 768, 1024 and 1440 px it asserts `elementFromPoint` at each preset's centre is that preset, then clicks all three and checks the scale reading is still on screen. Runs under `reducedMotion: 'reduce'`, because the HUD's entrance animation holds the presets ~45 px above their resting place for its 1 s delay and the top bar wins the hit test meanwhile — pre-existing and cosmetic, not the chip bug.
+- `e2e/canvas.spec.ts`: the bare 5 s canvas wait now has the same 30 s budget as the readiness wait. Nine browser tests in parallel made the lazy scene chunk slower to arrive than the old five-test suite ever did.
 
 ### 2026-10-21: unknown addresses rewritten to the home hash
 

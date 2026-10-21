@@ -16,7 +16,9 @@ test('renders the 3D canvas without errors', async ({ page }) => {
   await expect(page.getByText('Building the terrain model')).toHaveCount(0)
 
   const canvas = page.locator('canvas')
-  await expect(canvas).toBeVisible()
+  // The scene chunk is fetched after the surveys are ready, and the suite runs several browsers
+  // in parallel, so this needs the same budget as the readiness wait above.
+  await expect(canvas).toBeVisible({ timeout: 30_000 })
 
   // R3F sizes the canvas from a ResizeObserver, so it briefly keeps the 300x150 default.
   await expect

@@ -308,9 +308,11 @@ export function ScaleBar() {
     return useCameraState.subscribe(draw)
   }, [])
 
+  // Decorative, so it never takes a click. Below `xl` the stage is too narrow to hold this chip
+  // and the camera group in one row, so it drops under the timeline instead of covering a button.
   return (
     <div
-      className="map-chip enter-down absolute top-4 left-4 flex items-center gap-2.5"
+      className="map-chip enter-down pointer-events-none absolute top-4 left-4 flex items-center gap-2.5 max-xl:top-auto max-xl:bottom-24"
       style={delay(1.2)}
       aria-hidden="true"
     >
