@@ -75,6 +75,7 @@ Newest first.
 - The Map card keeps its key and exaggeration; the drawer gets the switches plus the exaggeration slider. No store or state change — both placements call the same `toggleLayer`/`setExaggeration`.
 - Fixed a real bug the move exposed: both `ExaggerationSlider` instances used `id="exaggeration"`, and since a label associates with the first element carrying that id, the drawer's slider was unlabelled (duplicate ids are invalid too). It now uses `useId`.
 - Tests: `e2e/mobile-layers.spec.ts` (at 390 px every one of the eight switches is visible in the drawer, toggles, and the slider sets 2×; at 800 px the drawer carries none and the card carries all eight), plus a phone-width axe scan with the drawer open in `a11y.spec.ts`. 19 browser checks, 105 unit tests.
+- Follow-up from the visual pass: the layer block was capped at `max-h-[45%]` with its own scrollbar, which cut the "Findings" row in half on a 844 px phone. The drawer now has one scroll area under the tabs holding both the layer block and the tab content, so nothing clips mid-row on short screens.
 
 ### 2026-10-21: a failed load can be retried in place
 

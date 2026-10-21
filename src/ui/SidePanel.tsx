@@ -68,29 +68,29 @@ export function SidePanel() {
           )
         })}
       </div>
-      {/* Below `md` the floating Map card is hidden, so its switches live here instead: same
-          component, one placement at a time, no duplicate controls at any width. */}
-      <section
-        aria-label="Map layers"
-        className="md:hidden border-b border-line px-3 pt-3 pb-2 max-h-[45%] overflow-y-auto"
-      >
-        <LayerSwitches />
-        {ready && (
-          <div className="mt-3 border-t border-line pt-3">
-            <ExaggerationSlider />
-          </div>
-        )}
-      </section>
+      {/* One scroll area under the tabs: the layer block and the tab content scroll together,
+          so a capped block cannot clip a switch row in half on a short phone. */}
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        {/* Below `md` the floating Map card is hidden, so its switches live here instead: same
+            component, one placement at a time, no duplicate controls at any width. */}
+        <section aria-label="Map layers" className="md:hidden border-b border-line px-3 pt-3 pb-2">
+          <LayerSwitches />
+          {ready && (
+            <div className="mt-3 border-t border-line pt-3">
+              <ExaggerationSlider />
+            </div>
+          )}
+        </section>
 
-      <div
-        role="tabpanel"
-        id="details-tabpanel"
-        aria-labelledby={`tab-${activeTab}`}
-        tabIndex={0}
-        className="min-h-0 flex-1 overflow-y-auto"
-      >
-        <div key={activeTab} className="tab-in">
-          <Content />
+        <div
+          role="tabpanel"
+          id="details-tabpanel"
+          aria-labelledby={`tab-${activeTab}`}
+          tabIndex={0}
+        >
+          <div key={activeTab} className="tab-in">
+            <Content />
+          </div>
         </div>
       </div>
     </aside>
