@@ -141,7 +141,7 @@ Newest first.
 ### 2026-10-21: required Node version declared
 
 - `package.json` gains `engines.node` `^20.19.0 || >=22.12.0`, the same range Vite 8 declares about itself, so a wrong toolchain gets npm's `EBADENGINE` warning and Vite's own early "requires Node.js" error instead of an opaque build failure later. Local Node is 24.18.0; CI pins 22.
-- Not done: `.npmrc` with `engine-strict=true`, which would make installs hard-fail. The file write was refused by the tool sandbox (an `.npmrc` can carry registry credentials), so this is a warning, not a gate. Add it by hand if a hard gate is wanted.
+- Decided not to enforce it. `engines.node` plus Vite's own startup check is enough for a demo; an `.npmrc` with `engine-strict=true` would make installs hard-fail, but the tool sandbox refuses to write that filename (it can carry registry credentials), so it would have to be added by hand, and the call was that it is not worth it. Recorded here rather than tracked as a ticket: a wrong Node still fails early with npm's `EBADENGINE` warning and Vite's error, just not at install time.
 
 ### 2026-10-21: narrow-screens spec from the browser audit
 
