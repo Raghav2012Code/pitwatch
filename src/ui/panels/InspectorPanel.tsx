@@ -11,6 +11,7 @@ import { useAppStore } from '../../state/store'
 import { useTerrain } from '../../state/terrain'
 import { formatLat, formatLon } from '../format'
 import { FindingIcon, MeasureIcon, PickIcon } from '../icons'
+import { CoordinateEntry } from './CoordinateEntry'
 import { EmptyNote, Row, Section } from './parts'
 import { ProfileChart } from './ProfileChart'
 
@@ -85,9 +86,14 @@ function Point() {
         <Row label="Slope" value={r.slopeDeg === null ? '—' : `${n(r.slopeDeg)}°`} mono />
       </dl>
       <p className="mt-1 text-[12.5px] leading-5 text-ink-dim">
-        {r.change === 'excavated' && `Excavated: lowered by more than ${n(limit, 2)} m.`}
-        {r.change === 'filled' && `Filled: raised by more than ${n(limit, 2)} m.`}
-        {r.change === 'none' && `No significant change (threshold ±${n(limit, 2)} m).`}
+        {r.dh === null && 'No reading here: the point is outside the survey grid.'}
+        {r.dh !== null &&
+          r.change === 'excavated' &&
+          `Excavated: lowered by more than ${n(limit, 2)} m.`}
+        {r.dh !== null && r.change === 'filled' && `Filled: raised by more than ${n(limit, 2)} m.`}
+        {r.dh !== null &&
+          r.change === 'none' &&
+          `No significant change (threshold ±${n(limit, 2)} m).`}
       </p>
       <dl className="mt-2 border-t border-line pt-2">
         <Row
@@ -228,10 +234,12 @@ export function InspectorPanel() {
   const tool = useAppStore((s) => s.tool)
   const ready = useTerrain((s) => s.status === 'ready')
 
-  if (ready && (picked || a)) {
-    return (
-      <>
-        {tool === 'measure' ? (
+  return (
+    <>
+      {/* Always at the top of the tab, whether or not a point is already selected. */}
+      {ready && <CoordinateEntry />}
+      {ready && (picked || a) ? (
+        tool === 'measure' ? (
           <>
             {a && <Measurement />}
             {picked && <Point />}
@@ -241,26 +249,24 @@ export function InspectorPanel() {
             {picked && <Point />}
             {a && <Measurement />}
           </>
-        )}
-      </>
-    )
-  }
-
-  return (
-    <Section title="Nothing selected">
-      <ul className="space-y-2">
-        {WAYS.map(({ Icon, title, text }) => (
-          <li key={title} className="hint-row">
-            <span className="hint-icon">
-              <Icon className="h-[18px] w-[18px]" />
-            </span>
-            <div>
-              <div className="text-[13px] font-medium text-ink">{title}</div>
-              <div className="text-[12.5px] leading-5 text-ink-dim">{text}</div>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Section>
+        )
+      ) : (
+        <Section title="Nothing selected">
+          <ul className="space-y-2">
+            {WAYS.map(({ Icon, title, text }) => (
+              <li key={title} className="hint-row">
+                <span className="hint-icon">
+                  <Icon className="h-[18px] w-[18px]" />
+                </span>
+                <div>
+                  <div className="text-[13px] font-medium text-ink">{title}</div>
+                  <div className="text-[12.5px] leading-5 text-ink-dim">{text}</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+    </>
   )
 }
