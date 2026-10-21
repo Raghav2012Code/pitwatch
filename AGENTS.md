@@ -48,6 +48,11 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: required Node version declared
+
+- `package.json` gains `engines.node` `^20.19.0 || >=22.12.0`, the same range Vite 8 declares about itself, so a wrong toolchain gets npm's `EBADENGINE` warning and Vite's own early "requires Node.js" error instead of an opaque build failure later. Local Node is 24.18.0; CI pins 22.
+- Not done: `.npmrc` with `engine-strict=true`, which would make installs hard-fail. The file write was refused by the tool sandbox (an `.npmrc` can carry registry credentials), so this is a warning, not a gate. Add it by hand if a hard gate is wanted.
+
 ### 2026-10-21: narrow-screens spec from the browser audit
 
 - Playwright-driven UI/UX audit (screenshots, pointer probes, keyboard, zoom, drag at 390–1440 px) published as issue #2 with `ready-for-agent`: scale-bar chip eats camera-button clicks at 1024 and below, SIMULATED badge hidden on phones, no layer controls on mobile.
