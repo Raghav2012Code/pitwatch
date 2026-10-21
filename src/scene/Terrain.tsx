@@ -4,18 +4,9 @@ import * as THREE from 'three'
 import type { Orthophoto, TerrainSurvey } from '../domain/types'
 import { useAppStore } from '../state/store'
 import type { TerrainMarks } from './marks'
-import { CONTOUR_INK, OVERLAY, SOIL_PROFILE } from './palette'
+import { OVERLAY, SOIL_PROFILE } from './palette'
 import { BASE_RL, buildSkirtArrays, buildTerrainArrays } from './terrainGeometry'
-
-/* Shared uniforms: layer switches are uniform changes, not shader recompiles. */
-const surfaceUniforms = {
-  uBase: { value: BASE_RL },
-  uInterval: { value: 5 },
-  uContours: { value: 0 },
-  /** 0 = aerial image, 1 = hypsometric tint. */
-  uTint: { value: 0 },
-  uInk: { value: new THREE.Color(CONTOUR_INK) },
-}
+import { makeSurfaceUniforms, type SurfaceUniforms } from './surfaceUniforms'
 
 /*
  * Morph: every vertex also carries the other survey's height (aAltY) and normal
@@ -46,6 +37,7 @@ function makeSurfaceMaterial(
   map: THREE.Texture | null,
   map2: THREE.Texture | null,
   morph: Uniform<number>,
+  uniforms: SurfaceUniforms,
 ) {
   const m = new THREE.MeshStandardMaterial({
     map,
@@ -58,7 +50,7 @@ function makeSurfaceMaterial(
   m.userData.overlay = overlay
   const color = (hex: string) => ({ value: new THREE.Color(hex) })
   m.onBeforeCompile = (shader) => {
-    Object.assign(shader.uniforms, surfaceUniforms, {
+    Object.assign(shader.uniforms, uniforms, {
       uOverlay: overlay,
       uCut: color(OVERLAY.cut),
       uFill: color(OVERLAY.fill),
@@ -283,12 +275,18 @@ export function Terrain({
   )
   const materials = useMemo(() => {
     const morphU = { value: 0 }
+    // This surface owns its layer uniforms; the setter below is the only thing that writes them.
+    const uniforms = makeSurfaceUniforms()
     return {
       getMorph: () => morphU.value,
       setMorph: (v: number) => {
         morphU.value = v
       },
-      surface: makeSurfaceMaterial(texture, texture2, morphU),
+      setLayers: (contours: boolean, tint: boolean) => {
+        uniforms.uContours.value = contours ? 1 : 0
+        uniforms.uTint.value = tint ? 1 : 0
+      },
+      surface: makeSurfaceMaterial(texture, texture2, morphU, uniforms),
       skirt: makeSkirtMaterial(morphU),
       depth: makeDepthMaterial(morphU),
     }
@@ -314,11 +312,11 @@ export function Terrain({
 
   // Without an aerial image the tint is the only colouring available.
   const tint = layers.tint || !texture
+  const setLayers = materials.setLayers
   useEffect(() => {
-    surfaceUniforms.uContours.value = layers.contours ? 1 : 0
-    surfaceUniforms.uTint.value = tint ? 1 : 0
+    setLayers(layers.contours, tint)
     invalidate()
-  }, [layers.contours, tint, invalidate])
+  }, [layers.contours, tint, invalidate, setLayers])
 
   // Ease overlay strengths towards their targets (about 0.6 s).
   const [targetChange, targetFindings] = overlay

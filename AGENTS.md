@@ -48,11 +48,17 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: each terrain surface owns its layer uniforms
+
+- The contour and tint uniforms lived in a module-level `surfaceUniforms` object that every surface material merged into its own shader. So the layer effect wrote state shared by all materials and by both canvases: whichever mounted last won, and the values survived a navigation instead of following the store.
+- `src/scene/surfaceUniforms.ts` (`makeSurfaceUniforms`, tested) returns a fresh set per material, so `uContours`, `uTint` and `uInk` are now as per-material as `uOverlay` and `uMorph` already were. `Terrain` creates the set inside its material memo and exposes a `setLayers` closure for the effect — the same shape as the existing `setMorph`, which is also why the React 19 hook linter accepts it (it rejects mutating a memo result directly).
+- Verified with a throwaway pixel probe against the dev server, since no unit test can see a shader: clipped to bare terrain, toggling Contours or Elevation tint changes the frame and toggling it back restores it byte for byte. Note for future probes: an element screenshot of the canvas also captures the overlapping Map panel, so clip a region clear of the cards.
+
 ### 2026-10-21: the honesty badge shows on phones
 
 - The home page dropped its SIMULATED DATA badge below `sm` (`hidden sm:inline-flex`). The reason it was hidden is geometric: `.home-corner` is a fixed row at the top right holding the badge and the monitor CTA, and at 390 px that row starts around x=78 while the floating brand ends around x=140.
 - Fix is to stack the corner below `sm` (`max-sm:flex-col max-sm:items-end`) and show the badge at every width, with the full label rather than an abbreviation. No change from `sm` up, where badge and CTA still sit in one row.
-- New `e2e/badge.spec.ts`: at 390, 800 and 1440 px it asserts the badge is visible on home *and* monitor, and that its box does not intersect the brand's on home. Fourteen browser checks now.
+- New `e2e/badge.spec.ts`: at 390, 800 and 1440 px it asserts the badge is visible on home _and_ monitor, and that its box does not intersect the brand's on home. Fourteen browser checks now.
 
 ### 2026-10-21: the scale bar stops eating camera clicks
 
