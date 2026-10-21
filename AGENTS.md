@@ -50,6 +50,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: landing page made one piece (branch `ui-redesign`)
+
+- The lower landing page read as separate blocks. Every section now opens the same way (`.landing-head`: heading left, one paragraph right) and is wired to the hero: "From two surveys to a verdict" is a real sequence (1, 2, 3) and each step has **Show on the model**, which scrolls the hero into view and switches the model (`showOnModel` in `HomePage.tsx`); the rule columns show the live engine result per rule (glyph and count, from `findings`); the top bar has "How it works" and "What it checks" buttons that scroll (buttons, not `#` links, because the hash router owns the hash).
+- The page now ends in a slate band that matches the dashboard sidebar (`.landing-close`, `btn-light`, `btn-outline-light`, `chip-dark`) holding the CTAs and the honesty note; the old footer is gone. Headings use `text-wrap: balance`; step links and rule results sit at the foot of their column so paragraph length never staggers them; the hero text column is wider so the three facts sit on one row.
+- Checked by eye at 1440, 1100, 800 and 390 px; browser tests for the landing page, axe, badge and dashboard pass.
+
 ### 2026-10-21: dashboard redesign (branch `ui-redesign`)
 
 - Why: the scroll story was hard to demo. Now a landing page, then a dashboard with a sidebar. All features kept; nothing removed, only moved.

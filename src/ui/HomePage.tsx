@@ -7,21 +7,23 @@ import {
   type ComponentType,
   type SVGProps,
 } from 'react'
+import { COMPLIANCE_CONFIG } from '../compliance/config'
+import type { RuleId } from '../domain/types'
 import { SURVEY_EPOCHS } from '../data/fixtures/mine'
 import { tweenStory, useStory } from '../state/story'
 import { useTerrain } from '../state/terrain'
-import { countText } from './findings'
+import { countText, GLYPH, worstTone } from './findings'
 import { daysBetween, formatDate } from './format'
 import { StoryClock } from './home/StoryClock'
 import { ArrowRightIcon, BoundaryIcon, FloorIcon, PitMark, TerrainIcon } from './icons'
-import { ProvenanceTag } from './ProvenanceTag'
 import { MONITOR_HREF, OVERVIEW_HREF, ROUTE_HREF } from './route'
 import { Relief } from './schematic'
 import { SceneErrorBoundary } from './viewport/SceneErrorBoundary'
 
 /*
  * The landing page: what PitWatch does, shown on the live 3D model of the simulated surveys,
- * and one click into the dashboard. The model is driven by four buttons, not by scrolling.
+ * and one click into the dashboard. The model is driven by four buttons, and the sections
+ * below it are wired back to the model, so the page reads as one demonstration.
  */
 
 // three.js is large; fetch it only for the landing model.
@@ -62,30 +64,59 @@ const VIEWS = [
   },
 ] as const
 
+type View = (typeof VIEWS)[number]
+
+/** The method, in order. Each step can be shown on the model above. */
+const STEPS: { title: string; text: string; view: View }[] = [
+  {
+    title: 'Survey the ground twice',
+    text: `A drone maps the pit surface on two dates, ${DAYS} days apart, to within a few centimetres.`,
+    view: VIEWS[0],
+  },
+  {
+    title: 'Keep only real change',
+    text: `Subtract one survey from the other. A change counts only when it is bigger than the survey noise: more than ${COMPLIANCE_CONFIG.minChangeM} m plus ${COMPLIANCE_CONFIG.k}σ.`,
+    view: VIEWS[2],
+  },
+  {
+    title: 'Check it against the permit',
+    text: 'Every changed cell is tested against the lease. Failures become findings, ranked by how serious they are.',
+    view: VIEWS[3],
+  },
+]
+
 const RULES: {
+  rule: RuleId
   Icon: ComponentType<SVGProps<SVGSVGElement>>
   title: string
   text: string
 }[] = [
   {
+    rule: 'R1',
     Icon: BoundaryIcon,
     title: 'Stay inside the lease',
     text: 'No ground may be excavated outside the lease boundary, or inside the safety buffer along its inner edge.',
   },
   {
+    rule: 'R2',
     Icon: FloorIcon,
     title: 'Stop at the approved floor',
     text: 'The pit may not be taken deeper than the floor level approved on the mine plan.',
   },
   {
+    rule: 'R3',
     Icon: TerrainIcon,
     title: 'Dump only where allowed',
     text: 'Waste rock may only be placed inside the dump zones approved in the mine plan.',
   },
 ]
 
+const PROVENANCE = ['measured', 'derived', 'simulated', 'unverified'] as const
+
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
 export function HomePage() {
-  const [view, setView] = useState<(typeof VIEWS)[number]['id']>(4)
+  const [view, setView] = useState<View['id']>(4)
   // The model only renders while it is on screen.
   const [stageVisible, setStageVisible] = useState(true)
   const stageRef = useRef<HTMLDivElement>(null)
@@ -109,10 +140,25 @@ export function HomePage() {
     return () => io.disconnect()
   }, [])
 
-  const show = (next: (typeof VIEWS)[number]) => {
+  const show = (next: View) => {
     setView(next.id)
     tweenStory(next.t)
   }
+
+  /** Switches the model and brings it into view, so a step below answers on the screen above. */
+  const showOnModel = (next: View) => {
+    show(next)
+    stageRef.current?.scrollIntoView({
+      block: 'center',
+      behavior: reducedMotion() ? 'auto' : 'smooth',
+    })
+  }
+
+  const goTo = (id: string) =>
+    document.getElementById(id)?.scrollIntoView({
+      block: 'start',
+      behavior: reducedMotion() ? 'auto' : 'smooth',
+    })
 
   return (
     <div className="landing h-full overflow-y-auto">
@@ -123,6 +169,14 @@ export function HomePage() {
           </span>
           <span className="cond text-[22px] font-bold text-ink">PitWatch</span>
         </a>
+        <nav aria-label="On this page" className="landing-nav">
+          <button type="button" onClick={() => goTo('how')}>
+            How it works
+          </button>
+          <button type="button" onClick={() => goTo('checks')}>
+            What it checks
+          </button>
+        </nav>
         <div className="ml-auto flex items-center gap-3">
           <span className="stamp">
             <span className="stamp-dot" aria-hidden="true" />
@@ -219,83 +273,138 @@ export function HomePage() {
           </div>
         </section>
 
-        <section aria-labelledby="checks" className="landing-section">
+        <section id="how" aria-labelledby="how-title" className="landing-section">
           <div className="landing-inner">
-            <h2 id="checks" className="cond section-big">
-              Three conditions in every mining lease, checked on every cell
-            </h2>
-            <ul className="mt-10 grid gap-x-10 gap-y-8 md:grid-cols-3">
-              {RULES.map(({ Icon, title, text }) => (
-                <li key={title} className="rule-col">
-                  <span className="rule-icon">
-                    <Icon className="h-5 w-5" />
+            <div className="landing-head">
+              <h2 id="how-title" className="cond section-big">
+                From two surveys to a verdict
+              </h2>
+              <p>
+                Three steps, the same ones the dashboard runs. Each can be shown on the model above.
+              </p>
+            </div>
+            <ol className="step-list">
+              {STEPS.map((s, i) => (
+                <li key={s.title} className="step">
+                  <span className="step-n cond" aria-hidden="true">
+                    {i + 1}
                   </span>
-                  <h3 className="cond mt-4 text-[24px] leading-tight font-bold text-ink">
-                    {title}
-                  </h3>
-                  <p className="mt-2 text-[15px] leading-7 text-ink-dim">{text}</p>
+                  <h3 className="cond text-[24px] leading-tight font-bold text-ink">{s.title}</h3>
+                  <p className="mt-2 text-[15px] leading-7 text-ink-dim">{s.text}</p>
+                  <button type="button" className="link-arrow" onClick={() => showOnModel(s.view)}>
+                    Show on the model
+                    <ArrowRightIcon className="h-4 w-4" />
+                  </button>
                 </li>
               ))}
+            </ol>
+          </div>
+        </section>
+
+        <section
+          id="checks"
+          aria-labelledby="checks-title"
+          className="landing-section landing-band"
+        >
+          <div className="landing-inner">
+            <div className="landing-head">
+              <h2 id="checks-title" className="cond section-big">
+                Three conditions in every mining lease
+              </h2>
+              <p>
+                PitWatch tests every 8 m cell of the ground against each one. The result under each
+                rule is what the engine found on this demo.
+              </p>
+            </div>
+            <ul className="rule-cols">
+              {RULES.map(({ rule, Icon, title, text }) => {
+                const own = findings.filter((f) => f.ruleId === rule)
+                const tone = own.length ? worstTone(own) : 'clear'
+                const Glyph = tone === 'clear' ? null : GLYPH[tone]
+                return (
+                  <li key={rule} className="rule-col">
+                    <span className="rule-icon">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <h3 className="cond mt-4 text-[24px] leading-tight font-bold text-ink">
+                      {title}
+                    </h3>
+                    <p className="mt-2 text-[15px] leading-7 text-ink-dim">{text}</p>
+                    <p
+                      className={`rule-result-line ${ready ? `tone-${tone}` : ''}`}
+                      aria-live="polite"
+                    >
+                      {ready ? (
+                        <>
+                          {Glyph ? (
+                            <Glyph className="h-[18px] w-[18px]" />
+                          ) : (
+                            <span className="status-led" data-tone="clear" aria-hidden="true" />
+                          )}
+                          {own.length ? countText(own) : 'Clear on this demo'}
+                        </>
+                      ) : (
+                        'Evaluating…'
+                      )}
+                    </p>
+                  </li>
+                )
+              })}
             </ul>
-            <a href={ROUTE_HREF.rules} className="link-arrow mt-8">
+            <a href={ROUTE_HREF.rules} className="link-arrow mt-10">
               How each rule is tested
               <ArrowRightIcon className="h-4 w-4" />
             </a>
           </div>
         </section>
 
-        <section aria-labelledby="honest" className="landing-section landing-band">
-          <div className="landing-inner grid gap-10 lg:grid-cols-[1fr_1fr] lg:gap-16">
-            <div>
-              <h2 id="honest" className="cond section-big">
-                Everything here is simulated, and it says so.
-              </h2>
-              <p className="mt-5 max-w-[32rem] text-[16px] leading-7 text-ink-dim">
-                Venthar Ridge and Ardent Ore Works are fictional, and both surveys are generated
-                from a fixed seed. Findings point an inspector at places to look; they do not prove
-                a breach.
-              </p>
+        <section aria-labelledby="close-title" className="landing-close">
+          <div className="landing-inner">
+            <div className="close-grid">
+              <div>
+                <h2 id="close-title" className="cond close-title">
+                  Open the dashboard and look for yourself.
+                </h2>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <a href={OVERVIEW_HREF} className="btn-light btn-lg">
+                    Open the dashboard
+                  </a>
+                  <a href={MONITOR_HREF} className="btn-outline-light btn-lg">
+                    Explore the 3D map
+                  </a>
+                </div>
+              </div>
+              <div className="close-note">
+                <p className="text-[16px] leading-7">
+                  Everything here is simulated, and it says so. Venthar Ridge and Ardent Ore Works
+                  are fictional, and both surveys are generated from a fixed seed. Findings point an
+                  inspector at places to look; they do not prove a breach.
+                </p>
+                <p className="mt-5 text-[14px]">
+                  Every value carries a tag for where it came from:
+                </p>
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {PROVENANCE.map((p) => (
+                    <li key={p} className="chip-dark">
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+                <a href={ROUTE_HREF.about} className="link-arrow-light mt-5">
+                  About the data
+                  <ArrowRightIcon className="h-4 w-4" />
+                </a>
+              </div>
             </div>
-            <div>
-              <p className="text-[15px] leading-7 text-ink-dim">
-                Every value in the dashboard carries a tag for where it came from:
-              </p>
-              <ul className="mt-4 flex flex-wrap gap-2.5">
-                <li>
-                  <ProvenanceTag value="measured" />
-                </li>
-                <li>
-                  <ProvenanceTag value="derived" />
-                </li>
-                <li>
-                  <ProvenanceTag value="simulated" />
-                </li>
-                <li>
-                  <ProvenanceTag value="unverified" />
-                </li>
-              </ul>
-              <a href={ROUTE_HREF.about} className="link-arrow mt-6">
-                About the data
-                <ArrowRightIcon className="h-4 w-4" />
-              </a>
+            <div className="close-foot">
+              <span className="brand-mark">
+                <PitMark className="h-5 w-8" />
+              </span>
+              <span>PitWatch, a demo of permit compliance monitoring for open-pit mines.</span>
             </div>
           </div>
         </section>
       </main>
-
-      <footer className="landing-footer">
-        <div className="landing-inner flex flex-wrap items-center justify-between gap-6">
-          <div>
-            <div className="cond text-[32px] leading-none font-bold text-ink">PitWatch</div>
-            <p className="mt-2 text-[13.5px] text-ink-dim">
-              A demo of permit compliance monitoring for open-pit mines.
-            </p>
-          </div>
-          <a href={OVERVIEW_HREF} className="btn-primary btn-lg">
-            Open the dashboard
-          </a>
-        </div>
-      </footer>
     </div>
   )
 }
