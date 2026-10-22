@@ -50,6 +50,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: the landing terrain survives the map's Terrain switch (fork #20)
+
+- `Terrain` read `layers.terrain` from the app store inside the component, and both the map and the landing page render it. Switching Terrain off on the map therefore emptied the landing page's featured model, which has no control of its own to bring it back.
+- Visibility is now the caller's decision: `Terrain` takes an optional `visible` and uses `visible ?? layers.terrain`. The map passes nothing, so its switch works exactly as before; `HomeScene` passes `visible` so the landing model is always drawn.
+- Tests: new `e2e/landing-terrain.spec.ts`. No test can see a shader and the page exposes no scene graph (checked: the canvas carries only React internals), so it compares canvas screenshots — and it proves its own probe first: at a fixed Top pose, switching Terrain off changes the map shot by 61% of its byte length (1,295,940 to 503,764), while the landing shot after the same switch changes by 0.003%. Run against the old wiring first, the landing assertion fails, so the check catches the regression. 133 unit tests, 57 browser checks.
+- Browser check at 1440 px: with the map's Terrain off, the landing model still shows the pit, the waste dump and the findings pins.
+
 ### 2026-10-21: keyboard focus stays in the open phone drawer (fork #19)
 
 - The drawer handled Escape and returned focus to the Menu button, but Tab walked straight out into the page behind the scrim, where focus is invisible.
