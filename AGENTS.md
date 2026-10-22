@@ -50,6 +50,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: two unreferenced Vite leftovers removed (fork #25)
+
+- `src/assets/hero.png` (13,057 bytes) and `src/assets/react.svg` (4,126 bytes) came from the Vite template and were imported by nothing: `git grep` for both names and for `src/assets` finds no code, style, test or documentation reference. The folder was left empty and is gone with them. `public/logo.svg` stays: it is a public brand asset.
+- Verified the bundle does not change: built with the two files restored and again with them deleted, the `dist` file list and every file size are identical, which is the proof they were never in it.
+- `npm run verify` passes (133 unit tests); the browser suite is unchanged at 64 checks.
+
 ### 2026-10-21: the app stops teaching one threshold and claiming a breach (fork #17)
 
 - Two separate claims were wrong, and both are explanation only: the engine's arithmetic is unchanged.
