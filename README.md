@@ -12,7 +12,7 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
 
 - **Landing page** (`#/`): the live 3D model, slowly turning, with four buttons (Baseline, Current, Change, Findings) that switch what it shows: the baseline survey, the current survey, the measured change coloured on the terrain (rust cut, blue fill) and the findings with the lease line and a pin for each. No scrolling story; a short section on the three permit rules follows.
 - **Dashboard** with a sidebar (a slim icon rail on the 3D map, a drawer on phones):
-  - **Overview** (`#/overview`): the verdict, four headline figures, the result for each permit rule, the findings to look at first, and the survey, surface and lease facts.
+  - **Overview** (`#/overview`): the verdict, four headline figures, the result for each permit rule, the findings to look at first, and the survey, surface and lease facts. An interactive site plan draws the lease, permitted zones, changed cells and finding pins from the same data as the 3D map; select a pin with a pointer, touch, Enter or Space to open its finding on the map.
   - **Findings** (`#/findings`): every finding with its explanation and figures, and a Show on map button.
   - **Permit rules** (`#/rules`), **Uncertainty** (`#/uncertainty`: the 2σ calculator and the resolution comparison) and **About the data** (`#/about`, with the keyboard shortcuts).
 - **3D map** (`#/monitor`):
@@ -24,16 +24,26 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
   - A survey slider on the timeline switches the map between the baseline and current surveys. Findings can be opened from their pins and flown to from the Findings tab.
   - Overlay layers: lease boundary, safety buffer, pit and dump zone outlines, measured change (excavated and filled, only beyond the noise threshold) and finding markers, all drawn from the engine output.
   - Header compliance status, and a details panel with a Findings tab (every finding with its explanation and figures) and an Inspector tab.
+  - Selecting a finding restores the current survey, terrain and finding markers, frames the chosen pin and opens the Findings tab. Selection stays synchronized with the Overview. On phones, the details drawer closes to reveal the terrain and retains the selected finding when reopened.
+  - Layer switches and vertical exaggeration are available in the phone details drawer. On larger screens, the Map card holds these controls; its key can be folded to leave more room.
 - **Compliance engine** (`src/compliance/`): change detection, rules R1–R3, clustering into findings, severity and plain-English explanations. All of it is pure TypeScript and unit-tested.
 
-Everything planned for the monitor is built. See [Roadmap](#roadmap).
+The original M1–M8 milestones are complete. Further interface improvements are tracked separately in the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md); only its first P0, finding selection that reveals its evidence, is implemented.
+
+## Try the inspection workflow
+
+1. Open the landing page and switch between **Baseline**, **Current**, **Change** and **Findings** to see how the two simulated surveys lead to the engine results.
+2. Open **Overview** to read the permit-rule results and locate the five findings on the site plan.
+3. Select a site-plan pin or choose **Show on map** on a finding. The map restores the evidence layers and frames the selected result.
+4. Open **Inspector** to read a terrain point, or enter its easting and northing. Switch to **Measure** and choose two points to compare distance, grade and the survey profiles.
+5. Visit **Permit rules**, **Uncertainty** and **About the data** to inspect the thresholds, uncertainty assumptions and source limitations behind the result.
 
 ## Data honesty
 
 - Every displayed value carries a provenance tag: `measured`, `derived`, `simulated` or `unverified`.
 - Elevations are shown as value ± vertical uncertainty (σ).
 - No alert is hand-written. Every finding comes from the rule engine running on the two surveys.
-- The About data tab explains what different sources can show:
+- The About the data page explains what different sources can show:
   - satellite imagery shows the surface, not depth;
   - global DEMs (Copernicus GLO-30, SRTM, about 30 m cells, metres of vertical error) are too coarse for bench-scale change;
   - drone, LiDAR or DGPS surveys are what mine-scale monitoring needs.
@@ -72,10 +82,10 @@ The seeded scenario produces exactly these findings, locked by a snapshot test:
 
 ## Run it
 
-Requires Node 20.19+ or 22.12+ (what Vite 8 needs) and npm.
+Requires npm and Node.js matching `^20.19.0 || >=22.12.0`, as declared in `package.json`. CI uses Node 22.
 
 ```sh
-npm install
+npm ci
 npm run dev          # http://localhost:5173
 ```
 
@@ -91,9 +101,17 @@ npm run dev          # http://localhost:5173
 | `npm run preview`                 | Serve the production build                     |
 | `npm run format` / `format:check` | Prettier                                       |
 
-The terrain (two 257 × 257 surveys at 8 m plus their aerial images) is generated in a Web Worker when the page opens. This takes about a second and a half.
+The terrain (two 257 × 257 surveys at 8 m plus their aerial images) is generated in a shared Web Worker when the page opens. Generation time depends on the device. If loading fails, **Try again** retries in place.
 
 The browser checks run against the production build, so run `npx playwright install chromium` once before the first `npm run test:e2e`. CI (GitHub Actions) runs `npm run verify`, the build and the Playwright suite on every push to `main` and every pull request, and uploads the report when a run fails.
+
+Run the full local checks with:
+
+```sh
+npm run verify && npm run test:e2e
+```
+
+For the responsive browser review, start `npx vite --port 5179 --strictPort` and review the landing page, Overview and 3D map at 1440, 1100 and 800 px wide. Include a phone-width check for the navigation and details drawers.
 
 ## Deploy
 
@@ -124,7 +142,7 @@ flowchart LR
   T -->|surveys, limits| C
   C -->|change, findings| T
   T --> SC[scene<br/>three.js / R3F terrain]
-  T --> UI[ui<br/>monitor panels, home map]
+  T --> UI[ui<br/>landing, dashboard pages, map panels]
   A[state/store<br/>layers, view, panels] --> SC
   A --> UI
 ```
@@ -141,7 +159,7 @@ src/
   compliance/   change detection, R1–R3, connected components, severity, explanations
   scene/        R3F terrain, shaders (aerial/tint blend, contours, soil profile), camera rig
   state/        Zustand stores: app UI state, loaded terrain and findings
-  ui/           home page, monitor layout, panels, map HUD
+  ui/           landing page, dashboard shell and pages, site plan, panels, map HUD
   workers/      terrain generation off the main thread
 ```
 
@@ -162,4 +180,11 @@ Vite, React 19, TypeScript (strict), three.js with @react-three/fiber and drei, 
 | M7  | Polish: accessibility, performance, share metadata                          | done   |
 | M8  | Deployment config (Vercel) and final checks                                 | done   |
 
-`AGENTS.md` keeps a detailed log of every change (Claude Code reads it through `CLAUDE.md`).
+## Limits and follow-up work
+
+- This is a frontend demonstration using a fictional permit and synthetic surveys. There is no backend, real survey ingestion or regulatory certification.
+- Vertical survey uncertainty is modelled; horizontal position error is not. A coordinate outside the survey grid can still be inspected for position and lease status, but has no elevation or change reading.
+- Around 1100 px wide, the map is tight with both side panels open. Use `[` and `]` to toggle the Map and Details panels. At 800 px, the layers panel still covers a substantial part of the model.
+- First-visit map guidance, visible icon-rail tooltips and desktop dragging of the landing model remain proposed improvements.
+
+See the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md) for proposed work, [STATUS.md](STATUS.md) for the redesign handoff, and [AGENTS.md](AGENTS.md) for the detailed update log and contributor workflow.

@@ -50,6 +50,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-22: README reflects the merged dashboard
+
+- Documented the Overview site plan, synchronized finding selection and evidence restoration, phone layer controls, foldable map key, and in-place loading retry. Added a five-step inspection walkthrough.
+- Setup now uses the lockfile with `npm ci`, quotes the declared Node range, and includes the full verification and responsive-review commands. Updated the architecture labels and source tree to describe the dashboard pages.
+- Separated completed M1–M8 milestones from proposed competition improvements and recorded the current map-layout and data limitations, with links to the plan and status handoff.
+- Verification: `npm run verify` passes (131 unit tests in 17 files). The first run timed out in the existing Inspector suite setup; a separate full rerun passed without changing configuration. `npm run test:e2e` built successfully and passed 48 of 51 checks, with timeouts in the 1440 px camera and two coordinate-entry checks; all three passed with `--last-failed --workers=1`. This is not a single clean full browser-suite run.
+- Manual browser review confirmed the landing page, Overview site-plan content, and selection of R1-1 opening the current map with terrain and finding markers visible. The full 1440/1100/800 px manual review was not repeated; the available browser interface did not expose viewport resizing. No application code changed.
+
 ### 2026-10-21: finding selection restores visible evidence (branch `ui-redesign`)
 
 - Selecting a finding now returns the map to the current survey, enables terrain and the findings overlay, opens the Findings tab, restores the desktop details panel, and closes the phone drawer so the terrain is visible. Reopening Details retains the selected item.
