@@ -50,6 +50,18 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: the app stops teaching one threshold and claiming a breach (fork #17)
+
+- Two separate claims were wrong, and both are explanation only: the engine's arithmetic is unchanged.
+- The Uncertainty page taught the noise band (kσ) as _the_ threshold, while R1 and R3 report a change only beyond `minChangeM + k·σ` (`changeThreshold`, `src/compliance/change.ts`): 0.14 m against 0.64 m at the default σ = 0.05 m. The 0.40 m example was therefore called a real change while the engine would report nothing.
+  - `src/ui/home/NoiseCheck.tsx` now takes the threshold from the engine's own helper, shows three figures (combined σ, noise band kσ, R1/R3 threshold minChange + kσ), draws both lines on the number line (shaded band, dashed threshold) and gives a three-way verdict: inside the band, distinguishable but not reportable, reportable.
+  - R2 is explained on its own line: it measures the ground against a fixed approved floor, uses the current survey's σ alone (2σ2 = 0.10 m at the default) and has no minimum-change allowance, so a floor breach a few centimetres deep is still a warning.
+  - The page subtitle is now "How much change the surveys can actually support".
+- The copy no longer asserts a breach in the fictional scenario: the landing headline is "See where a simulated mine breaks its permit." (was "…the digging broke the permit"), its Findings and Change captions say what the engine classifies and which lines a change must clear, the Permit rules page states the tests from `COMPLIANCE_CONFIG` (0.5 m + 2σ for R1 and R3, 2σ2 for R2) in both the introduction and each card, the Findings page says findings are the demo engine's classifications and not a legal determination, About says the same about the violation/warning labels, and the `<meta>` description matches. `ThresholdNote` says changes below the line are not reported, instead of calling them noise.
+- Tests: new `e2e/uncertainty.spec.ts`. The two thresholds are separate figures at the default preset (0.14 m and 0.64 m); the 0.40 m example is described as distinguishable but not reportable, with both numbers in the sentence; a preset and a slider move the figures and the wording together (11.3 m and 11.8 m, then 12 m becomes reportable); and one copy check walks landing → Findings → Permit rules → About for the simulated framing. Against the old code all three fail (heading missing, one threshold, "See where the digging broke the permit."). 133 unit tests, 64 browser checks.
+- Found while running the full suite: `e2e/landing-terrain.spec.ts` compared canvas shots after a fixed 2.5 s sleep and timed out under parallel load. It now waits for the canvas to exist and to be resized off its 300 × 150 default, and has a 90 s budget. Two clean full runs after the change.
+- Deliberate: the phone headline needs a wider column (14ch below 64rem) to stay three lines, so the first-screen budget from #23 still holds at 390 × 844 (links 750–801) and 800 × 900 (803–854). At 360 × 780 the second action still wraps below the fold, now about 100 px rather than 59, because this step's Findings caption is longer than #23's measurement.
+
 ### 2026-10-21: metric labels and their provenance tags stop competing on a phone (fork #24)
 
 - The Overview's figure cells put the provenance tag beside the label in a `justify-between` row, and the figures grid is two columns below 64rem, so at 390 px "Removed outside the lease" wrapped into its tag.

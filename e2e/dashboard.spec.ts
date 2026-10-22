@@ -32,7 +32,7 @@ test('the sidebar counts the findings and the home link leaves the dashboard', a
 
   await page.getByRole('link', { name: 'Back to home page' }).click()
   await expect(page).toHaveURL(/#\/$/)
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('See where the digging')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('See where a simulated mine')
 })
 
 test('the overview reports the engine result and the figures behind it', async ({ page }) => {

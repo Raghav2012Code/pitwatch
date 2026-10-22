@@ -1298,6 +1298,16 @@ body {
   .noise-marker.real {
     background: var(--color-violation);
   }
+  /* The R1/R3 reporting threshold: a second, sharper line than the noise band. */
+  .noise-limit {
+    position: absolute;
+    top: -10px;
+    bottom: -10px;
+    width: 2px;
+    translate: -50% 0;
+    background: repeating-linear-gradient(to bottom, var(--color-oxide) 0 4px, transparent 4px 8px);
+    transition: left 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
 
   /* Resolution panels: columns sweep in left to right when the page opens. */
   .res-panel {
@@ -1590,6 +1600,10 @@ body {
     .hero-stage {
       order: -1;
       min-height: min(46vh, 420px);
+    }
+    /* The phone headline needs a little more room per line, or it runs to four. */
+    .hero-title {
+      max-width: 14ch;
     }
     /* The controls are a fixed 244 px tall, so the model takes what is left of the stage. */
     .hero-model {

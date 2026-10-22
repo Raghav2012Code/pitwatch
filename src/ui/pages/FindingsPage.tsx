@@ -35,9 +35,13 @@ function List() {
         </h2>
         <ProvenanceTag value="derived" />
       </div>
+      <p className="mt-3 max-w-[44rem] text-[14px] leading-6 text-ink-dim">
+        These are the demo engine's classifications of a simulated change. A finding says where to
+        look first; it is not a legal determination.
+      </p>
       {findings.length === 0 ? (
         <p className="mt-3 text-[14px] text-ink-dim">
-          No change between the surveys breaks a permit rule.
+          No change in this simulated scenario breaks a permit rule.
         </p>
       ) : (
         <ul className="finding-grid mt-5">

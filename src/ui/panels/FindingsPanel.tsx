@@ -97,8 +97,7 @@ export function ThresholdNote() {
   return (
     <p className="mt-3 text-[11.5px] leading-4 text-ink-faint">
       A cell counts as changed when it moved more than {cfg.minChangeM} m plus {cfg.k}σ (σ ={' '}
-      {sigma.toFixed(2)} m for the two surveys combined). Smaller changes are treated as survey
-      noise.
+      {sigma.toFixed(2)} m for the two surveys combined). Changes below that line are not reported.
     </p>
   )
 }

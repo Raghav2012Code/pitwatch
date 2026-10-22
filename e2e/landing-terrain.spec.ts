@@ -9,12 +9,22 @@ import { expect, test } from '@playwright/test'
 // asserts the same switch does not change the landing model.
 
 test.use({ reducedMotion: 'reduce' })
+// Two scene builds and four screenshots, on software WebGL. Fine alone; under a full parallel
+// run the same work needs longer than the default budget.
+test.setTimeout(90_000)
 
 const relativeChange = (a: Buffer, b: Buffer) => Math.abs(a.length - b.length) / a.length
 
-async function settle(page: import('@playwright/test').Page, ms = 2500) {
+async function settle(page: import('@playwright/test').Page, ms = 2000) {
+  const canvas = page.locator('canvas').first()
+  // The scene chunk and the surveys are built lazily. Under a full parallel run that takes
+  // longer than a fixed sleep allows, and a half-built canvas would compare unequal for the
+  // wrong reason, so wait for the canvas to exist and to have been resized off its 300x150
+  // default first.
+  await expect(canvas).toBeVisible({ timeout: 30_000 })
+  await expect.poll(async () => (await canvas.boundingBox())?.width ?? 0).toBeGreaterThan(300)
   await page.waitForTimeout(ms)
-  return page.locator('canvas').first().screenshot()
+  return canvas.screenshot()
 }
 
 test('the landing model survives the map Terrain switch', async ({ page }) => {

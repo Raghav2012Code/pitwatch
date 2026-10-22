@@ -35,7 +35,7 @@ export const PAGES: Record<DashboardRoute, Page> = {
   },
   uncertainty: {
     title: 'Uncertainty',
-    subtitle: 'Why a change has to beat the survey noise to count',
+    subtitle: 'How much change the surveys can actually support',
     Icon: SigmaIcon,
   },
   about: {
