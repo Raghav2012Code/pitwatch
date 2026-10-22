@@ -28,7 +28,7 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 - App structure: landing page (`#/`) and a dashboard shell (`src/ui/shell/`: slate sidebar with a vertical drill-core strip, header with page title, status and SIMULATED DATA badge). Pages in `src/ui/pages/`: Overview, 3D map (`#/monitor`), Findings, Permit rules, Uncertainty, About the data. The sidebar is a 64 px icon rail on the 3D map by default (`sidebar: 'auto'`), full width elsewhere, a drawer below `lg`. Dashboard pages are ruled report sections, not stacks of identical cards.
 - 3D map layout: full-screen 3D canvas on a survey-paper backdrop (`--color-backdrop`, faint `<Relief />` contours, soft vignette; fog uses the same colour); a `ViewOffset` shifts the projection so the model centres in `.stage` (the area the side cards leave free, click-through except its controls). Left "Map" card (layers, key, exaggeration), right details card (Findings and Inspector tabs), camera presets + compass top-right, scale bar top-left from `xl` up and just above the timeline below that (a stage under ~437 px cannot hold the chip and the camera group in one row), timeline pill bottom-centre. Soft `.card` surfaces (8 px radius, shadow); strata stripes only on the sidebar edge, the landing bar and footer.
 - Each fact appears once: mine name in the sidebar, survey dates in the timeline and the Surveys section, nothing duplicated in map overlays.
-- Landing page (`#/`) shows the live 3D model of the simulated surveys, driven by four buttons, not by scroll. Topographic look: limestone paper, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity only (never status).
+- Landing page (`#/`) shows the live 3D model of the simulated surveys, driven by four buttons, not by scroll. Below `lg` the model comes first and the copy follows it, tight enough that both calls to action stay in the first screen. Topographic look: limestone paper, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity only (never status).
 - Type: Archivo variable; `.cond` (font-stretch 72%) for headings and big figures. JetBrains Mono for coordinates and dates.
 - All colours are tokens in `@theme`; components use `var(--color-*)` or `color-mix(...)`. Never hardcode a colour in a component.
 - Severity colour always pairs with a glyph shape: warning = triangle, violation = octagon, critical = diamond.
@@ -49,6 +49,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-21: the phone landing opens on the model (fork #23)
+
+- The hero put the copy first at every width and the stage had a 540 px floor, so on a 390 × 844 phone the model began at y = 760: the first screen was introduction only.
+- Below 64rem the stage is now `order: -1` with `min-height: min(46vh, 420px)`, and the copy is tightened: the paragraph has a one-line phone version (the long one stays from `sm` up), the hero gap and padding shrink, the buttons lose a little padding and type size so the two actions sit on one row, and the model area's floor drops to 140 px — the stage's controls take about 244 px, so the model gets what is left.
+- Measured with a throwaway layout probe: at 390 × 844 the stage runs 76–464 and both links sit at y 729–779, inside 844; at 800 × 900 the stage runs 76–490 and the links 803–854. At 360 × 780 the two buttons wrap and the second lands 59 px below the fold — deliberate, since the sizes the plan names are 390 and 800, and cutting more copy would cost the phone more than it gains.
+- Tests: `e2e/home.spec.ts` gains a case at each of 390 × 844 and 800 × 900 — the stage box is on the first screen, at least 200 px tall, at least 90% of it inside the viewport, the model canvas is mounted, and both links are fully within the first screen. The plan's literal assertions were not enough: against the old hero they passed, because the stage still nicked the fold (15.5% of it visible at 390, 58% at 800). With the visibility ratio added, the old layout fails at both sizes. 133 unit tests, 59 browser checks.
+- Browser check at 390 and 800 px: the model, the four view buttons, the caption, the clock, the headline and both calls to action all sit in one screen.
 
 ### 2026-10-21: the landing terrain survives the map's Terrain switch (fork #20)
 

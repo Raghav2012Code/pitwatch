@@ -1580,6 +1580,27 @@ body {
     position: absolute !important;
     inset: 0;
   }
+  /* Narrow screens: the live model is the reason to look, so it comes first and the copy
+     follows it — small enough that both calls to action are still on the first screen. */
+  @media (width < 64rem) {
+    .hero {
+      gap: 20px;
+      padding-block: 12px 40px;
+    }
+    .hero-stage {
+      order: -1;
+      min-height: min(46vh, 420px);
+    }
+    /* The controls are a fixed 244 px tall, so the model takes what is left of the stage. */
+    .hero-model {
+      min-height: 140px;
+    }
+    /* Slightly smaller buttons, so the two calls to action sit on one row at phone width. */
+    .hero-copy .btn-lg {
+      padding-inline: 14px;
+      font-size: 15px;
+    }
+  }
   .hero-controls {
     position: relative;
     z-index: 2;

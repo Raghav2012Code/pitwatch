@@ -38,6 +38,37 @@ test('the landing model is driven by buttons, not by scrolling', async ({ page }
   await expect(page.getByRole('heading', { name: /Current survey, 22 Aug 2026/ })).toBeVisible()
 })
 
+// The hero used to open on its copy, so a phone's first screen had no model in it at all.
+for (const viewport of [
+  { width: 390, height: 844 },
+  { width: 800, height: 900 },
+]) {
+  test(`the landing model and both actions share the first screen at ${viewport.width}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport)
+    await page.goto('/')
+
+    const stage = page.locator('.hero-stage')
+    await expect(stage).toBeVisible()
+    const box = await stage.boundingBox()
+    expect(box).not.toBeNull()
+    // On screen, and big enough that the model is worth looking at.
+    expect(box!.y).toBeLessThan(viewport.height)
+    expect(box!.y + box!.height).toBeGreaterThan(0)
+    expect(box!.height).toBeGreaterThanOrEqual(200)
+    // And nearly all of it inside the first screen: the model is why the page opens on it.
+    // With the copy first the stage still intersected the fold, but only its top strip.
+    await expect(stage).toBeInViewport({ ratio: 0.9 })
+
+    // The live model itself, once the surveys are built.
+    await expect(page.locator('.hero-model canvas')).toBeVisible({ timeout: 30_000 })
+
+    await expect(page.locator('.hero-copy a[href="#/overview"]')).toBeInViewport({ ratio: 1 })
+    await expect(page.locator('.hero-copy a[href="#/monitor"]')).toBeInViewport({ ratio: 1 })
+  })
+}
+
 test('the landing page can open the 3D map directly', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('link', { name: 'Explore the 3D map' }).first().click()
