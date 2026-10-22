@@ -44,6 +44,31 @@ test('the phone navigation drawer is clean', async ({ page }) => {
   expect(await seriousViolations(page)).toEqual([])
 })
 
+test('Keyboard stays inside the open phone navigation drawer', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/#/overview')
+  const menu = page.getByRole('button', { name: 'Menu' })
+  await menu.click()
+  const nav = page.getByRole('navigation', { name: 'Dashboard' })
+  await expect(nav).toBeVisible()
+
+  const insideNav = page.locator('#sidebar :focus')
+  const stops = await nav.locator('a[href], button:not([disabled])').count()
+  expect(stops).toBeGreaterThan(1)
+
+  // Opening the drawer moved focus into it, and no number of Tabs walks out.
+  await expect(insideNav).toHaveCount(1)
+  for (let i = 0; i < stops + 2; i++) await page.keyboard.press('Tab')
+  await expect(insideNav).toHaveCount(1)
+  await page.keyboard.press('Shift+Tab')
+  await expect(insideNav).toHaveCount(1)
+
+  // Escape closes the drawer and focus returns to the button that opened it.
+  await page.keyboard.press('Escape')
+  await expect(nav).toBeHidden()
+  await expect(menu).toBeFocused()
+})
+
 test('monitor has no critical or serious accessibility violations', async ({ page }) => {
   await page.goto('/#/monitor')
   await expect(page.getByRole('banner').getByText('2 violations, 3 warnings')).toBeVisible({

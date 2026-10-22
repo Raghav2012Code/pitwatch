@@ -50,6 +50,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: keyboard focus stays in the open phone drawer (fork #19)
+
+- The drawer handled Escape and returned focus to the Menu button, but Tab walked straight out into the page behind the scrim, where focus is invisible.
+- Tab and Shift+Tab now wrap inside `#sidebar` between its visible controls, and a focus that is somehow outside the drawer is pulled back to the first (or last) control.
+- The recorded "focus moves to the first navigation item" never actually worked: `.sidebar` is `visibility: hidden` until the browser applies the open style, and a `focus()` on a hidden element is dropped — the call ran in the effect, before that frame. Focus now retries on the next frames until it sticks, which is state-driven rather than a guessed duration. Escape still returns focus to the opener.
+- Tests: `e2e/a11y.spec.ts` gains a keyboard check — focus is inside the drawer on open, more Tabs than there are controls still leave it inside, Shift+Tab too, and Escape closes the drawer with focus back on the Menu button. 133 unit tests, 56 browser checks.
+- Found with a throwaway probe script rather than by reading the code: counting focusables and pressing keys showed focus never entered the drawer at all.
+
 ### 2026-10-21: findings first in the phone map drawer (fork #22)
 
 - The drawer used to render the layer block before the tab panel, so on a phone the first finding started below eight switches and the exaggeration slider (about 440 px of controls).

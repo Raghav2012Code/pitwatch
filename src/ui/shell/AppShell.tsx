@@ -22,18 +22,57 @@ export function AppShell({ route, children }: { route: DashboardRoute; children:
     useAppStore.getState().setMenuOpen(false)
   }, [route])
 
-  // The phone drawer: Esc closes it and focus goes back to the button that opened it.
+  // The phone drawer: Esc closes it and focus goes back to the button that opened it. While the
+  // drawer is open Tab stays inside it — the page behind the scrim must not take focus.
   useEffect(() => {
     if (!menuOpen) return
     opener.current = document.activeElement as HTMLElement | null
-    document.querySelector<HTMLElement>('#sidebar .nav-item')?.focus()
+    const sidebar = document.querySelector<HTMLElement>('#sidebar')
+    // The drawer is `visibility: hidden` until the browser applies the open style, and a focus()
+    // in that frame is dropped even once it reports visible, so retry until it sticks rather
+    // than guess a duration.
+    let frame = 0
+    let raf = requestAnimationFrame(function move() {
+      const target = sidebar?.querySelector<HTMLElement>('.nav-item')
+      target?.focus()
+      if (document.activeElement !== target && frame++ < 10) {
+        raf = requestAnimationFrame(move)
+      }
+    })
+    // Visible focusable controls of the drawer, in tab order.
+    const focusables = () =>
+      Array.from(
+        sidebar?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      ).filter((el) => el.offsetParent !== null)
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      e.preventDefault()
-      setMenuOpen(false)
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        setMenuOpen(false)
+        return
+      }
+      if (e.key !== 'Tab') return
+      const items = focusables()
+      if (items.length === 0) return
+      const first = items[0]!
+      const last = items[items.length - 1]!
+      const focus = e.shiftKey ? last : first
+      // A control outside the drawer (or the edge in the shift direction) wraps inside.
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        focus.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        focus.focus()
+      } else if (!items.includes(document.activeElement as HTMLElement)) {
+        e.preventDefault()
+        focus.focus()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => {
+      cancelAnimationFrame(raf)
       window.removeEventListener('keydown', onKey)
       opener.current?.focus?.()
     }
