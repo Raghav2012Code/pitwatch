@@ -14,7 +14,7 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
 - **Dashboard** with a sidebar (a slim icon rail on the 3D map, a drawer on phones):
   - **Overview** (`#/overview`): the verdict, four headline figures, the result for each permit rule, the findings to look at first, and the survey, surface and lease facts. An interactive site plan draws the lease, permitted zones, changed cells and finding pins from the same data as the 3D map; select a pin with a pointer, touch, Enter or Space to open its finding on the map.
   - **Findings** (`#/findings`): every finding with its explanation and figures, and a Show on map button.
-  - **Permit rules** (`#/rules`), **Uncertainty** (`#/uncertainty`: the 2σ calculator and the resolution comparison) and **About the data** (`#/about`, with the keyboard shortcuts).
+  - **Permit rules** (`#/rules`), **Uncertainty** (`#/uncertainty`: combined survey σ, the noise band and the threshold the rules report beyond, plus the resolution comparison) and **About the data** (`#/about`, with the keyboard shortcuts).
 - **3D map** (`#/monitor`):
   - 3D terrain of the current survey with a simulated aerial image draped over it. The block sides show a soil profile.
   - Optional elevation tint, with colours spread so the plateau's relief shows, and optional 5 m contours.
@@ -22,10 +22,10 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
   - Oblique, top and pit camera views, a compass and a live scale bar.
   - Click the terrain with the Inspect tool to read a point (elevation ± uncertainty, change, slope, lease and pit-floor status, findings there), or switch to Measure for distances, grade and an elevation profile of current against baseline. Without a mouse, type an easting and northing in the Inspector tab instead.
   - A survey slider on the timeline switches the map between the baseline and current surveys. Findings can be opened from their pins and flown to from the Findings tab.
-  - Overlay layers: lease boundary, safety buffer, pit and dump zone outlines, measured change (excavated and filled, only beyond the noise threshold) and finding markers, all drawn from the engine output.
+  - Overlay layers: lease boundary, safety buffer, pit and dump zone outlines, measured change (excavated and filled, only beyond the reporting threshold of 0.5 m plus twice the combined survey σ) and finding markers, all drawn from the engine output.
   - Header compliance status, and a details panel with a Findings tab (every finding with its explanation and figures) and an Inspector tab.
   - Selecting a finding restores the current survey, terrain and finding markers, frames the chosen pin and opens the Findings tab. Selection stays synchronized with the Overview. On phones, the details drawer closes to reveal the terrain and retains the selected finding when reopened.
-  - Layer switches and vertical exaggeration are available in the phone details drawer. On larger screens, the Map card holds these controls; its key can be folded to leave more room.
+  - On phones the details drawer opens on the findings, with the layer switches and vertical exaggeration under a Map layers disclosure below them. On larger screens, the Map card holds these controls; its key can be folded to leave more room.
 - **Compliance engine** (`src/compliance/`): change detection, rules R1–R3, clustering into findings, severity and plain-English explanations. All of it is pure TypeScript and unit-tested.
 
 The original M1–M8 milestones are complete. Further interface improvements are tracked separately in the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md); only its first P0, finding selection that reveals its evidence, is implemented.
@@ -184,7 +184,7 @@ Vite, React 19, TypeScript (strict), three.js with @react-three/fiber and drei, 
 
 - This is a frontend demonstration using a fictional permit and synthetic surveys. There is no backend, real survey ingestion or regulatory certification.
 - Vertical survey uncertainty is modelled; horizontal position error is not. A coordinate outside the survey grid can still be inspected for position and lease status, but has no elevation or change reading.
-- Around 1100 px wide, the map is tight with both side panels open. Use `[` and `]` to toggle the Map and Details panels. At 800 px, the layers panel still covers a substantial part of the model.
+- Below 1280 px the details panel starts closed so the model keeps the room; the header's Details button or `]` brings it back, and `[` toggles the Map card. At 800 px the Map card still covers part of the model.
 - First-visit map guidance, visible icon-rail tooltips and desktop dragging of the landing model remain proposed improvements.
 
 See the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md) for proposed work, [STATUS.md](STATUS.md) for the redesign handoff, and [AGENTS.md](AGENTS.md) for the detailed update log and contributor workflow.
