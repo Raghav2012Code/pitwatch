@@ -50,6 +50,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: findings first in the phone map drawer (fork #22)
+
+- The drawer used to render the layer block before the tab panel, so on a phone the first finding started below eight switches and the exaggeration slider (about 440 px of controls).
+- The block now sits below the tab content behind a closed `<details>` with the summary "Map layers and vertical scale". The drawer opens on the findings; opening the disclosure brings the same `LayerSwitches` and slider back, so there is still exactly one set of controls at every width. The floating Map card is unchanged from `md` up.
+- Tests: `e2e/mobile-layers.spec.ts` — the reachability check opens the disclosure first, and two new assertions cover the point of the issue: a collapsed, named disclosure (hidden switches before it opens) and the first finding's heading visible near the tabs at 390 px. 133 unit tests, 55 browser checks.
+- Browser check at 390 px: the drawer opens straight onto "Lease boundary and buffer" with the layers disclosure closed underneath.
+
 ### 2026-10-21: the map gives the model room at laptop widths (fork #21)
 
 - Both floating panels were open on arrival, and the stage reserved a fixed 272 px and 392 px for them, so at 1100 px the model had a 372 px slot between them: the complaint in the issue, confirmed by measurement in the browser.
