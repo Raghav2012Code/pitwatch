@@ -50,6 +50,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-21: metric labels and their provenance tags stop competing on a phone (fork #24)
+
+- The Overview's figure cells put the provenance tag beside the label in a `justify-between` row, and the figures grid is two columns below 64rem, so at 390 px "Removed outside the lease" wrapped into its tag.
+- The `<dt>` now stacks below `sm` (`max-sm:flex-col max-sm:items-start max-sm:gap-y-1`). From `sm` up the classes are the ones that were there before, so the desktop cells do not move.
+- The plan's proposed `flex-wrap` with baseline alignment was not taken: measured, it also drops the tag under the label at 1280 px, because the four-column cell is about 200 px wide and label plus tag do not fit on one line. The change is width-gated only.
+- A stacked cell renders label, tag, value, note: the tag sits against the figure it describes. (The plan put the tag after the note; it lives inside the `<dt>`, so it renders before the value.)
+- Tests: new `e2e/overview-metrics.spec.ts` measures the label with a DOM range, since it is a bare text node beside the tag span. At 390 × 844 the tag's top must be at or below the label's bottom; at 1280 × 800 the tag must start above the label's bottom, i.e. beside it. Against the old markup the phone case fails (tag top 528, label bottom 562). 133 unit tests, 61 browser checks.
+- Browser check at 390 and 1280 px: the phone cells read label, tag, value, note with no overlap, and the desktop cells are unchanged.
+
 ### 2026-10-21: the phone landing opens on the model (fork #23)
 
 - The hero put the copy first at every width and the stage had a 540 px floor, so on a 390 × 844 phone the model began at y = 760: the first screen was introduction only.

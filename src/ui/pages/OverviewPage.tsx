@@ -122,7 +122,7 @@ function Figure({
 }) {
   return (
     <div className="figure">
-      <dt className="flex items-center justify-between gap-2 text-[13px] text-ink-dim">
+      <dt className="flex items-center justify-between gap-2 text-[13px] text-ink-dim max-sm:flex-col max-sm:items-start max-sm:gap-y-1">
         {label}
         {provenance && <ProvenanceTag value={provenance} />}
       </dt>
