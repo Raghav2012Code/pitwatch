@@ -180,6 +180,12 @@ export function HomePage() {
           <button type="button" onClick={() => goTo('checks')}>
             What it checks
           </button>
+          <a href={MONITOR_HREF} className="max-lg:hidden">
+            3D map
+          </a>
+          <a href={ROUTE_HREF.about} className="max-lg:hidden">
+            About the data
+          </a>
         </nav>
         <div className="ml-auto flex items-center gap-3">
           <span className="stamp">
