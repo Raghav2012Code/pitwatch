@@ -40,52 +40,63 @@ export function RulesPage() {
 
   return (
     <Page>
-      <p className="max-w-[44rem] text-[15.5px] leading-7 text-ink-dim">
-        A lease is written in sentences. PitWatch turns each condition into a test that every 8 m
-        grid cell either passes or fails, and only fails it when the change is bigger than the
-        survey can be trusted to measure ({COMPLIANCE_CONFIG.k}σ, where σ is the combined error of
-        the two surveys).
-      </p>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-12">
+        <p className="max-w-[44rem] text-[15.5px] leading-7 text-ink-dim">
+          A lease is written in sentences. PitWatch turns each condition into a test that every 8 m
+          grid cell either passes or fails, and fails it only when the change is bigger than the
+          survey can be trusted to measure.
+        </p>
+        <div className="permit-test self-start">
+          <span className="text-ink-faint">A cell counts as changed when</span>
+          <code>
+            |Δh| &gt; {COMPLIANCE_CONFIG.minChangeM} m + {COMPLIANCE_CONFIG.k}σ
+          </code>
+          <span className="text-ink-faint">σ is the combined error of the two surveys.</span>
+        </div>
+      </div>
 
-      <ol className="rule-list mt-8">
+      <ol className="rule-rows">
         {CONDITIONS.map(({ rule, Icon, text, test }) => {
           const own = findings.filter((f) => f.ruleId === rule)
           const tone = own.length ? worstTone(own) : 'clear'
           const Glyph = tone === 'clear' ? null : GLYPH[tone]
           return (
-            <li key={rule} className="rule-card">
-              <div className="flex items-center gap-3">
-                <span className="rule-icon">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className="font-mono text-[12px] text-oxide">{rule}</span>
+            <li key={rule} className="rule-row">
+              <span className="rule-id cond" aria-hidden="true">
+                {rule}
+              </span>
+              <div>
+                <h2 className="cond flex items-center gap-3 text-[26px] leading-tight font-bold text-ink">
+                  <Icon className="h-5 w-5 shrink-0 text-accent" />
+                  {RULE_NAMES[rule]}
+                </h2>
+                <p className="mt-2 max-w-[38rem] text-[14.5px] leading-6 text-ink-dim">{text}</p>
+                <div className="permit-test mt-4 max-w-[38rem]">
+                  <span className="text-ink-faint">Checked when</span>
+                  <code>{test}</code>
+                </div>
               </div>
-              <h2 className="cond mt-3 text-[24px] leading-tight font-bold text-ink">
-                {RULE_NAMES[rule]}
-              </h2>
-              <p className="mt-2 text-[14.5px] leading-6 text-ink-dim">{text}</p>
-              <div className="permit-test">
-                <span className="text-ink-faint">Checked when</span>
-                <code>{test}</code>
-              </div>
-              <div className={`rule-card-foot ${ready ? `tone-${tone}` : ''}`}>
-                <span
-                  className={`flex items-center gap-2 text-[13px] ${ready ? 'text-(--tone)' : 'text-ink-faint'}`}
-                >
-                  {Glyph ? (
-                    <Glyph className="h-[18px] w-[18px]" />
+              <div className="space-y-2">
+                <p className={`rule-result-line ${ready ? `tone-${tone}` : ''}`}>
+                  {ready ? (
+                    <>
+                      {Glyph ? (
+                        <Glyph className="h-[18px] w-[18px]" />
+                      ) : (
+                        <span className="status-led" data-tone="clear" aria-hidden="true" />
+                      )}
+                      {own.length ? countText(own) : 'Clear'}
+                    </>
                   ) : (
-                    <span className="status-led" data-tone={ready ? 'clear' : undefined} />
+                    <>
+                      <span className="status-led" aria-hidden="true" />
+                      Not evaluated yet
+                    </>
                   )}
-                  {ready
-                    ? own.length
-                      ? countText(own)
-                      : 'Clear in this demo'
-                    : 'Not evaluated yet'}
-                </span>
+                </p>
                 {own.length > 0 && (
                   <a href={ROUTE_HREF.findings} className="link-arrow">
-                    View
+                    View findings
                     <ArrowRightIcon className="h-4 w-4" />
                   </a>
                 )}

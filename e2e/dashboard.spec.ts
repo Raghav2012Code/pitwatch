@@ -47,14 +47,14 @@ test('the overview reports the engine result and the figures behind it', async (
 
   // R1 to R3 each report a result.
   for (const rule of ['Lease boundary and buffer', 'Approved pit floor', 'Permitted dump zones'])
-    await expect(page.getByText(rule).first()).toBeVisible()
+    await expect(page.locator('.rule-result', { hasText: rule })).toBeVisible()
 })
 
 test('Show on map from the findings page lands on the map with that finding selected', async ({
   page,
 }) => {
   await page.goto('/#/findings')
-  const cards = page.locator('li.finding')
+  const cards = page.locator('li.frow')
   await expect(cards).toHaveCount(5, { timeout: 30_000 })
 
   await cards.first().getByRole('button', { name: 'Show on map' }).click()
@@ -65,18 +65,17 @@ test('Show on map from the findings page lands on the map with that finding sele
   await expect(page.locator('#details-tabpanel li.finding[data-selected]')).toHaveCount(1)
 })
 
-test('the sidebar is a slim rail on the map and the choice sticks', async ({ page }) => {
+test('the sidebar opens as a slim rail and expanding it sticks', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/#/overview')
   const nav = page.getByRole('navigation', { name: 'Dashboard' })
   const width = async () => (await page.locator('#sidebar').boundingBox())?.width ?? 0
 
-  await expect.poll(width).toBeGreaterThan(200)
-
-  // The map wants the room, so the sidebar narrows by itself; names stay for screen readers.
-  await nav.getByRole('link', { name: '3D map' }).click()
+  // Content gets the width; link names stay for screen readers.
   await expect.poll(width).toBeLessThan(100)
   await expect(nav.getByRole('link', { name: '3D map' })).toBeVisible()
+  await nav.getByRole('link', { name: '3D map' }).click()
+  await expect.poll(width).toBeLessThan(100)
 
   // Expanding it by hand is remembered on the other pages too.
   await page.getByRole('button', { name: 'Expand sidebar' }).click()
@@ -115,7 +114,7 @@ test('leaving the map forgets the fly-to, so the next visit opens with the intro
   page,
 }) => {
   await page.goto('/#/findings')
-  await page.locator('li.finding').first().getByRole('button', { name: 'Show on map' }).click()
+  await page.locator('li.frow').first().getByRole('button', { name: 'Show on map' }).click()
   await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible({ timeout: 30_000 })
 
   const nav = page.getByRole('navigation', { name: 'Dashboard' })

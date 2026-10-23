@@ -14,7 +14,7 @@ export function LayerPanel() {
     <nav
       aria-label="Map"
       style={{ '--d': '0.15s' } as CSSProperties}
-      className="layer-panel card enter-left absolute top-4 left-4 z-10 hidden max-h-[calc(100%-32px)] w-[240px] flex-col overflow-y-auto md:flex"
+      className="layer-panel card enter-left absolute top-4 left-4 z-10 hidden max-h-[calc(100%-32px)] w-[208px] flex-col xl:w-[240px] overflow-y-auto md:flex"
     >
       <section className="px-3 pt-3 pb-2">
         <LayerSwitches />

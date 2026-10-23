@@ -8,10 +8,12 @@ import { MapPage } from './ui/pages/MapPage'
 import { OverviewPage } from './ui/pages/OverviewPage'
 import { RulesPage } from './ui/pages/RulesPage'
 import { UncertaintyPage } from './ui/pages/UncertaintyPage'
-import { plannedHash, useRoute, type Route } from './ui/route'
+import { LegalPage } from './ui/LegalPage'
+import { isLegal, plannedHash, useRoute } from './ui/route'
+import type { DashboardRoute } from './ui/shell/nav'
 import { AppShell } from './ui/shell/AppShell'
 
-const PAGES: Record<Exclude<Route, 'home'>, () => React.JSX.Element> = {
+const PAGES: Record<DashboardRoute, () => React.JSX.Element> = {
   overview: OverviewPage,
   monitor: MapPage,
   findings: FindingsPage,
@@ -49,6 +51,7 @@ export default function App() {
   }, [route])
 
   if (route === 'home') return <HomePage />
+  if (isLegal(route)) return <LegalPage route={route} />
   const Page = PAGES[route]
   return (
     <AppShell route={route}>

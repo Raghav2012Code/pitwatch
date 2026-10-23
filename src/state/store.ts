@@ -19,7 +19,7 @@ export const EXAGGERATION = { min: 1, max: 3, initial: 1.5 } as const
 interface AppState {
   activeTab: PanelTab
   drawerOpen: boolean
-  /** The viewer's choice for the sidebar; `auto` until they use the collapse control. */
+  /** The viewer's choice for the sidebar; a slim `rail` until they expand it. */
   sidebar: SidebarMode
   /** Phones: the navigation drawer. */
   menuOpen: boolean
@@ -63,9 +63,12 @@ interface AppState {
 export const useAppStore = create<AppState>((set) => ({
   activeTab: 'findings',
   drawerOpen: false,
-  sidebar: 'auto',
+  sidebar: 'rail',
   menuOpen: false,
-  layersHidden: false,
+  // Between 1024 and 1280 px both cards leave the model little room: start with the layers card
+  // folded away (the header toggle and the [ key bring it back).
+  layersHidden:
+    typeof window !== 'undefined' && window.innerWidth >= 1024 && window.innerWidth < 1280,
   detailsHidden: false,
   // Natural look by default: aerial image, no tint or contours; the lease line and the
   // engine's findings are on because they are what the monitor is for.

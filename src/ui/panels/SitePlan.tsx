@@ -5,11 +5,13 @@ import { useAppStore } from '../../state/store'
 import { useTerrain } from '../../state/terrain'
 import { GLYPH, RULE_NAMES, toneOf } from '../findings'
 import { ProvenanceTag } from '../ProvenanceTag'
-import { navigate } from '../route'
+import { navigate, ROUTE_HREF } from '../route'
 
 /** Marker size in metres on the plan (about 24 px at the width the Overview gives it). */
 const PIN = 104
 const SCALE_BAR_M = 500
+/** Smoothing factor for the change mask: output pixels per grid cell. */
+const SMOOTH = 6
 
 /**
  * Pins nudge away from each other so two nearby findings (R1-1 and R1-2 sit 30 m apart) can both
@@ -51,31 +53,51 @@ export function SitePlan() {
   const selectedFinding = useAppStore((s) => s.selectedFinding)
   const selectFinding = useAppStore((s) => s.selectFinding)
 
-  // One pixel per grid cell: rust where ground was removed, blue where it was added.
+  // The change mask, smoothed: each class is drawn one pixel per cell, enlarged with bilinear
+  // filtering and cut at half strength, so its edge is a clean curve rather than a staircase.
   const image = useMemo(() => {
     if (!change) return null
     const { cols, rows } = change.grid
-    const canvas = document.createElement('canvas')
-    canvas.width = cols
-    canvas.height = rows
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return null
-    const data = ctx.createImageData(cols, rows)
     const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
-    const cut = rgb(OVERLAY.cut)
-    const fill = rgb(OVERLAY.fill)
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const i = row * cols + col
-        const colour = change.excavated[i] ? cut : change.filled[i] ? fill : null
-        if (!colour) continue
-        // Row 0 is the southern edge, and the top of the picture is north.
-        const o = ((rows - 1 - row) * cols + col) * 4
-        data.data.set([...colour, 235], o)
+    const out = document.createElement('canvas')
+    out.width = cols * SMOOTH
+    out.height = rows * SMOOTH
+    const outCtx = out.getContext('2d')
+    if (!outCtx) return null
+    const result = outCtx.createImageData(out.width, out.height)
+    const layer = (cells: ArrayLike<number | boolean>, colour: number[]) => {
+      const small = document.createElement('canvas')
+      small.width = cols
+      small.height = rows
+      const sctx = small.getContext('2d')
+      const big = document.createElement('canvas')
+      big.width = out.width
+      big.height = out.height
+      const bctx = big.getContext('2d')
+      if (!sctx || !bctx) return
+      const mask = sctx.createImageData(cols, rows)
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          // Row 0 is the southern edge, and the top of the picture is north.
+          if (cells[row * cols + col]) mask.data[((rows - 1 - row) * cols + col) * 4 + 3] = 255
+        }
+      }
+      sctx.putImageData(mask, 0, 0)
+      bctx.imageSmoothingEnabled = true
+      bctx.imageSmoothingQuality = 'high'
+      bctx.drawImage(small, 0, 0, big.width, big.height)
+      const px = bctx.getImageData(0, 0, big.width, big.height).data
+      for (let i = 0; i < px.length; i += 4) {
+        const edge = Math.min(1, Math.max(0, (px[i + 3]! - 96) / 64))
+        if (edge > 0) {
+          result.data.set([...colour, Math.round(235 * edge)], i)
+        }
       }
     }
-    ctx.putImageData(data, 0, 0)
-    return canvas.toDataURL()
+    layer(change.excavated, rgb(OVERLAY.cut))
+    layer(change.filled, rgb(OVERLAY.fill))
+    outCtx.putImageData(result, 0, 0)
+    return out.toDataURL()
   }, [change])
 
   const pins = useMemo(() => placePins(findings), [findings])
@@ -107,7 +129,12 @@ export function SitePlan() {
         <h2 id="site-plan" className="section-title">
           Site plan
         </h2>
-        <ProvenanceTag value="derived" />
+        <div className="flex items-center gap-3">
+          <ProvenanceTag value="derived" />
+          <a href={ROUTE_HREF.monitor} className="btn-primary">
+            Explore in 3D
+          </a>
+        </div>
       </div>
       <figure className="mt-3">
         <svg

@@ -22,6 +22,14 @@ test('home has no critical or serious accessibility violations', async ({ page }
   expect(await seriousViolations(page)).toEqual([])
 })
 
+for (const route of ['terms', 'license', 'contact']) {
+  test(`${route} has no critical or serious accessibility violations`, async ({ page }) => {
+    await page.goto(`/#/${route}`)
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    expect(await seriousViolations(page)).toEqual([])
+  })
+}
+
 // Every dashboard page, once the engine has reported, so the scan sees real content.
 for (const route of ['overview', 'findings', 'rules', 'uncertainty', 'about']) {
   test(`${route} has no critical or serious accessibility violations`, async ({ page }) => {

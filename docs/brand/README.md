@@ -3,7 +3,7 @@
 The mark joins the nested benches of an open pit with an observing eye. The central diamond is a survey point, not a severity indicator. The website pairs it with its existing Archivo wordmark.
 
 - `public/logo.svg`: transparent slate mark, redrawn as paths for sharp scaling.
-- `public/favicon.svg`: limestone mark on a slate tile.
+- `public/favicon.svg`: bolder two-ring version of the mark on a slate tile, with an ochre survey point, drawn to stay legible at 16 px.
 - `public/favicon-32.png`: 32 px browser fallback.
 - `public/apple-touch-icon.png`: 180 px home-screen icon with an opaque slate background.
 - `generated-mark.png`: original transparent image from the built-in image generation tool; visual reference for the production SVG.

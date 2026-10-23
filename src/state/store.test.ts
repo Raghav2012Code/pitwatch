@@ -11,7 +11,7 @@ describe('app store', () => {
 
   it('remembers the sidebar choice and the phone menu separately', () => {
     const s = useAppStore.getState
-    expect([s().sidebar, s().menuOpen]).toEqual(['auto', false])
+    expect([s().sidebar, s().menuOpen]).toEqual(['rail', false])
     s().setSidebar('rail')
     s().setMenuOpen(true)
     expect([s().sidebar, s().menuOpen]).toEqual(['rail', true])

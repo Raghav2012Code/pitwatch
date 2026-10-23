@@ -21,8 +21,10 @@ describe('plannedHash', () => {
 })
 
 describe('isDashboard', () => {
-  it('treats every screen but the landing page as part of the dashboard', () => {
+  it('treats every screen but the landing and legal pages as part of the dashboard', () => {
     expect(isDashboard('home')).toBe(false)
+    for (const route of ['terms', 'license', 'contact'] as const)
+      expect(isDashboard(route)).toBe(false)
     for (const route of [
       'overview',
       'monitor',

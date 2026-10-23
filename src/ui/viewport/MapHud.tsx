@@ -75,9 +75,14 @@ export function ToolControls() {
   const survey = useTerrain((s) => s.surveys.current)
 
   const m = survey && a && b ? measureOnSurface(survey.grid, survey.elevations, a, b) : null
-  let hint = 'Click the terrain to read a point.'
+  // A finger taps and pinches; a pointer clicks. Say which, so the hint is never wrong.
+  const touch = window.matchMedia('(pointer: coarse)').matches
+  const press = touch ? 'Tap' : 'Click'
+  let hint = touch
+    ? 'Drag to turn, pinch to zoom, tap to read a point.'
+    : 'Click the terrain to read a point.'
   if (tool === 'measure') {
-    hint = !a ? 'Click point A.' : !b ? 'Click point B.' : ''
+    hint = !a ? `${press} point A.` : !b ? `${press} point B.` : ''
   } else if (picked) {
     hint = 'Point read. See Inspector.'
   }
@@ -319,7 +324,7 @@ export function ScaleBar() {
   // and the camera group in one row, so it drops under the timeline instead of covering a button.
   return (
     <div
-      className="map-chip enter-down pointer-events-none absolute top-4 left-4 flex items-center gap-2.5 max-xl:top-auto max-xl:bottom-24"
+      className="map-chip enter-down pointer-events-none absolute top-4 left-4 flex items-center gap-2.5 max-xl:top-auto max-xl:bottom-24 max-sm:bottom-[8.25rem]"
       style={delay(1.2)}
       aria-hidden="true"
     >

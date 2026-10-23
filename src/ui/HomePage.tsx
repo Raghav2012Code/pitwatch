@@ -23,7 +23,7 @@ import { SceneErrorBoundary } from './viewport/SceneErrorBoundary'
 /*
  * The landing page: what PitWatch does, shown on the live 3D model of the simulated surveys,
  * and one click into the dashboard. The model is driven by four buttons, and the sections
- * below it are wired back to the model, so the page reads as one demonstration.
+ * below it are wired back to the model, so the page reads as one piece.
  */
 
 // three.js is large; fetch it only for the landing model.
@@ -37,6 +37,7 @@ const VIEWS = [
   {
     id: 1,
     label: 'Baseline',
+    sub: BASELINE ? formatDate(BASELINE.date) : '',
     t: 0,
     title: `Baseline survey, ${BASELINE ? formatDate(BASELINE.date) : ''}`,
     text: 'The ground as it was: every bench, ramp and floor of the pit, from a drone survey.',
@@ -44,6 +45,7 @@ const VIEWS = [
   {
     id: 2,
     label: 'Current',
+    sub: CURRENT ? formatDate(CURRENT.date) : '',
     t: 1,
     title: `Current survey, ${CURRENT ? formatDate(CURRENT.date) : ''}`,
     text: `The same ground ${DAYS} days later. The west wall has been pushed back, a new cut has opened on the east side and the floor is a bench deeper.`,
@@ -51,6 +53,7 @@ const VIEWS = [
   {
     id: 3,
     label: 'Change',
+    sub: 'the difference',
     t: 1,
     title: 'Measured change',
     text: 'Rust where rock was removed, blue where material was added. Anything smaller than the survey noise is ignored.',
@@ -58,6 +61,7 @@ const VIEWS = [
   {
     id: 4,
     label: 'Findings',
+    sub: 'vs the permit',
     t: 1,
     title: 'Held against the permit',
     text: 'Each pin is a place that breaks the lease. Red cells are violations, purple the most severe ones, amber cells warnings.',
@@ -176,12 +180,15 @@ export function HomePage() {
           <button type="button" onClick={() => goTo('checks')}>
             What it checks
           </button>
+          <a href={MONITOR_HREF} className="max-lg:hidden">
+            3D map
+          </a>
+          <a href={ROUTE_HREF.about} className="max-lg:hidden">
+            About the data
+          </a>
         </nav>
         <div className="ml-auto flex items-center gap-3">
-          <span className="stamp">
-            <span className="stamp-dot" aria-hidden="true" />
-            SIMULATED DATA
-          </span>
+          <span className="sim-note">Simulated data</span>
           <a href={OVERVIEW_HREF} className="btn-primary max-sm:hidden">
             Open the dashboard
           </a>
@@ -192,11 +199,11 @@ export function HomePage() {
         <section className="hero">
           <div className="hero-copy">
             <h1 className="cond hero-title">See where the digging broke the permit.</h1>
-            <p className="mt-6 max-w-[34rem] text-[18px] leading-8 text-ink-dim">
+            <p className="mt-6 max-w-[34rem] text-[18px] leading-8 text-ink-dim max-sm:mt-0 max-sm:text-[16px] max-sm:leading-7">
               PitWatch compares two drone surveys of an open-pit mine in 3D and checks every change
               against the lease: the boundary, the approved depth and the permitted dump zones.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap gap-3 max-sm:mt-0">
               <a href={OVERVIEW_HREF} className="btn-primary btn-lg">
                 Open the dashboard
               </a>
@@ -227,7 +234,7 @@ export function HomePage() {
                 <dd>3</dd>
               </div>
               <div>
-                <dt>Result on this demo</dt>
+                <dt>Result</dt>
                 <dd>{ready ? countText(findings) : 'Building the surveys…'}</dd>
               </div>
             </dl>
@@ -251,6 +258,9 @@ export function HomePage() {
               )}
             </div>
 
+            <p className="model-hint" aria-hidden="true">
+              Drag to turn
+            </p>
             <div className="hero-controls">
               <div role="group" aria-label="What the model shows" className="seg seg-fill">
                 {VIEWS.map((v) => (
@@ -260,7 +270,11 @@ export function HomePage() {
                     aria-pressed={v.id === view}
                     onClick={() => show(v)}
                   >
-                    {v.label}
+                    <span className="seg-step" aria-hidden="true">
+                      {v.id}
+                    </span>
+                    <span className="seg-label">{v.label}</span>
+                    <span className="seg-sub">{v.sub}</span>
                   </button>
                 ))}
               </div>
@@ -313,23 +327,28 @@ export function HomePage() {
               </h2>
               <p>
                 PitWatch tests every 8 m cell of the ground against each one. The result under each
-                rule is what the engine found on this demo.
+                rule is what the engine found on this mine.
               </p>
             </div>
-            <ul className="rule-cols">
+            <ol className="rule-rows">
               {RULES.map(({ rule, Icon, title, text }) => {
                 const own = findings.filter((f) => f.ruleId === rule)
                 const tone = own.length ? worstTone(own) : 'clear'
                 const Glyph = tone === 'clear' ? null : GLYPH[tone]
                 return (
-                  <li key={rule} className="rule-col">
-                    <span className="rule-icon">
-                      <Icon className="h-5 w-5" />
+                  <li key={rule} className="rule-row">
+                    <span className="rule-id cond" aria-hidden="true">
+                      {rule}
                     </span>
-                    <h3 className="cond mt-4 text-[24px] leading-tight font-bold text-ink">
-                      {title}
-                    </h3>
-                    <p className="mt-2 text-[15px] leading-7 text-ink-dim">{text}</p>
+                    <div>
+                      <h3 className="cond flex items-center gap-3 text-[26px] leading-tight font-bold text-ink">
+                        <Icon className="h-5 w-5 shrink-0 text-accent" />
+                        {title}
+                      </h3>
+                      <p className="mt-2 max-w-[38rem] text-[15px] leading-7 text-ink-dim">
+                        {text}
+                      </p>
+                    </div>
                     <p
                       className={`rule-result-line ${ready ? `tone-${tone}` : ''}`}
                       aria-live="polite"
@@ -341,7 +360,7 @@ export function HomePage() {
                           ) : (
                             <span className="status-led" data-tone="clear" aria-hidden="true" />
                           )}
-                          {own.length ? countText(own) : 'Clear on this demo'}
+                          {own.length ? countText(own) : 'Clear'}
                         </>
                       ) : (
                         'Evaluating…'
@@ -350,7 +369,7 @@ export function HomePage() {
                   </li>
                 )
               })}
-            </ul>
+            </ol>
             <a href={ROUTE_HREF.rules} className="link-arrow mt-10">
               How each rule is tested
               <ArrowRightIcon className="h-4 w-4" />
@@ -400,7 +419,12 @@ export function HomePage() {
               <span className="brand-mark">
                 <PitMark className="h-5 w-8" />
               </span>
-              <span>PitWatch, a demo of permit compliance monitoring for open-pit mines.</span>
+              <span>PitWatch, permit compliance monitoring for open-pit mines.</span>
+              <nav aria-label="Legal" className="close-links">
+                <a href={ROUTE_HREF.terms}>Terms and Conditions</a>
+                <a href={ROUTE_HREF.license}>License</a>
+                <a href={ROUTE_HREF.contact}>Contact</a>
+              </nav>
             </div>
           </div>
         </section>

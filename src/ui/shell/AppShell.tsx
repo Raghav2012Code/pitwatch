@@ -6,14 +6,14 @@ import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 
 /**
- * Sidebar, header and the page. The sidebar is a slim rail on the 3D map (the map wants the
- * width) and full width everywhere else, until the viewer picks one with the collapse control.
+ * Sidebar, header and the page. The sidebar opens as a slim icon rail on every page, so content
+ * gets the width; the viewer expands it with the control at its foot and the choice sticks.
  */
 export function AppShell({ route, children }: { route: DashboardRoute; children: ReactNode }) {
   const sidebar = useAppStore((s) => s.sidebar)
   const menuOpen = useAppStore((s) => s.menuOpen)
   const setMenuOpen = useAppStore((s) => s.setMenuOpen)
-  const rail = sidebar === 'rail' || (sidebar === 'auto' && route === 'monitor')
+  const rail = sidebar === 'rail'
   const opener = useRef<HTMLElement | null>(null)
 
   useEffect(() => {

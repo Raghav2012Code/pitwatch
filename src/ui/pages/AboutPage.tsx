@@ -1,6 +1,29 @@
 import type { Provenance } from '../../domain/types'
+import { COMPLIANCE_CONFIG } from '../../compliance/config'
+import { ROUTE_HREF } from '../route'
 import { Page } from '../shell/AppShell'
 import { ProvenanceTag } from '../ProvenanceTag'
+
+const PIPELINE = [
+  ['Survey twice', 'Two drone surveys of the same ground, with their measurement error (σ).'],
+  [
+    'Keep real change',
+    `Subtract them. A cell counts only if it moved more than ${COMPLIANCE_CONFIG.minChangeM} m plus ${COMPLIANCE_CONFIG.k}σ.`,
+  ],
+  [
+    'Test the permit',
+    'Each changed cell is checked against the lease boundary, floor and dump zones.',
+  ],
+  ['Report findings', 'Connected cells become ranked findings you can open on the map.'],
+] as const
+
+const PAGES = [
+  ['Overview', ROUTE_HREF.overview, 'The verdict, the site plan and the facts behind them.'],
+  ['3D map', ROUTE_HREF.monitor, 'Orbit the pit, switch surveys, inspect and measure any point.'],
+  ['Findings', ROUTE_HREF.findings, 'Every finding with its figures and explanation.'],
+  ['Permit rules', ROUTE_HREF.rules, 'The three lease conditions and how each is tested.'],
+  ['Uncertainty', ROUTE_HREF.uncertainty, 'Why a change has to beat the survey noise.'],
+] as const
 
 const SOURCES = [
   {
@@ -34,13 +57,45 @@ const SHORTCUTS: [string, string][] = [
   ['R', 'Reset the camera'],
   ['F', 'Full screen'],
   ['Esc', 'Clear the picked point or measurement'],
+  ['Arrow keys', 'Move between the Findings and Inspector tabs'],
 ]
 
 /** What is simulated, what each kind of data can show, and how to read this app's labels. */
 export function AboutPage() {
   return (
     <Page>
-      <div className="grid gap-x-14 gap-y-12 xl:grid-cols-2">
+      <section aria-labelledby="pipeline" className="rule-section">
+        <h2 id="pipeline" className="section-title">
+          How a result is made
+        </h2>
+        <ol className="mt-4 grid gap-x-8 gap-y-5 sm:grid-cols-2 xl:grid-cols-4">
+          {PIPELINE.map(([title, text], i) => (
+            <li key={title}>
+              <span className="font-mono text-[12px] text-oxide">0{i + 1}</span>
+              <h3 className="mt-1 text-[15px] font-semibold text-ink">{title}</h3>
+              <p className="mt-1 text-[13.5px] leading-6 text-ink-dim">{text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section aria-labelledby="pages" className="rule-section mt-12">
+        <h2 id="pages" className="section-title">
+          What is in this app
+        </h2>
+        <ul className="mt-3 grid gap-x-12 md:grid-cols-2">
+          {PAGES.map(([name, href, text]) => (
+            <li key={name} className="flex items-baseline gap-4 py-2">
+              <a href={href} className="w-[104px] shrink-0 text-[14px] font-semibold text-accent">
+                {name}
+              </a>
+              <span className="text-[14px] text-ink-dim">{text}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <div className="mt-12 grid gap-x-14 gap-y-12 xl:grid-cols-2">
         <div className="space-y-12">
           <section aria-labelledby="fictional" className="rule-section">
             <h2 id="fictional" className="section-title">
@@ -60,7 +115,8 @@ export function AboutPage() {
             </h2>
             <p className="mt-3 max-w-[34rem] text-[15px] leading-7 text-ink-dim">
               Findings help decide where to send an inspector first. They do not prove a breach and
-              do not replace a site inspection.
+              do not replace a site inspection. A real deployment would swap the synthetic surveys
+              for a GeoTIFF provider; the rules and the screens stay the same.
             </p>
           </section>
 

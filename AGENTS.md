@@ -8,7 +8,7 @@ This is the main repo, `abivan100-stack/pitwatch-3d`; work is committed and push
 
 - After every feature: run the checks below, add an entry to **Update log**, commit (Conventional Commits, no Co-Authored-By or other AI attribution), push to `origin/main`, then ask the user before starting the next feature.
 - Keep the session task list current while a run is in flight: mark a ticket in progress when you start it, and completed the moment its checks pass and it is pushed. Not once per batch, and not at the end — a list still showing pending work that has already shipped is worse than no list, because it makes the visible progress wrong.
-- UI must stay honest: SIMULATED DATA badge, provenance tag on values (measured | derived | simulated | unverified), ± uncertainty, no hardcoded alerts, no dead buttons. Unbuilt controls are disabled with a tooltip naming the milestone that enables them.
+- UI must stay honest: the dashboard shows the SIMULATED DATA badge and the landing page a small "simulated data" note (no large callout, no "demo" wording), provenance tag on values (measured | derived | simulated | unverified), ± uncertainty, no hardcoded alerts, no dead buttons. Unbuilt controls are disabled with a tooltip naming the milestone that enables them.
 - `src/domain`, `src/data`, `src/geo`, `src/compliance` are pure TypeScript. ESLint blocks react, three, @react-three/* and zustand imports there.
 
 ## Checks
@@ -49,6 +49,23 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-23: remaining improvement issues and final bug check
+
+- Sidebar opens as a slim rail on every page (#27). Findings severity key in one row (#30). Resolution heading shortened (#33). About page rewritten with the pipeline and a page guide (#35). New favicon and app icon, bolder and legible at 16 px (#19).
+- New Terms and Conditions, License and Contact pages (#22), linked from the landing footer: routes `terms`, `license`, `contact` render outside the dashboard shell. The text is a draft: no licence has been chosen for the repository, so the License page says all rights are reserved until one is added. Needs the owner's review.
+- Landing page: the big SIMULATED DATA stamp is now a quiet "Simulated data" note and "demo" wording is gone (#18, #20); the dashboard keeps the full badge and every provenance tag.
+- Bug check (#41): `npm run verify` passes (135 unit tests); `npm run test:e2e` passes all 55 checks in one run; every page (landing, six dashboard pages, three legal pages) checked at 1440, 1100, 800 and 390 px for horizontal overflow and console errors, none found. The layers card still covers the left third of the map at 800 px (it is a card there, by design).
+- Still open: #36 (finer elevation grid) and the umbrella #21, which needs the owner's eye on the landing page.
+
+### 2026-10-23: improvement issues #13 to #40 (agent-ready ones)
+
+- Home: phone hero puts the live model in the first screen; model buttons are numbered and show the survey dates; the rules read as a ruled ledger (no cards); the hero model no longer spins (horizontal drag turns it); the header gains 3D map and About links and scrolls away on phones.
+- Overview: smooth site-plan change layer, "Explore in 3D" next to the plan, new order (verdict, plan beside findings and rules, facts in three columns). Area figures were audited and found correct; `src/compliance/areas.test.ts` pins them.
+- Findings page: ruled rows with status and rule filters, figures in line, explanation on demand. The map's Findings tab uses the same rows. Permit rules page is a ledger with the 0.5 m + 2σ threshold up front. Uncertainty: vector cross-sections replace the pixel pits, bigger noise sliders with a plain-language verdict.
+- Map: two-row timeline with a 44 px slider hit area on phones, touch-aware hints, narrower side cards, and the layers card starts folded between 1024 and 1280 px. Aerial image is 1.6 m per pixel (elevation grid stays 8 m, so no finding figure moved).
+- Not done here: #18, #19, #20, #22, #27, #30, #33, #35 (assigned to the fork contributor), #21 (umbrella, waits on #18 and #20) and #41 (final bug check). #36 is only partly done: the elevation grid is still 8 m.
+- Verification: `npm run verify` passes (135 unit tests); `npm run test:e2e` first run had 3 failures from changed selectors and a contrast issue on the new model-button captions; after fixing, the affected specs (a11y, dashboard, finding-evidence, home) pass. Not rerun as one clean full run, and no manual review at 1100 and 800 px of every page.
 
 ### 2026-10-22: README reflects the merged dashboard
 

@@ -26,7 +26,7 @@ test('Show on map restores the current terrain, finding layer, and selected evid
 
   const nav = page.getByRole('navigation', { name: 'Dashboard' })
   await nav.getByRole('link', { name: 'Findings' }).click()
-  const cards = page.locator('li.finding')
+  const cards = page.locator('li.frow')
   await expect(cards).toHaveCount(5, { timeout: 30_000 })
   await cards.first().getByRole('button', { name: 'Show on map' }).click()
 
@@ -50,7 +50,7 @@ test('Show on map restores the current terrain, finding layer, and selected evid
 
   // A second selection must replace the first throughout the list and map description.
   await nav.getByRole('link', { name: 'Findings' }).click()
-  await page.locator('li.finding').nth(1).getByRole('button', { name: 'Show on map' }).click()
+  await page.locator('li.frow').nth(1).getByRole('button', { name: 'Show on map' }).click()
   await expect(page.locator('#details-tabpanel li.finding[data-selected]')).toContainText('R2-1')
   await expect(page.locator('.scene-wrap')).toHaveAttribute(
     'aria-label',
