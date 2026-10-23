@@ -37,6 +37,7 @@ const VIEWS = [
   {
     id: 1,
     label: 'Baseline',
+    sub: BASELINE ? formatDate(BASELINE.date) : '',
     t: 0,
     title: `Baseline survey, ${BASELINE ? formatDate(BASELINE.date) : ''}`,
     text: 'The ground as it was: every bench, ramp and floor of the pit, from a drone survey.',
@@ -44,6 +45,7 @@ const VIEWS = [
   {
     id: 2,
     label: 'Current',
+    sub: CURRENT ? formatDate(CURRENT.date) : '',
     t: 1,
     title: `Current survey, ${CURRENT ? formatDate(CURRENT.date) : ''}`,
     text: `The same ground ${DAYS} days later. The west wall has been pushed back, a new cut has opened on the east side and the floor is a bench deeper.`,
@@ -51,6 +53,7 @@ const VIEWS = [
   {
     id: 3,
     label: 'Change',
+    sub: 'the difference',
     t: 1,
     title: 'Measured change',
     text: 'Rust where rock was removed, blue where material was added. Anything smaller than the survey noise is ignored.',
@@ -58,6 +61,7 @@ const VIEWS = [
   {
     id: 4,
     label: 'Findings',
+    sub: 'vs the permit',
     t: 1,
     title: 'Held against the permit',
     text: 'Each pin is a place that breaks the lease. Red cells are violations, purple the most severe ones, amber cells warnings.',
@@ -260,7 +264,11 @@ export function HomePage() {
                     aria-pressed={v.id === view}
                     onClick={() => show(v)}
                   >
-                    {v.label}
+                    <span className="seg-step" aria-hidden="true">
+                      {v.id}
+                    </span>
+                    <span className="seg-label">{v.label}</span>
+                    <span className="seg-sub">{v.sub}</span>
                   </button>
                 ))}
               </div>

@@ -1632,8 +1632,33 @@ body {
     box-shadow: none;
   }
   .seg-fill button {
-    padding: 9px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 8px 4px 9px;
     font-size: 14px;
+  }
+  .seg-step {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 500;
+    opacity: 0.65;
+  }
+  .seg-sub {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 500;
+    font-stretch: 100%;
+    opacity: 0.75;
+  }
+  @media (width < 40rem) {
+    .seg-sub {
+      font-size: 10px;
+    }
   }
 
   .story-clock {
