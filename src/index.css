@@ -1329,9 +1329,6 @@ body {
   .plan-ground {
     fill: var(--color-panel-2);
   }
-  .plan-change {
-    image-rendering: pixelated;
-  }
   .plan-line {
     fill: none;
     vector-effect: non-scaling-stroke;
