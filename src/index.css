@@ -1587,6 +1587,45 @@ body {
     background: color-mix(in srgb, var(--color-panel) 94%, transparent);
     border-top: 1px solid var(--color-line);
   }
+  /* Phones: a model tall enough to read, a compact caption, no second date readout. */
+  @media (width < 40rem) {
+    /* The live model comes right after the call to action; the three facts follow it. */
+    .hero {
+      gap: 20px;
+    }
+    .hero-copy {
+      display: contents;
+    }
+    .hero-copy > * {
+      order: 1;
+    }
+    .hero-stage {
+      order: 2;
+      min-height: 0;
+    }
+    .hero-copy > .hero-facts {
+      order: 3;
+    }
+    .hero-model {
+      flex: none;
+      height: min(62vw, 340px);
+      min-height: 260px;
+    }
+    .hero-controls {
+      padding: 12px 14px 14px;
+    }
+    .hero-controls .story-clock {
+      display: none;
+    }
+    .hero-facts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 0;
+    }
+    .hero-facts > div:last-child {
+      grid-column: 1 / -1;
+    }
+  }
   .seg-fill {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));

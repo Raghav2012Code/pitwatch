@@ -192,11 +192,11 @@ export function HomePage() {
         <section className="hero">
           <div className="hero-copy">
             <h1 className="cond hero-title">See where the digging broke the permit.</h1>
-            <p className="mt-6 max-w-[34rem] text-[18px] leading-8 text-ink-dim">
+            <p className="mt-6 max-w-[34rem] text-[18px] leading-8 text-ink-dim max-sm:mt-0 max-sm:text-[16px] max-sm:leading-7">
               PitWatch compares two drone surveys of an open-pit mine in 3D and checks every change
               against the lease: the boundary, the approved depth and the permitted dump zones.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap gap-3 max-sm:mt-0">
               <a href={OVERVIEW_HREF} className="btn-primary btn-lg">
                 Open the dashboard
               </a>
