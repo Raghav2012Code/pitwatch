@@ -240,7 +240,7 @@ function Facts() {
   const m = MINE_INFO
 
   return (
-    <div className="mt-10 space-y-10">
+    <div className="mt-10 grid gap-x-12 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
       <section aria-labelledby="surveys" className="rule-section">
         <div className="flex items-center justify-between gap-3">
           <h2 id="surveys" className="section-title">
