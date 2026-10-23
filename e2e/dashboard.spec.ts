@@ -65,18 +65,17 @@ test('Show on map from the findings page lands on the map with that finding sele
   await expect(page.locator('#details-tabpanel li.finding[data-selected]')).toHaveCount(1)
 })
 
-test('the sidebar is a slim rail on the map and the choice sticks', async ({ page }) => {
+test('the sidebar opens as a slim rail and expanding it sticks', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/#/overview')
   const nav = page.getByRole('navigation', { name: 'Dashboard' })
   const width = async () => (await page.locator('#sidebar').boundingBox())?.width ?? 0
 
-  await expect.poll(width).toBeGreaterThan(200)
-
-  // The map wants the room, so the sidebar narrows by itself; names stay for screen readers.
-  await nav.getByRole('link', { name: '3D map' }).click()
+  // Content gets the width; link names stay for screen readers.
   await expect.poll(width).toBeLessThan(100)
   await expect(nav.getByRole('link', { name: '3D map' })).toBeVisible()
+  await nav.getByRole('link', { name: '3D map' }).click()
+  await expect.poll(width).toBeLessThan(100)
 
   // Expanding it by hand is remembered on the other pages too.
   await page.getByRole('button', { name: 'Expand sidebar' }).click()

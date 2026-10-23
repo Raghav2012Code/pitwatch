@@ -19,7 +19,7 @@ export const EXAGGERATION = { min: 1, max: 3, initial: 1.5 } as const
 interface AppState {
   activeTab: PanelTab
   drawerOpen: boolean
-  /** The viewer's choice for the sidebar; `auto` until they use the collapse control. */
+  /** The viewer's choice for the sidebar; a slim `rail` until they expand it. */
   sidebar: SidebarMode
   /** Phones: the navigation drawer. */
   menuOpen: boolean
@@ -63,7 +63,7 @@ interface AppState {
 export const useAppStore = create<AppState>((set) => ({
   activeTab: 'findings',
   drawerOpen: false,
-  sidebar: 'auto',
+  sidebar: 'rail',
   menuOpen: false,
   // Between 1024 and 1280 px both cards leave the model little room: start with the layers card
   // folded away (the header toggle and the [ key bring it back).
