@@ -50,6 +50,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-23: remaining improvement issues and final bug check
+
+- Sidebar opens as a slim rail on every page (#27). Findings severity key in one row (#30). Resolution heading shortened (#33). About page rewritten with the pipeline and a page guide (#35). New favicon and app icon, bolder and legible at 16 px (#19).
+- New Terms and Conditions, License and Contact pages (#22), linked from the landing footer: routes `terms`, `license`, `contact` render outside the dashboard shell. The text is a draft: no licence has been chosen for the repository, so the License page says all rights are reserved until one is added. Needs the owner's review.
+- Landing page: the big SIMULATED DATA stamp is now a quiet "Simulated data" note and "demo" wording is gone (#18, #20); the dashboard keeps the full badge and every provenance tag.
+- Bug check (#41): `npm run verify` passes (135 unit tests); `npm run test:e2e` passes all 55 checks in one run; every page (landing, six dashboard pages, three legal pages) checked at 1440, 1100, 800 and 390 px for horizontal overflow and console errors, none found. The layers card still covers the left third of the map at 800 px (it is a card there, by design).
+- Still open: #36 (finer elevation grid) and the umbrella #21, which needs the owner's eye on the landing page.
+
 ### 2026-10-23: improvement issues #13 to #40 (agent-ready ones)
 
 - Home: phone hero puts the live model in the first screen; model buttons are numbered and show the survey dates; the rules read as a ruled ledger (no cards); the hero model no longer spins (horizontal drag turns it); the header gains 3D map and About links and scrolls away on phones.
