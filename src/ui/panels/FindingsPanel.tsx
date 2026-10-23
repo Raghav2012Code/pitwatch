@@ -12,19 +12,19 @@ const LEGEND = [
     Glyph: WarningGlyph,
     name: 'Warning',
     tone: 'sev-warn',
-    meaning: 'A possible issue the survey uncertainty cannot confirm, or a minor one.',
+    meaning: 'Possible or minor; the survey noise cannot confirm it.',
   },
   {
     Glyph: ViolationGlyph,
     name: 'Violation',
     tone: 'sev-violation',
-    meaning: 'A permitted limit is exceeded by more than the measurement uncertainty.',
+    meaning: 'A limit is exceeded by more than the noise.',
   },
   {
     Glyph: CriticalGlyph,
     name: 'Critical',
     tone: 'sev-critical',
-    meaning: 'A violation large enough in area, volume or depth to inspect first.',
+    meaning: 'A violation large enough to inspect first.',
   },
 ]
 
@@ -111,9 +111,9 @@ export function ThresholdNote() {
 }
 
 /** What the three severity shapes mean. */
-export function SeverityLegend() {
+export function SeverityLegend({ className = 'space-y-2' }: { className?: string }) {
   return (
-    <ul className="space-y-2">
+    <ul className={className}>
       {LEGEND.map(({ Glyph, name, tone, meaning }) => (
         <li key={name} className={`sev-row ${tone}`}>
           <Glyph className="mt-0.5 h-[18px] w-[18px] shrink-0" />

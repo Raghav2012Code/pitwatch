@@ -25,8 +25,8 @@ export function FindingsPage() {
           <h2 id="marking" className="section-title">
             How findings are marked
           </h2>
-          <div className="mt-3 max-w-[44rem]">
-            <SeverityLegend />
+          <div className="mt-3">
+            <SeverityLegend className="grid gap-x-10 gap-y-3 md:grid-cols-3" />
           </div>
         </section>
       </LoadGate>
