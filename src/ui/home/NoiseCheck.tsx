@@ -88,11 +88,12 @@ export function NoiseCheck() {
             </div>
             <div className="mt-2 flex justify-between font-mono text-[11px] text-ink-faint">
               <span>0 m</span>
+              <span>noise limit {m(threshold)}</span>
               <span>{m(max)}</span>
             </div>
           </div>
 
-          <dl className="mt-6 grid grid-cols-3 gap-px border border-line bg-line">
+          <dl className="mt-6 grid grid-cols-1 gap-px border border-line bg-line min-[30rem]:grid-cols-3">
             <div className="bg-panel p-3">
               <dt className="text-[12px] text-ink-faint">Combined σ</dt>
               <dd className="cond text-[24px] font-bold text-ink">{m(sigma)}</dd>
@@ -111,6 +112,10 @@ export function NoiseCheck() {
               </dd>
             </div>
           </dl>
+          <p className="mt-3 text-[14px] leading-6 text-ink-dim" aria-live="polite">
+            A {m(change)} change is {real ? 'bigger' : 'not bigger'} than the {m(threshold)}{' '}
+            threshold, so PitWatch {real ? 'counts it as real' : 'treats it as possible noise'}.
+          </p>
         </div>
       </div>
     </section>
@@ -150,7 +155,7 @@ function Slider({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="range mt-2 w-full"
+        className="noise-range w-full"
       />
     </div>
   )

@@ -1337,6 +1337,52 @@ body {
   .range {
     accent-color: var(--color-accent);
   }
+  /* Noise sliders: a thick track and a thumb a finger can hit (44 px tall hit area). */
+  .noise-range {
+    display: block;
+    height: 44px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    appearance: none;
+    touch-action: pan-y;
+  }
+  .noise-range::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--color-line-strong);
+  }
+  .noise-range::-moz-range-track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--color-line-strong);
+  }
+  .noise-range::-webkit-slider-thumb {
+    appearance: none;
+    width: 26px;
+    height: 26px;
+    margin-top: -10px;
+    border-radius: 50%;
+    border: 3px solid var(--color-panel);
+    background: var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-accent);
+  }
+  .noise-range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 3px solid var(--color-panel);
+    background: var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-accent);
+  }
+  .noise-range:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+  .noise-range:focus-visible::-moz-range-thumb {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
   .noise-line {
     position: relative;
     height: 44px;
