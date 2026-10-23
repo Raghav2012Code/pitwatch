@@ -80,7 +80,7 @@ function distanceToRoads(x: number, y: number): number {
 /**
  * @param elevations the survey surface (its slopes and hollows drive the shading)
  * @param natural    original ground level per cell (see `naturalField`)
- * @param size       image width and height in pixels (768 ≈ 2.7 m per pixel)
+ * @param size       image width and height in pixels (1280 ≈ 1.6 m per pixel)
  */
 export function buildOrthophoto(
   g: GridSpec,
@@ -88,7 +88,7 @@ export function buildOrthophoto(
   natural: Float32Array,
   epoch: 'baseline' | 'current',
   seed: number,
-  size = 768,
+  size = 1280,
 ): Orthophoto {
   const pit = epoch === 'baseline' ? BASELINE_PIT : CURRENT_PIT
   const pits = pitsOf(epoch)
