@@ -324,20 +324,25 @@ export function HomePage() {
                 rule is what the engine found on this demo.
               </p>
             </div>
-            <ul className="rule-cols">
+            <ol className="rule-rows">
               {RULES.map(({ rule, Icon, title, text }) => {
                 const own = findings.filter((f) => f.ruleId === rule)
                 const tone = own.length ? worstTone(own) : 'clear'
                 const Glyph = tone === 'clear' ? null : GLYPH[tone]
                 return (
-                  <li key={rule} className="rule-col">
-                    <span className="rule-icon">
-                      <Icon className="h-5 w-5" />
+                  <li key={rule} className="rule-row">
+                    <span className="rule-id cond" aria-hidden="true">
+                      {rule}
                     </span>
-                    <h3 className="cond mt-4 text-[24px] leading-tight font-bold text-ink">
-                      {title}
-                    </h3>
-                    <p className="mt-2 text-[15px] leading-7 text-ink-dim">{text}</p>
+                    <div>
+                      <h3 className="cond flex items-center gap-3 text-[26px] leading-tight font-bold text-ink">
+                        <Icon className="h-5 w-5 shrink-0 text-accent" />
+                        {title}
+                      </h3>
+                      <p className="mt-2 max-w-[38rem] text-[15px] leading-7 text-ink-dim">
+                        {text}
+                      </p>
+                    </div>
                     <p
                       className={`rule-result-line ${ready ? `tone-${tone}` : ''}`}
                       aria-live="polite"
@@ -358,7 +363,7 @@ export function HomePage() {
                   </li>
                 )
               })}
-            </ul>
+            </ol>
             <a href={ROUTE_HREF.rules} className="link-arrow mt-10">
               How each rule is tested
               <ArrowRightIcon className="h-4 w-4" />

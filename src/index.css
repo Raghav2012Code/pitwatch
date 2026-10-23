@@ -1732,29 +1732,25 @@ body {
     color: var(--color-ink);
   }
 
-  .step-list,
-  .rule-cols {
+  .step-list {
     display: grid;
     gap: 36px 40px;
     margin-top: 40px;
   }
   @media (width >= 48rem) {
-    .step-list,
-    .rule-cols {
+    .step-list {
       grid-template-columns: repeat(3, minmax(0, 1fr));
       margin-top: 52px;
     }
   }
-  .step,
-  .rule-col {
+  .step {
     display: flex;
     flex-direction: column;
     padding-top: 18px;
     border-top: 2px solid var(--color-ink);
   }
   /* Links and results sit at the foot of each column, so a longer paragraph never staggers them. */
-  .step > p,
-  .rule-col > p:not(.rule-result-line) {
+  .step > p {
     margin-bottom: 18px;
   }
   .step > .link-arrow {
@@ -1769,14 +1765,38 @@ body {
     line-height: 1;
     color: var(--color-oxide);
   }
+  /* The rules read as a ledger: id, what the rule says, what the engine found. */
+  .rule-rows {
+    margin-top: 40px;
+    border-top: 2px solid var(--color-ink);
+  }
+  .rule-row {
+    display: grid;
+    gap: 10px 32px;
+    padding-block: 24px;
+    border-bottom: 1px solid var(--color-line-strong);
+  }
+  @media (width >= 48rem) {
+    .rule-rows {
+      margin-top: 52px;
+    }
+    .rule-row {
+      grid-template-columns: 72px minmax(0, 1fr) minmax(170px, 14rem);
+      align-items: start;
+    }
+  }
+  .rule-id {
+    font-size: 44px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--color-oxide);
+  }
   .rule-result-line {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: auto;
-    padding-top: 14px;
-    border-top: 1px solid var(--color-line);
     font-size: 13.5px;
+    font-weight: 600;
     color: var(--tone, var(--color-ink-faint));
   }
 
