@@ -50,6 +50,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-23: fork synced to the parent (fast-forward to `41c450b`)
+
+- `git merge --ff-only upstream/main`, then pushed: 30 commits, no conflict resolution, no rewritten history. This brings in the parent's `improvements` PR #43 and PR #12 (this fork's branch, merged upstream), which closed 26 of the tracker's 28 items: home-page rework, Overview/Findings/Rules/Uncertainty redesigns, legal pages, new icons, rail sidebar, map timeline and touch hints, 1.6 m/px aerial image.
+- Still open upstream: #36 (elevation grid is still 8 m) and #21 (landing-page umbrella). This fork's working copies are #27 and #26; #28 is the final bug check and #29 the tracker. Their bodies cite the parent's numbers, which the copies say.
+- Checks: `npm run verify` passes (137 unit tests in 18 files). `npm run test:e2e` ran 68 checks: 67 passed, and `e2e/finding-evidence.spec.ts:5` failed on the Findings-page row assertion; rerun alone with one worker it passes, so it is a flake under parallel load, not a broken selector.
+- No code changed here; the only fork commit on top of the sync is this entry.
+
 ### 2026-10-23: remaining improvement issues and final bug check
 
 - Sidebar opens as a slim rail on every page (#27). Findings severity key in one row (#30). Resolution heading shortened (#33). About page rewritten with the pipeline and a page guide (#35). New favicon and app icon, bolder and legible at 16 px (#19).
