@@ -2,7 +2,7 @@
 
 3D mine monitoring and regulatory compliance demo. Frontend only, no backend. Every value is synthetic and labelled so.
 
-This is the main repo, `abivan100-stack/pitwatch-3d`; work is committed and pushed to `origin/main`. The fork `Raghav2012Code/pitwatch` did the work merged in PR #1 (2026-10-21); in a clone of the fork the parent is the `upstream` remote. Log entries from that work cite the fork's own issues as `Raghav2012Code/pitwatch#N`, since a bare `#N` here would point at this repo's tracker.
+Work is committed and pushed to `origin/main`. This checkout is the fork `Raghav2012Code/pitwatch`; the parent `abivan100-stack/pitwatch-3d` is fetched through the `upstream` remote (`git@github.com:abivan100-stack/pitwatch-3d.git`) and in the parent `origin` is the parent itself. The parent merged this fork's work in PR #1 (2026-10-21) and its own copy of this file calls the parent the main repo, so the header here states the fork's view; the parent's log entries are kept as it wrote them, and log entries from the fork's work cite its issues as `Raghav2012Code/pitwatch#N`.
 
 ## Working rules
 
@@ -28,7 +28,7 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 - App structure: landing page (`#/`) and a dashboard shell (`src/ui/shell/`: slate sidebar with a vertical drill-core strip, header with page title, status and SIMULATED DATA badge). Pages in `src/ui/pages/`: Overview, 3D map (`#/monitor`), Findings, Permit rules, Uncertainty, About the data. The sidebar is a 64 px icon rail on the 3D map by default (`sidebar: 'auto'`), full width elsewhere, a drawer below `lg`. Dashboard pages are ruled report sections, not stacks of identical cards.
 - 3D map layout: full-screen 3D canvas on a survey-paper backdrop (`--color-backdrop`, faint `<Relief />` contours, soft vignette; fog uses the same colour); a `ViewOffset` shifts the projection so the model centres in `.stage` (the area the side cards leave free, click-through except its controls). Left "Map" card (layers, key, exaggeration), right details card (Findings and Inspector tabs), camera presets + compass top-right, scale bar top-left from `xl` up and just above the timeline below that (a stage under ~437 px cannot hold the chip and the camera group in one row), timeline pill bottom-centre. Soft `.card` surfaces (8 px radius, shadow); strata stripes only on the sidebar edge, the landing bar and footer.
 - Each fact appears once: mine name in the sidebar, survey dates in the timeline and the Surveys section, nothing duplicated in map overlays.
-- Landing page (`#/`) shows the live 3D model of the simulated surveys, driven by four buttons, not by scroll. Topographic look: limestone paper, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity only (never status).
+- Landing page (`#/`) shows the live 3D model of the simulated surveys, driven by four buttons, not by scroll. Below `lg` the model comes first and the copy follows it, tight enough that both calls to action stay in the first screen. Topographic look: limestone paper, slate ink, map-water blue (`accent`) for interaction, haematite `oxide` and `ochre` for identity only (never status).
 - Type: Archivo variable; `.cond` (font-stretch 72%) for headings and big figures. JetBrains Mono for coordinates and dates.
 - All colours are tokens in `@theme`; components use `var(--color-*)` or `color-mix(...)`. Never hardcode a colour in a component.
 - Severity colour always pairs with a glyph shape: warning = triangle, violation = octagon, critical = diamond.
@@ -66,6 +66,96 @@ Newest first.
 - Map: two-row timeline with a 44 px slider hit area on phones, touch-aware hints, narrower side cards, and the layers card starts folded between 1024 and 1280 px. Aerial image is 1.6 m per pixel (elevation grid stays 8 m, so no finding figure moved).
 - Not done here: #18, #19, #20, #22, #27, #30, #33, #35 (assigned to the fork contributor), #21 (umbrella, waits on #18 and #20) and #41 (final bug check). #36 is only partly done: the elevation grid is still 8 m.
 - Verification: `npm run verify` passes (135 unit tests); `npm run test:e2e` first run had 3 failures from changed selectors and a contrast issue on the new model-button captions; after fixing, the affected specs (a11y, dashboard, finding-evidence, home) pass. Not rerun as one clean full run, and no manual review at 1100 and 800 px of every page.
+
+### 2026-10-21: two unreferenced Vite leftovers removed (fork #25)
+
+- `src/assets/hero.png` (13,057 bytes) and `src/assets/react.svg` (4,126 bytes) came from the Vite template and were imported by nothing: `git grep` for both names and for `src/assets` finds no code, style, test or documentation reference. The folder was left empty and is gone with them. `public/logo.svg` stays: it is a public brand asset.
+- Verified the bundle does not change: built with the two files restored and again with them deleted, the `dist` file list and every file size are identical, which is the proof they were never in it.
+- `npm run verify` passes (133 unit tests); the browser suite is unchanged at 64 checks.
+
+### 2026-10-21: the app stops teaching one threshold and claiming a breach (fork #17)
+
+- Two separate claims were wrong, and both are explanation only: the engine's arithmetic is unchanged.
+- The Uncertainty page taught the noise band (kσ) as _the_ threshold, while R1 and R3 report a change only beyond `minChangeM + k·σ` (`changeThreshold`, `src/compliance/change.ts`): 0.14 m against 0.64 m at the default σ = 0.05 m. The 0.40 m example was therefore called a real change while the engine would report nothing.
+  - `src/ui/home/NoiseCheck.tsx` now takes the threshold from the engine's own helper, shows three figures (combined σ, noise band kσ, R1/R3 threshold minChange + kσ), draws both lines on the number line (shaded band, dashed threshold) and gives a three-way verdict: inside the band, distinguishable but not reportable, reportable.
+  - R2 is explained on its own line: it measures the ground against a fixed approved floor, uses the current survey's σ alone (2σ2 = 0.10 m at the default) and has no minimum-change allowance, so a floor breach a few centimetres deep is still a warning.
+  - The page subtitle is now "How much change the surveys can actually support".
+- The copy no longer asserts a breach in the fictional scenario: the landing headline is "See where a simulated mine breaks its permit." (was "…the digging broke the permit"), its Findings and Change captions say what the engine classifies and which lines a change must clear, the Permit rules page states the tests from `COMPLIANCE_CONFIG` (0.5 m + 2σ for R1 and R3, 2σ2 for R2) in both the introduction and each card, the Findings page says findings are the demo engine's classifications and not a legal determination, About says the same about the violation/warning labels, and the `<meta>` description matches. `ThresholdNote` says changes below the line are not reported, instead of calling them noise.
+- Tests: new `e2e/uncertainty.spec.ts`. The two thresholds are separate figures at the default preset (0.14 m and 0.64 m); the 0.40 m example is described as distinguishable but not reportable, with both numbers in the sentence; a preset and a slider move the figures and the wording together (11.3 m and 11.8 m, then 12 m becomes reportable); and one copy check walks landing → Findings → Permit rules → About for the simulated framing. Against the old code all three fail (heading missing, one threshold, "See where the digging broke the permit."). 133 unit tests, 64 browser checks.
+- Found while running the full suite: `e2e/landing-terrain.spec.ts` compared canvas shots after a fixed 2.5 s sleep and timed out under parallel load. It now waits for the canvas to exist and to be resized off its 300 × 150 default, and has a 90 s budget. Two clean full runs after the change.
+- Deliberate: the phone headline needs a wider column (14ch below 64rem) to stay three lines, so the first-screen budget from #23 still holds at 390 × 844 (links 750–801) and 800 × 900 (803–854). At 360 × 780 the second action still wraps below the fold, now about 100 px rather than 59, because this step's Findings caption is longer than #23's measurement.
+
+### 2026-10-21: metric labels and their provenance tags stop competing on a phone (fork #24)
+
+- The Overview's figure cells put the provenance tag beside the label in a `justify-between` row, and the figures grid is two columns below 64rem, so at 390 px "Removed outside the lease" wrapped into its tag.
+- The `<dt>` now stacks below `sm` (`max-sm:flex-col max-sm:items-start max-sm:gap-y-1`). From `sm` up the classes are the ones that were there before, so the desktop cells do not move.
+- The plan's proposed `flex-wrap` with baseline alignment was not taken: measured, it also drops the tag under the label at 1280 px, because the four-column cell is about 200 px wide and label plus tag do not fit on one line. The change is width-gated only.
+- A stacked cell renders label, tag, value, note: the tag sits against the figure it describes. (The plan put the tag after the note; it lives inside the `<dt>`, so it renders before the value.)
+- Tests: new `e2e/overview-metrics.spec.ts` measures the label with a DOM range, since it is a bare text node beside the tag span. At 390 × 844 the tag's top must be at or below the label's bottom; at 1280 × 800 the tag must start above the label's bottom, i.e. beside it. Against the old markup the phone case fails (tag top 528, label bottom 562). 133 unit tests, 61 browser checks.
+- Browser check at 390 and 1280 px: the phone cells read label, tag, value, note with no overlap, and the desktop cells are unchanged.
+
+### 2026-10-21: the phone landing opens on the model (fork #23)
+
+- The hero put the copy first at every width and the stage had a 540 px floor, so on a 390 × 844 phone the model began at y = 760: the first screen was introduction only.
+- Below 64rem the stage is now `order: -1` with `min-height: min(46vh, 420px)`, and the copy is tightened: the paragraph has a one-line phone version (the long one stays from `sm` up), the hero gap and padding shrink, the buttons lose a little padding and type size so the two actions sit on one row, and the model area's floor drops to 140 px — the stage's controls take about 244 px, so the model gets what is left.
+- Measured with a throwaway layout probe: at 390 × 844 the stage runs 76–464 and both links sit at y 729–779, inside 844; at 800 × 900 the stage runs 76–490 and the links 803–854. At 360 × 780 the two buttons wrap and the second lands 59 px below the fold — deliberate, since the sizes the plan names are 390 and 800, and cutting more copy would cost the phone more than it gains.
+- Tests: `e2e/home.spec.ts` gains a case at each of 390 × 844 and 800 × 900 — the stage box is on the first screen, at least 200 px tall, at least 90% of it inside the viewport, the model canvas is mounted, and both links are fully within the first screen. The plan's literal assertions were not enough: against the old hero they passed, because the stage still nicked the fold (15.5% of it visible at 390, 58% at 800). With the visibility ratio added, the old layout fails at both sizes. 133 unit tests, 59 browser checks.
+- Browser check at 390 and 800 px: the model, the four view buttons, the caption, the clock, the headline and both calls to action all sit in one screen.
+
+### 2026-10-21: the landing terrain survives the map's Terrain switch (fork #20)
+
+- `Terrain` read `layers.terrain` from the app store inside the component, and both the map and the landing page render it. Switching Terrain off on the map therefore emptied the landing page's featured model, which has no control of its own to bring it back.
+- Visibility is now the caller's decision: `Terrain` takes an optional `visible` and uses `visible ?? layers.terrain`. The map passes nothing, so its switch works exactly as before; `HomeScene` passes `visible` so the landing model is always drawn.
+- Tests: new `e2e/landing-terrain.spec.ts`. No test can see a shader and the page exposes no scene graph (checked: the canvas carries only React internals), so it compares canvas screenshots — and it proves its own probe first: at a fixed Top pose, switching Terrain off changes the map shot by 61% of its byte length (1,295,940 to 503,764), while the landing shot after the same switch changes by 0.003%. Run against the old wiring first, the landing assertion fails, so the check catches the regression. 133 unit tests, 57 browser checks.
+- Browser check at 1440 px: with the map's Terrain off, the landing model still shows the pit, the waste dump and the findings pins.
+
+### 2026-10-21: keyboard focus stays in the open phone drawer (fork #19)
+
+- The drawer handled Escape and returned focus to the Menu button, but Tab walked straight out into the page behind the scrim, where focus is invisible.
+- Tab and Shift+Tab now wrap inside `#sidebar` between its visible controls, and a focus that is somehow outside the drawer is pulled back to the first (or last) control.
+- The recorded "focus moves to the first navigation item" never actually worked: `.sidebar` is `visibility: hidden` until the browser applies the open style, and a `focus()` on a hidden element is dropped — the call ran in the effect, before that frame. Focus now retries on the next frames until it sticks, which is state-driven rather than a guessed duration. Escape still returns focus to the opener.
+- Tests: `e2e/a11y.spec.ts` gains a keyboard check — focus is inside the drawer on open, more Tabs than there are controls still leave it inside, Shift+Tab too, and Escape closes the drawer with focus back on the Menu button. 133 unit tests, 56 browser checks.
+- Found with a throwaway probe script rather than by reading the code: counting focusables and pressing keys showed focus never entered the drawer at all.
+
+### 2026-10-21: findings first in the phone map drawer (fork #22)
+
+- The drawer used to render the layer block before the tab panel, so on a phone the first finding started below eight switches and the exaggeration slider (about 440 px of controls).
+- The block now sits below the tab content behind a closed `<details>` with the summary "Map layers and vertical scale". The drawer opens on the findings; opening the disclosure brings the same `LayerSwitches` and slider back, so there is still exactly one set of controls at every width. The floating Map card is unchanged from `md` up.
+- Tests: `e2e/mobile-layers.spec.ts` — the reachability check opens the disclosure first, and two new assertions cover the point of the issue: a collapsed, named disclosure (hidden switches before it opens) and the first finding's heading visible near the tabs at 390 px. 133 unit tests, 55 browser checks.
+- Browser check at 390 px: the drawer opens straight onto "Lease boundary and buffer" with the layers disclosure closed underneath.
+
+### 2026-10-21: the map gives the model room at laptop widths (fork #21)
+
+- Both floating panels were open on arrival, and the stage reserved a fixed 272 px and 392 px for them, so at 1100 px the model had a 372 px slot between them: the complaint in the issue, confirmed by measurement in the browser.
+- The findings panel now starts closed below 1280 px. The map card stays open, because it holds the exaggeration control and the key, and the header's Details panel button brings the findings back with one click. At 1100 px the stage grows from 372 px to 764 px.
+- The visitor's own choice wins: `detailsUserSet` in the store records that the panel was toggled or opened to show a selected finding, and the width rule stops deciding after that. The store grew one action, `setDetailsHidden`, which sets the panel without claiming the visitor asked for it.
+- Tests: `e2e/map-width.spec.ts` is new and checks both ends of the rule — at 1100 px the panel starts closed, the stage is at least 600 px wide, the map card is there and the visible button opens the panel and takes the room back; at 1440 px the panel is open on arrival.
+- A trap worth recording: `vite preview` serves the built files from memory, so a preview server left running from an earlier build serves the old bundle. Playwright reuses an existing preview server, which made the first run of this check fail against stale code.
+
+### 2026-10-21: a measurement cannot ask for unbounded work (fork #18)
+
+- The coordinate form accepts any finite local metres, but the profile along the line was sampled every half cell with no cap: `profileAlong` (`src/geo/profile.ts`) asked for `length / 4` samples, so a typed line of a million kilometres wanted 250 million of them. Two callers paid that cost — the Inspector's profile and the map's draped line (`src/scene/PickLayer.tsx`) — and the Inspector built the profile _before_ it checked whether an end was off the grid, so a line that could not be measured was still profiled in full.
+- `profileAlong` now caps the samples at `MAX_PROFILE_SAMPLES` (2000) and says what it did: `step` is the spacing actually used and `limited` is true when the half-cell step had to be widened. A line that fits the cap is unchanged.
+- The real saving is upstream of that: the Inspector only builds a profile when both ends have an elevation (`measureOnSurface` first), and the map line is not drawn at all when an end is off the grid, because `onGround` falls back to the base level and the line sinks out of sight. An off-grid end now costs nothing.
+- When a profile is limited the Inspector says so under the chart, with the spacing it used.
+- Tests: `src/geo/profile.test.ts` gains three (the half-cell step is kept for a line that fits; a 100 km line stays inside the cap and reports the coarser step). `e2e/keyboard.spec.ts` gains one: Measure, then A at E 0 / N 0 and B at a million kilometres east, and the panel must say the line is outside the survey area, offer no measurement and leave the page alive. That check was run against the old code first — it times out there, so it really catches the regression. 133 unit tests, 52 browser checks.
+- Browser check at 1100 px: a 200 m measurement still shows the markers, the draped line, the profile chart and the four rows.
+
+### 2026-10-21: the parent's nine open issues, copied here and planned
+
+- The parent `abivan100-stack/pitwatch-3d` has nine open issues (#3–#11). They were copied into this fork as **#17–#25** (`gh issue create`, one per issue), each body byte-identical to the parent's, plus one line saying where it came from. Labels carried over (`bug`, `enhancement`, `ready-for-agent`); both trackers have the same label set. Mapping: parent #3→fork #17, #4→#18, #5→#19, #6→#20, #7→#21, #8→#22, #9→#23, #10→#24, #11→#25. The parent's tracker keeps the originals; these are the fork's working copies.
+- `docs/plan-open-issues.md` is the plan: one step per issue, in nine steps, each with the root cause (file and line), the fix, the files, the tests, the risk and a "done when" line. The order is the one to work in: the profile bound first (the only correctness and performance risk), then the map layout, the phone drawer, the focus trap, the landing terrain, the landing layout, the Overview metrics, the copy and threshold work last so its wording lands on settled layouts, and the asset cleanup last.
+- Root causes found while planning, all confirmed in the code: `profileAlong` (`src/geo/profile.ts:20`) has no sample cap and is called by both the map line (`src/scene/PickLayer.tsx:81`) and the Inspector (`src/ui/panels/InspectorPanel.tsx:157`, which builds the profile before it checks whether an end is off the grid); `.stage` reserves a fixed 272 px and 392 px (`src/index.css:265-280`) so at 1100 px the stage is 372 px wide; the phone drawer renders the layer block before the findings (`src/ui/SidePanel.tsx:70-77`); the drawer does not trap focus (`src/ui/shell/AppShell.tsx:26-40`); `Terrain` reads the map's `layers.terrain` from the store (`src/scene/Terrain.tsx:345`), so the map's Terrain switch hides the landing model; the hero is one column with the copy first (`src/index.css:1503`, `src/ui/HomePage.tsx:193`); the Overview metric `<dt>` puts the provenance tag beside the label (`src/ui/pages/OverviewPage.tsx:125`); the Uncertainty page teaches one threshold while the engine uses `minChange + k·σ` (`src/ui/home/NoiseCheck.tsx:34` against `changeThreshold`, `src/compliance/change.ts:6`); and `src/assets/hero.png` plus `src/assets/react.svg` are Vite leftovers referenced nowhere, 17,183 bytes together.
+- No code changed. `npm run verify` and `npm run test:e2e` were green before the copy (131 unit tests, 51 browser checks) and the tree is unchanged by this entry.
+
+### 2026-10-21: pulled the parent's redesign (fork `main` fast-forward to `f8a302a`)
+
+- The parent `abivan100-stack/pitwatch-3d` merged the `ui-redesign` branch as PR #2 (`38613ad`) and added `f8a302a`. This fork's `main` was an ancestor of `upstream/main`, so the pull was `git merge --ff-only upstream/main`: 12 commits, no conflict resolution, no rewritten history.
+- What came in: a landing page at `#/` (the live 3D model driven by four buttons, not a scroll story), a dashboard shell in `src/ui/shell/` (slate sidebar, header, load gate), pages in `src/ui/pages/` (`#/overview`, `#/findings`, `#/rules`, `#/uncertainty`, `#/about`), a schematic site plan on the Overview, the PitWatch logo and favicon set, and `STATUS.md` plus the competition improvement plan. `TopBar`, `PermitSheet`, `OverviewPanel` and `AboutDataPanel` are gone: their content moved to pages, not deleted.
+- The parent's `AGENTS.md` header calls the parent the main repo. In this fork that is wrong, so the header was restored to the fork's wording (origin is the fork, the parent is `upstream`); the parent's log entries are kept as it wrote them, and the fork-era issue citations keep the `Raghav2012Code/pitwatch#N` form, which is unambiguous in both repos.
+- Nothing else needed changing: `package.json` is identical to before the pull, so no dependency work; our `CoordinateEntry`, `zone.ts`, the layer drawer, the worker reuse and the retry path all survived the parent's merge of the fork's PR #1 untouched.
+- Checks after the pull: `npm run verify` passes (131 unit tests in 17 files) and `npm run test:e2e` passes all 51 Playwright checks against the production build. Browser review at 1440, 1100 and 800 px on the Overview and the 3D map: no horizontal overflow, no console errors, findings and pins render.
+- Known and left as upstream recorded them: the 3D map is tight at 1100 px with both side panels open, and the layers panel covers a lot of the model at 800 px.
 
 ### 2026-10-22: README reflects the merged dashboard
 

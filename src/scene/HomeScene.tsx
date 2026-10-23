@@ -179,6 +179,7 @@ export default function HomeScene({ step, active }: { step: number; active: bool
         morph={readTime}
         marks={marks}
         overlay={overlay}
+        visible
       />
       {step >= 4 && lease && <Line points={lease} color="#fbfaf6" lineWidth={2.5} />}
       {step >= 4 && findings.map((f) => <Pin key={f.id} f={f} survey={current} ex={ex} />)}

@@ -7,6 +7,13 @@ import { Page } from '../shell/AppShell'
 import type { ComponentType, SVGProps } from 'react'
 import type { RuleId } from '../../domain/types'
 
+/**
+ * The thresholds, read from the live config so the page cannot drift from the engine: R1 and R3
+ * need the noise band plus the minimum-change allowance, R2 only the current survey's uncertainty.
+ */
+const { k, minChangeM } = COMPLIANCE_CONFIG
+const CHANGE_TEST = `${minChangeM} m + ${k}σ`
+
 /** The three permit conditions, each with the test PitWatch applies and the live result. */
 const CONDITIONS: {
   rule: RuleId
@@ -18,19 +25,19 @@ const CONDITIONS: {
     rule: 'R1',
     Icon: BoundaryIcon,
     text: 'No ground may be excavated outside the lease boundary, or inside the safety buffer that runs along its inner edge.',
-    test: 'removed depth > 2σ  and  cell outside (lease − buffer)',
+    test: `removed depth > ${CHANGE_TEST}  and  cell outside (lease − buffer)`,
   },
   {
     rule: 'R2',
     Icon: FloorIcon,
     text: 'The pit floor may not be taken below the approved floor level shown on the mine plan.',
-    test: 'approved floor − current surface > 2σ',
+    test: `approved floor − current surface > ${k}σ2  (current survey only, no minimum change)`,
   },
   {
     rule: 'R3',
     Icon: TerrainIcon,
     text: 'Waste rock may only be placed inside the dump zones approved in the mine plan.',
-    test: 'added height > 2σ  and  cell outside every dump zone',
+    test: `added height > ${CHANGE_TEST}  and  cell outside every dump zone`,
   },
 ]
 
@@ -43,14 +50,17 @@ export function RulesPage() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-12">
         <p className="max-w-[44rem] text-[15.5px] leading-7 text-ink-dim">
           A lease is written in sentences. PitWatch turns each condition into a test that every 8 m
-          grid cell either passes or fails, and fails it only when the change is bigger than the
-          survey can be trusted to measure.
+          grid cell either passes or fails. R1 and R3 report a change only once it clears the survey
+          noise ({k}σ, σ being the combined error of the two surveys) and a minimum-change allowance
+          of {minChangeM} m on top of it. R2 measures the ground against a fixed approved floor
+          rather than a second survey, so it uses the current survey's uncertainty alone and no
+          minimum-change allowance.
         </p>
         <div className="permit-test self-start">
           <span className="text-ink-faint">A cell counts as changed when</span>
-          <code>
+          <span className="font-mono text-ink">
             |Δh| &gt; {COMPLIANCE_CONFIG.minChangeM} m + {COMPLIANCE_CONFIG.k}σ
-          </code>
+          </span>
           <span className="text-ink-faint">σ is the combined error of the two surveys.</span>
         </div>
       </div>

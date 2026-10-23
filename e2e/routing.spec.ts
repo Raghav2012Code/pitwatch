@@ -35,6 +35,8 @@ test('the footer links open the Terms, License and Contact pages', async ({ page
     await expect(page).toHaveURL(hash)
     await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
     await page.getByRole('link', { name: 'Back to home' }).click()
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('See where the digging')
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(
+      'See where a simulated mine',
+    )
   }
 })

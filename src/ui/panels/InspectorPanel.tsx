@@ -154,12 +154,14 @@ function Measurement() {
     () => (current && b ? measureOnSurface(current.grid, current.elevations, a, b) : null),
     [current, a, b],
   )
+  // The profile is only built when both ends are on the grid: a line with an end outside the
+  // survey has no elevation to read, and it must not ask for an unbounded number of samples.
   const profile = useMemo(
     () =>
-      current && baseline && b
+      current && baseline && b && m
         ? profileAlong(current.grid, a, b, current.elevations, baseline.elevations)
         : null,
-    [current, baseline, a, b],
+    [current, baseline, a, b, m],
   )
   // Overlapping pit zones: the chart uses the zone the line is deepest below, which is the same
   // zone the depth rule would blame, rather than whichever zone happens to come first.
@@ -210,6 +212,12 @@ function Measurement() {
               inPit={inPit}
               sigma={sigma}
             />
+            {profile.limited && (
+              <p className="mt-1.5 text-[11.5px] leading-4 text-ink-faint">
+                The line is longer than the survey samples finely: the profile is read every{' '}
+                {n(profile.step, 1)} m instead of every half cell.
+              </p>
+            )}
           </div>
         </>
       )}

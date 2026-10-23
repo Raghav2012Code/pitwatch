@@ -26,6 +26,8 @@ interface AppState {
   /** Desktop only: panels collapsed to give the map more room. */
   layersHidden: boolean
   detailsHidden: boolean
+  /** True once the details panel's visibility was decided on purpose, so the width rule stops. */
+  detailsUserSet: boolean
   layers: Record<LayerId, boolean>
   exaggeration: number
   tool: Tool
@@ -46,6 +48,8 @@ interface AppState {
   setMenuOpen: (open: boolean) => void
   toggleLayers: () => void
   toggleDetails: () => void
+  /** Sets the details panel's visibility without claiming the visitor asked for it. */
+  setDetailsHidden: (hidden: boolean) => void
   toggleLayer: (id: LayerId) => void
   setExaggeration: (v: number) => void
   requestView: (kind: ViewRequest) => void
@@ -65,11 +69,9 @@ export const useAppStore = create<AppState>((set) => ({
   drawerOpen: false,
   sidebar: 'rail',
   menuOpen: false,
-  // Between 1024 and 1280 px both cards leave the model little room: start with the layers card
-  // folded away (the header toggle and the [ key bring it back).
-  layersHidden:
-    typeof window !== 'undefined' && window.innerWidth >= 1024 && window.innerWidth < 1280,
+  layersHidden: false,
   detailsHidden: false,
+  detailsUserSet: false,
   // Natural look by default: aerial image, no tint or contours; the lease line and the
   // engine's findings are on because they are what the monitor is for.
   layers: {
@@ -96,7 +98,8 @@ export const useAppStore = create<AppState>((set) => ({
   setSidebar: (sidebar) => set({ sidebar }),
   setMenuOpen: (menuOpen) => set({ menuOpen }),
   toggleLayers: () => set((s) => ({ layersHidden: !s.layersHidden })),
-  toggleDetails: () => set((s) => ({ detailsHidden: !s.detailsHidden })),
+  toggleDetails: () => set((s) => ({ detailsHidden: !s.detailsHidden, detailsUserSet: true })),
+  setDetailsHidden: (detailsHidden) => set({ detailsHidden }),
   toggleLayer: (id) => set((s) => ({ layers: { ...s.layers, [id]: !s.layers[id] } })),
   setExaggeration: (v) =>
     set({ exaggeration: Math.min(EXAGGERATION.max, Math.max(EXAGGERATION.min, v)) }),
@@ -120,6 +123,9 @@ export const useAppStore = create<AppState>((set) => ({
             activeTab: 'findings' as const,
             drawerOpen: false,
             detailsHidden: false,
+            // The app opened the panel to show the evidence, so the width rule must not close it
+            // again later.
+            detailsUserSet: true,
             epoch: 'current' as const,
             layers: { ...s.layers, terrain: true, findings: true },
           }

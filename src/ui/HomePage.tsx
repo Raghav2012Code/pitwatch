@@ -56,7 +56,7 @@ const VIEWS = [
     sub: 'the difference',
     t: 1,
     title: 'Measured change',
-    text: 'Rust where rock was removed, blue where material was added. Anything smaller than the survey noise is ignored.',
+    text: 'Rust where rock was removed, blue where material was added. Anything that does not clear the survey noise plus the minimum-change allowance is ignored.',
   },
   {
     id: 4,
@@ -64,7 +64,7 @@ const VIEWS = [
     sub: 'vs the permit',
     t: 1,
     title: 'Held against the permit',
-    text: 'Each pin is a place that breaks the lease. Red cells are violations, purple the most severe ones, amber cells warnings.',
+    text: 'Each pin is ground the engine classifies as breaking the lease in this simulated scenario. Red cells are violations, purple the most severe ones, amber cells warnings.',
   },
 ] as const
 
@@ -198,12 +198,16 @@ export function HomePage() {
       <main id="content" tabIndex={-1}>
         <section className="hero">
           <div className="hero-copy">
-            <h1 className="cond hero-title">See where the digging broke the permit.</h1>
-            <p className="mt-6 max-w-[34rem] text-[18px] leading-8 text-ink-dim max-sm:mt-0 max-sm:text-[16px] max-sm:leading-7">
+            <h1 className="cond hero-title">See where a simulated mine breaks its permit.</h1>
+            <p className="mt-6 max-w-[34rem] text-[18px] leading-8 text-ink-dim max-sm:hidden">
               PitWatch compares two drone surveys of an open-pit mine in 3D and checks every change
               against the lease: the boundary, the approved depth and the permitted dump zones.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3 max-sm:mt-0">
+            {/* One line long, so the model and both calls to action share the phone's first screen. */}
+            <p className="mt-6 max-w-[34rem] text-[18px] leading-7 text-ink-dim sm:hidden">
+              Two drone surveys of one pit, compared in 3D against the lease.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
               <a href={OVERVIEW_HREF} className="btn-primary btn-lg">
                 Open the dashboard
               </a>

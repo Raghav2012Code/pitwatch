@@ -1453,6 +1453,16 @@ body {
   .noise-marker.real {
     background: var(--color-violation);
   }
+  /* The R1/R3 reporting threshold: a second, sharper line than the noise band. */
+  .noise-limit {
+    position: absolute;
+    top: -10px;
+    bottom: -10px;
+    width: 2px;
+    translate: -50% 0;
+    background: repeating-linear-gradient(to bottom, var(--color-oxide) 0 4px, transparent 4px 8px);
+    transition: left 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
 
   /* Resolution panels: one cross-section per way of measuring. */
   .res-panel {
@@ -1752,6 +1762,30 @@ body {
     background: color-mix(in srgb, var(--color-panel) 80%, transparent);
     pointer-events: none;
   }
+  /* Narrow screens: tighter hero so the model and both calls to action share the first screens. */
+  @media (width < 64rem) {
+    .hero {
+      gap: 20px;
+      padding-block: 12px 40px;
+    }
+    .hero-stage {
+      order: -1;
+      min-height: min(46vh, 420px);
+    }
+    /* The controls are a fixed height, so the model takes what is left of the stage. */
+    .hero-model {
+      min-height: 140px;
+    }
+    /* The phone headline needs a little more room per line, or it runs to four. */
+    .hero-title {
+      max-width: 14ch;
+    }
+    /* Slightly smaller buttons, so the two calls to action sit on one row at phone width. */
+    .hero-copy .btn-lg {
+      padding-inline: 14px;
+      font-size: 15px;
+    }
+  }
   .hero-controls {
     position: relative;
     z-index: 2;
@@ -1759,30 +1793,8 @@ body {
     background: color-mix(in srgb, var(--color-panel) 94%, transparent);
     border-top: 1px solid var(--color-line);
   }
-  /* Phones: a model tall enough to read, a compact caption, no second date readout. */
+  /* Phones: a compact caption and no second date readout, so the first screen holds the model. */
   @media (width < 40rem) {
-    /* The live model comes right after the call to action; the three facts follow it. */
-    .hero {
-      gap: 20px;
-    }
-    .hero-copy {
-      display: contents;
-    }
-    .hero-copy > * {
-      order: 1;
-    }
-    .hero-stage {
-      order: 2;
-      min-height: 0;
-    }
-    .hero-copy > .hero-facts {
-      order: 3;
-    }
-    .hero-model {
-      flex: none;
-      height: min(62vw, 340px);
-      min-height: 260px;
-    }
     .hero-controls {
       padding: 12px 14px 14px;
     }
@@ -1792,7 +1804,6 @@ body {
     .hero-facts {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      margin-top: 0;
     }
     .hero-facts > div:last-child {
       grid-column: 1 / -1;

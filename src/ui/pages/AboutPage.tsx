@@ -114,9 +114,11 @@ export function AboutPage() {
               What findings mean
             </h2>
             <p className="mt-3 max-w-[34rem] text-[15px] leading-7 text-ink-dim">
-              Findings help decide where to send an inspector first. They do not prove a breach and
-              do not replace a site inspection. A real deployment would swap the synthetic surveys
-              for a GeoTIFF provider; the rules and the screens stay the same.
+              Findings are the demo engine's classifications of the simulated change: violation and
+              warning are its labels, not a regulator's. They help decide where to send an inspector
+              first, and do not prove a breach or replace a site inspection. A real deployment would
+              swap the synthetic surveys for a GeoTIFF provider; the rules and the screens stay the
+              same.
             </p>
           </section>
 

@@ -110,6 +110,33 @@ test('a coordinate outside the grid is applied and reported honestly', async ({ 
   ).toBeVisible()
 })
 
+test('a very long typed measurement is refused instead of profiled', async ({ page }) => {
+  const failures: string[] = []
+  page.on('pageerror', (e) => failures.push(String(e)))
+
+  await openMonitor(page)
+  await page.keyboard.press('m')
+  await openInspector(page)
+
+  // A on the survey corner, B a million kilometres east. The line used to be profiled at every
+  // half cell: 250 million samples, built twice (Inspector and map line), which exhausted the
+  // browser long before it could say the line cannot be read.
+  await enterCoordinate(page, '0', '0')
+  await enterCoordinate(page, '1000000000', '0')
+
+  // The panel says the line cannot be read, and no measurement is offered.
+  await expect(
+    page.getByText('One end is outside the survey area. Click another point.'),
+  ).toBeVisible()
+  await expect(page.locator('#details-tabpanel dt', { hasText: 'Horizontal' })).toHaveCount(0)
+
+  // The form says where the point is, and the page is still alive.
+  const status = page.locator('form').getByRole('status')
+  await expect(status).toContainText('outside the survey grid')
+  await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible()
+  expect(failures).toEqual([])
+})
+
 test('the coordinate form fits the phone drawer', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await openMonitor(page)

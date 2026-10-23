@@ -223,6 +223,7 @@ export function Terrain({
   morphTo,
   morph,
   onPick,
+  visible,
 }: {
   survey: TerrainSurvey
   marks?: TerrainMarks
@@ -231,6 +232,8 @@ export function Terrain({
   morph?: () => number
   /** Called with the world position of a click (not a drag) on the surface. */
   onPick?: (point: THREE.Vector3) => void
+  /** Drawn or not. Defaults to the map's Terrain layer switch; the landing page always passes it. */
+  visible?: boolean
 }) {
   const exaggeration = useAppStore((s) => s.exaggeration)
   const layers = useAppStore((s) => s.layers)
@@ -342,7 +345,7 @@ export function Terrain({
   })
 
   return (
-    <group scale={[1, exaggeration, 1]} visible={layers.terrain}>
+    <group scale={[1, exaggeration, 1]} visible={visible ?? layers.terrain}>
       <mesh
         geometry={geometry.surface}
         material={materials.surface}

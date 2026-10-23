@@ -65,17 +65,6 @@ export function SidePanel() {
       {/* One scroll area under the tabs: the layer block and the tab content scroll together,
           so a capped block cannot clip a switch row in half on a short phone. */}
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {/* Below `md` the floating Map card is hidden, so its switches live here instead: same
-            component, one placement at a time, no duplicate controls at any width. */}
-        <section aria-label="Map layers" className="md:hidden border-b border-line px-3 pt-3 pb-2">
-          <LayerSwitches />
-          {ready && (
-            <div className="mt-3 border-t border-line pt-3">
-              <ExaggerationSlider />
-            </div>
-          )}
-        </section>
-
         <div
           role="tabpanel"
           id="details-tabpanel"
@@ -86,6 +75,22 @@ export function SidePanel() {
             <Content />
           </div>
         </div>
+        {/* Below `md` the floating Map card is hidden, so its switches live here instead: same
+            component, one placement at a time. They sit behind a closed disclosure so the drawer
+            opens on the findings, not on eight switches. */}
+        <details className="md:hidden border-t border-line px-3 py-2">
+          <summary className="cursor-pointer list-none py-1 text-[12.5px] font-medium text-ink">
+            Map layers and vertical scale
+          </summary>
+          <div className="pt-2">
+            <LayerSwitches />
+            {ready && (
+              <div className="mt-3 border-t border-line pt-3">
+                <ExaggerationSlider />
+              </div>
+            )}
+          </div>
+        </details>
       </div>
     </aside>
   )
