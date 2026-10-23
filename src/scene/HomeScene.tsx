@@ -1,6 +1,6 @@
 import { Line } from '@react-three/drei'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { useMemo, useRef } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { useEffect, useMemo, useRef } from 'react'
 import * as THREE from 'three'
 import type { ComplianceFinding, TerrainSurvey } from '../domain/types'
 import { sampleBilinear } from '../geo/grid'
@@ -14,11 +14,11 @@ import { Terrain } from './Terrain'
 import { BASE_RL, toScene } from './terrainGeometry'
 
 /*
- * The home-page model: the same simulated surveys and engine output as the monitor,
- * slowly turning (whole block in frame) while the story steps change what it shows:
- *   baseline, morphing smoothly to current as the page scrolls between those two steps,
- *   then 3 measured change, 4+ findings with lease line and pins.
- * No controls, so scrolling the page is never captured by the canvas.
+ * The home-page model: the same simulated surveys and engine output as the monitor, held
+ * still (whole block in frame) while the story steps change what it shows:
+ *   baseline, morphing smoothly to current, then 3 measured change, 4+ findings with lease
+ *   line and pins.
+ * It never turns by itself. A horizontal drag turns it; vertical swipes still scroll the page.
  */
 
 const backdrop = () =>
@@ -62,13 +62,42 @@ const SWEEP = Math.hypot(1024, 1024)
 const THICKNESS = 260
 
 /**
- * Slow orbit around the block centre. The distance is recomputed from the canvas size so
- * the whole block, corners included, stays in frame at every angle and aspect ratio.
+ * Orbit around the block centre, turned only by a horizontal drag. The distance is recomputed
+ * from the canvas size so the whole block, corners included, stays in frame at every angle and
+ * aspect ratio.
  */
 function Orbit({ target }: { target: [number, number, number] }) {
   const angle = useRef(0.55)
-  useFrame(({ camera, size }, dt) => {
-    if (!reducedMotion()) angle.current += dt * 0.045
+  const host = useThree((s) => s.gl.domElement.parentElement)
+
+  useEffect(() => {
+    if (!host) return
+    let last: number | null = null
+    const down = (e: PointerEvent) => {
+      last = e.clientX
+      host.setPointerCapture(e.pointerId)
+    }
+    const move = (e: PointerEvent) => {
+      if (last === null) return
+      angle.current -= (e.clientX - last) * 0.007
+      last = e.clientX
+    }
+    const up = () => {
+      last = null
+    }
+    host.addEventListener('pointerdown', down)
+    host.addEventListener('pointermove', move)
+    host.addEventListener('pointerup', up)
+    host.addEventListener('pointercancel', up)
+    return () => {
+      host.removeEventListener('pointerdown', down)
+      host.removeEventListener('pointermove', move)
+      host.removeEventListener('pointerup', up)
+      host.removeEventListener('pointercancel', up)
+    }
+  }, [host])
+
+  useFrame(({ camera, size }) => {
     const cam = camera as THREE.PerspectiveCamera
     const v = THREE.MathUtils.degToRad(cam.fov) / 2
     const h = Math.atan(Math.tan(v) * (size.width / size.height))
@@ -125,7 +154,7 @@ export default function HomeScene({ step, active }: { step: number; active: bool
       dpr={[1, 2]}
       camera={{ fov: 35, near: 10, far: 16000, position: [0, 3000, 2000] }}
       gl={{ antialias: true, alpha: true }}
-      style={{ pointerEvents: 'none' }}
+      style={{ touchAction: 'pan-y', cursor: 'grab' }}
     >
       <fog attach="fog" args={[fog, 5200, 12000]} />
       <hemisphereLight args={['#e4ebee', '#6b5a48', 0.95]} />

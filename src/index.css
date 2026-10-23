@@ -1580,6 +1580,18 @@ body {
     position: absolute !important;
     inset: 0;
   }
+  .model-hint {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    z-index: 2;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    color: var(--color-ink-faint);
+    background: color-mix(in srgb, var(--color-panel) 80%, transparent);
+    pointer-events: none;
+  }
   .hero-controls {
     position: relative;
     z-index: 2;

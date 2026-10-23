@@ -255,6 +255,9 @@ export function HomePage() {
               )}
             </div>
 
+            <p className="model-hint" aria-hidden="true">
+              Drag to turn
+            </p>
             <div className="hero-controls">
               <div role="group" aria-label="What the model shows" className="seg seg-fill">
                 {VIEWS.map((v) => (
