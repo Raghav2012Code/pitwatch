@@ -28,16 +28,14 @@ export function OverviewPage() {
       <LoadGate>
         <Verdict />
         <Figures />
-        <div className="mt-10 grid gap-x-12 gap-y-10 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <div className="mt-10 grid gap-x-12 gap-y-10 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+          <SitePlan />
           <div className="space-y-10">
-            <RuleResults />
             <Attention />
-          </div>
-          <div className="space-y-10">
-            <SitePlan />
-            <Facts />
+            <RuleResults />
           </div>
         </div>
+        <Facts />
       </LoadGate>
     </Page>
   )
@@ -242,7 +240,7 @@ function Facts() {
   const m = MINE_INFO
 
   return (
-    <div className="space-y-10">
+    <div className="mt-10 space-y-10">
       <section aria-labelledby="surveys" className="rule-section">
         <div className="flex items-center justify-between gap-3">
           <h2 id="surveys" className="section-title">
