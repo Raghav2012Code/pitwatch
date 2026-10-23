@@ -67,9 +67,6 @@ function Verdict() {
         <a href={ROUTE_HREF.findings} className="btn-primary">
           Review findings
         </a>
-        <a href={ROUTE_HREF.monitor} className="btn">
-          Open the 3D map
-        </a>
       </div>
     </section>
   )

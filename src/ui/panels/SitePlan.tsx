@@ -5,7 +5,7 @@ import { useAppStore } from '../../state/store'
 import { useTerrain } from '../../state/terrain'
 import { GLYPH, RULE_NAMES, toneOf } from '../findings'
 import { ProvenanceTag } from '../ProvenanceTag'
-import { navigate } from '../route'
+import { navigate, ROUTE_HREF } from '../route'
 
 /** Marker size in metres on the plan (about 24 px at the width the Overview gives it). */
 const PIN = 104
@@ -129,7 +129,12 @@ export function SitePlan() {
         <h2 id="site-plan" className="section-title">
           Site plan
         </h2>
-        <ProvenanceTag value="derived" />
+        <div className="flex items-center gap-3">
+          <ProvenanceTag value="derived" />
+          <a href={ROUTE_HREF.monitor} className="btn-primary">
+            Explore in 3D
+          </a>
+        </div>
       </div>
       <figure className="mt-3">
         <svg
