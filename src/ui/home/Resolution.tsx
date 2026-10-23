@@ -77,11 +77,11 @@ export function Resolution() {
   return (
     <section aria-labelledby="resolution-title" className="rule-section mt-14">
       <div>
-        <div className="max-w-[44rem]">
+        <div className="grid gap-3 lg:grid-cols-2 lg:items-end lg:gap-12">
           <h2 id="resolution-title" className="section-title">
-            The same pit, three ways of measuring it
+            Why survey resolution matters
           </h2>
-          <p className="mt-3 text-[15px] leading-7 text-ink-dim">
+          <p className="text-[15px] leading-7 text-ink-dim">
             A compliance check is only as sharp as the survey behind it. Free global elevation data
             is too coarse to check a 10 m bench. Mine-scale surveys are not.
           </p>
