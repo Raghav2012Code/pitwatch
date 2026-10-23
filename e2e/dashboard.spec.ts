@@ -47,7 +47,7 @@ test('the overview reports the engine result and the figures behind it', async (
 
   // R1 to R3 each report a result.
   for (const rule of ['Lease boundary and buffer', 'Approved pit floor', 'Permitted dump zones'])
-    await expect(page.getByText(rule).first()).toBeVisible()
+    await expect(page.locator('.rule-result', { hasText: rule })).toBeVisible()
 })
 
 test('Show on map from the findings page lands on the map with that finding selected', async ({

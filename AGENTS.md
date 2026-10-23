@@ -50,6 +50,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-23: improvement issues #13 to #40 (agent-ready ones)
+
+- Home: phone hero puts the live model in the first screen; model buttons are numbered and show the survey dates; the rules read as a ruled ledger (no cards); the hero model no longer spins (horizontal drag turns it); the header gains 3D map and About links and scrolls away on phones.
+- Overview: smooth site-plan change layer, "Explore in 3D" next to the plan, new order (verdict, plan beside findings and rules, facts in three columns). Area figures were audited and found correct; `src/compliance/areas.test.ts` pins them.
+- Findings page: ruled rows with status and rule filters, figures in line, explanation on demand. The map's Findings tab uses the same rows. Permit rules page is a ledger with the 0.5 m + 2σ threshold up front. Uncertainty: vector cross-sections replace the pixel pits, bigger noise sliders with a plain-language verdict.
+- Map: two-row timeline with a 44 px slider hit area on phones, touch-aware hints, narrower side cards, and the layers card starts folded between 1024 and 1280 px. Aerial image is 1.6 m per pixel (elevation grid stays 8 m, so no finding figure moved).
+- Not done here: #18, #19, #20, #22, #27, #30, #33, #35 (assigned to the fork contributor), #21 (umbrella, waits on #18 and #20) and #41 (final bug check). #36 is only partly done: the elevation grid is still 8 m.
+- Verification: `npm run verify` passes (135 unit tests); `npm run test:e2e` first run had 3 failures from changed selectors and a contrast issue on the new model-button captions; after fixing, the affected specs (a11y, dashboard, finding-evidence, home) pass. Not rerun as one clean full run, and no manual review at 1100 and 800 px of every page.
+
 ### 2026-10-22: README reflects the merged dashboard
 
 - Documented the Overview site plan, synchronized finding selection and evidence restoration, phone layer controls, foldable map key, and in-place loading retry. Added a five-step inspection walkthrough.
