@@ -22,3 +22,19 @@ for (const route of ['overview', 'monitor', 'findings', 'rules', 'uncertainty', 
     await expect(page).toHaveURL(new RegExp(`#/${route}$`))
   })
 }
+
+test('the footer links open the Terms, License and Contact pages', async ({ page }) => {
+  await page.goto('/')
+  for (const [name, hash] of [
+    ['Terms and Conditions', /#\/terms$/],
+    ['License', /#\/license$/],
+    ['Contact', /#\/contact$/],
+  ] as const) {
+    await page.goto('/')
+    await page.getByRole('navigation', { name: 'Legal' }).getByRole('link', { name }).click()
+    await expect(page).toHaveURL(hash)
+    await expect(page.getByRole('heading', { level: 1, name })).toBeVisible()
+    await page.getByRole('link', { name: 'Back to home' }).click()
+    await expect(page.getByRole('heading', { level: 1 })).toContainText('See where the digging')
+  }
+})

@@ -2067,6 +2067,39 @@ body {
     font-size: 13px;
     color: var(--color-side-faint);
   }
+  .close-foot {
+    flex-wrap: wrap;
+  }
+  .close-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 20px;
+    margin-left: auto;
+  }
+  .close-links a:hover {
+    color: var(--color-side-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .legal-page {
+    max-width: 46rem;
+    margin-inline: auto;
+    padding: 48px var(--gutter) 80px;
+  }
+  .legal-page h2 {
+    margin-top: 32px;
+    font-size: 20px;
+    font-weight: 700;
+    font-stretch: 72%;
+    color: var(--color-ink);
+  }
+  .legal-page p,
+  .legal-page li {
+    margin-top: 10px;
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--color-ink-dim);
+  }
   .close-foot .brand-mark {
     width: 32px;
     height: 24px;

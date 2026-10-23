@@ -423,6 +423,11 @@ export function HomePage() {
                 <PitMark className="h-5 w-8" />
               </span>
               <span>PitWatch, a demo of permit compliance monitoring for open-pit mines.</span>
+              <nav aria-label="Legal" className="close-links">
+                <a href={ROUTE_HREF.terms}>Terms and Conditions</a>
+                <a href={ROUTE_HREF.license}>License</a>
+                <a href={ROUTE_HREF.contact}>Contact</a>
+              </nav>
             </div>
           </div>
         </section>

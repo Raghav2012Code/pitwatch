@@ -2,7 +2,7 @@ import type { ComponentType, SVGProps } from 'react'
 import { CubeIcon, FindingIcon, InfoIcon, OverviewIcon, RulesIcon, SigmaIcon } from '../icons'
 import type { Route } from '../route'
 
-export type DashboardRoute = Exclude<Route, 'home'>
+export type DashboardRoute = Exclude<Route, 'home' | 'terms' | 'license' | 'contact'>
 
 interface Page {
   /** Sidebar label and the page heading. */

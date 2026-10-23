@@ -4,7 +4,17 @@ import { useSyncExternalStore } from 'react'
  * The landing page and the dashboard screens, addressed by URL hash so links and the back
  * button work without a router.
  */
-export type Route = 'home' | 'overview' | 'monitor' | 'findings' | 'rules' | 'uncertainty' | 'about'
+export type Route =
+  | 'home'
+  | 'overview'
+  | 'monitor'
+  | 'findings'
+  | 'rules'
+  | 'uncertainty'
+  | 'about'
+  | 'terms'
+  | 'license'
+  | 'contact'
 
 export const ROUTE_HREF: Record<Route, string> = {
   home: '#/',
@@ -14,6 +24,9 @@ export const ROUTE_HREF: Record<Route, string> = {
   rules: '#/rules',
   uncertainty: '#/uncertainty',
   about: '#/about',
+  terms: '#/terms',
+  license: '#/license',
+  contact: '#/contact',
 }
 
 export const HOME_HREF = ROUTE_HREF.home
@@ -33,8 +46,14 @@ const subscribe = (onChange: () => void) => {
 
 export const useRoute = () => useSyncExternalStore(subscribe, read)
 
-/** Everything except the landing page lives inside the dashboard shell. */
-export const isDashboard = (route: Route): boolean => route !== 'home'
+/** The standalone pages linked from the landing page footer. */
+export const LEGAL_ROUTES = ['terms', 'license', 'contact'] as const
+export type LegalRoute = (typeof LEGAL_ROUTES)[number]
+export const isLegal = (route: Route): route is LegalRoute =>
+  (LEGAL_ROUTES as readonly string[]).includes(route)
+
+/** Everything except the landing page and the legal pages lives inside the dashboard shell. */
+export const isDashboard = (route: Route): boolean => route !== 'home' && !isLegal(route)
 
 /** Goes to a screen by changing the hash, which `useRoute` and the back button both follow. */
 export const navigate = (route: Route) => {
