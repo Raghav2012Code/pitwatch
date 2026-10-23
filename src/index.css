@@ -280,11 +280,18 @@ body {
   }
   @media (width >= 48rem) {
     .stage {
-      left: 272px;
+      left: 240px;
     }
   }
   @media (width >= 64rem) {
     .stage {
+      right: 352px;
+    }
+  }
+  /* From 1280 px the cards widen to their full size. */
+  @media (width >= 80rem) {
+    .stage {
+      left: 272px;
       right: 392px;
     }
   }

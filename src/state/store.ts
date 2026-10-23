@@ -65,7 +65,10 @@ export const useAppStore = create<AppState>((set) => ({
   drawerOpen: false,
   sidebar: 'auto',
   menuOpen: false,
-  layersHidden: false,
+  // Between 1024 and 1280 px both cards leave the model little room: start with the layers card
+  // folded away (the header toggle and the [ key bring it back).
+  layersHidden:
+    typeof window !== 'undefined' && window.innerWidth >= 1024 && window.innerWidth < 1280,
   detailsHidden: false,
   // Natural look by default: aerial image, no tint or contours; the lease line and the
   // engine's findings are on because they are what the monitor is for.
