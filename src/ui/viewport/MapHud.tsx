@@ -319,7 +319,7 @@ export function ScaleBar() {
   // and the camera group in one row, so it drops under the timeline instead of covering a button.
   return (
     <div
-      className="map-chip enter-down pointer-events-none absolute top-4 left-4 flex items-center gap-2.5 max-xl:top-auto max-xl:bottom-24"
+      className="map-chip enter-down pointer-events-none absolute top-4 left-4 flex items-center gap-2.5 max-xl:top-auto max-xl:bottom-24 max-sm:bottom-[8.25rem]"
       style={delay(1.2)}
       aria-hidden="true"
     >

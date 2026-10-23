@@ -23,17 +23,18 @@ export function Timeline() {
     <div className="@container pointer-events-none absolute inset-x-4 bottom-4 flex justify-center">
       <section
         aria-label="Survey timeline"
-        className="card enter-up pointer-events-auto flex w-full max-w-[600px] items-center gap-4 px-4 py-2.5"
+        className="card enter-up pointer-events-auto flex w-full max-w-[600px] flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5 @[480px]:flex-nowrap"
         style={{ '--d': '0.5s' } as CSSProperties}
       >
         <Epoch
           label={baseline.label}
           date={baseline.date}
           id="baseline"
+          className="order-1 flex-1 @[480px]:order-none @[480px]:flex-none"
           shown={epoch === 'baseline'}
           onPick={ready ? setEpoch : undefined}
         />
-        <div className="relative h-7 min-w-[90px] flex-1">
+        <div className="relative order-3 h-7 min-w-[90px] basis-full @[480px]:order-none @[480px]:flex-1 @[480px]:basis-auto">
           <div aria-hidden="true" className="absolute inset-0">
             <div className="track track-draw absolute inset-x-0 top-3" />
             {ticks.map((t) => (
@@ -64,13 +65,14 @@ export function Timeline() {
             onChange={(e) => setEpoch(e.target.value === '1' ? 'current' : 'baseline')}
             aria-label="Survey shown on the map"
             aria-valuetext={`${epoch === 'current' ? current.label : baseline.label} survey`}
-            className="epoch-range inset-x-0 top-0 w-full"
+            className="epoch-range inset-x-0 top-0 w-full pointer-coarse:-top-2 pointer-coarse:h-11"
           />
         </div>
         <Epoch
           label={current.label}
           date={current.date}
           id="current"
+          className="order-2 flex-1 @[480px]:order-none @[480px]:flex-none"
           shown={epoch === 'current'}
           right
           onPick={ready ? setEpoch : undefined}
@@ -90,8 +92,10 @@ function Epoch({
   id,
   shown,
   right,
+  className = '',
   onPick,
 }: {
+  className?: string
   label: string
   date: string
   id: Epoch
@@ -105,7 +109,7 @@ function Epoch({
       disabled={!onPick}
       aria-pressed={shown}
       onClick={() => onPick?.(id)}
-      className={`epoch-btn leading-tight whitespace-nowrap ${right ? 'text-right' : 'text-left'}`}
+      className={`epoch-btn leading-tight whitespace-nowrap ${right ? 'text-right' : 'text-left'} ${className}`}
     >
       <div
         className={`flex items-center gap-1.5 text-[12px] font-semibold text-ink ${right ? 'justify-end' : ''}`}
