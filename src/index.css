@@ -1384,20 +1384,21 @@ body {
     background: var(--color-violation);
   }
 
-  /* Resolution panels: columns sweep in left to right when the page opens. */
+  /* Resolution panels: one cross-section per way of measuring. */
   .res-panel {
-    border-top: 2px solid var(--color-ink);
-    padding-top: 16px;
+    padding-top: 4px;
   }
-  .res-col {
-    opacity: 0;
-    animation: col-in 0.35s ease-out both;
-    animation-delay: calc(0.3s + var(--c) * 40ms);
+  .res-truth {
+    fill: none;
+    stroke: var(--color-contour);
+    stroke-width: 1.5;
+    opacity: 0.5;
   }
-  @keyframes col-in {
-    to {
-      opacity: 1;
-    }
+  .res-line {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 2.5;
+    stroke-linejoin: round;
   }
 }
 
@@ -2214,8 +2215,5 @@ body {
     animation: none !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-  }
-  .res-col {
-    opacity: 1;
   }
 }
