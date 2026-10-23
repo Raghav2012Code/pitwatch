@@ -31,7 +31,11 @@ const LEGEND = [
 const n = (v: number, digits = 0) =>
   v.toLocaleString('en-GB', { minimumFractionDigits: digits, maximumFractionDigits: digits })
 
-/** One finding. `level` is the heading level of its title: 4 inside a panel, 3 on a page. */
+/**
+ * One finding as a compact ruled row, the same anatomy as the Findings page: severity glyph and
+ * rule, the three figures in line, the explanation on demand. `level` is the heading level of
+ * its title.
+ */
 export function FindingCard({ f, level = 4 }: { f: ComplianceFinding; level?: 3 | 4 }) {
   const Title = `h${level}` as const
   const tone = toneOf(f)
@@ -56,7 +60,6 @@ export function FindingCard({ f, level = 4 }: { f: ComplianceFinding; level?: 3 
           </div>
         </div>
       </div>
-      <p className="mt-2 text-[12.5px] leading-5 text-ink-dim">{f.explanation}</p>
       <dl className="finding-figures">
         {[
           ['Area', `${n(f.areaM2)} m²`],
@@ -70,12 +73,16 @@ export function FindingCard({ f, level = 4 }: { f: ComplianceFinding; level?: 3 
         ))}
       </dl>
       <div className="mt-1.5 flex items-center justify-between gap-2">
-        <span className="font-mono text-[11px] text-ink-faint">
-          Centre E {n(f.centroid.x)} m, N {n(f.centroid.y)} m
-        </span>
+        <details className="frow-more">
+          <summary>Why it was flagged</summary>
+          <p>{f.explanation}</p>
+          <p className="mt-2 font-mono text-[11px] text-ink-faint">
+            Centre E {n(f.centroid.x)} m, N {n(f.centroid.y)} m
+          </p>
+        </details>
         <button
           type="button"
-          className="text-[12px] font-semibold text-accent underline underline-offset-2"
+          className="shrink-0 self-start text-[12px] font-semibold text-accent underline underline-offset-2"
           onClick={() => {
             selectFinding(f.id, f.centroid)
             navigate('monitor')
@@ -135,7 +142,7 @@ export function FindingsPanel() {
         ) : findings.length === 0 ? (
           <EmptyNote>No change between the surveys breaks a permit rule.</EmptyNote>
         ) : (
-          <ul className="space-y-2.5">
+          <ul className="finding-list">
             {findings.map((f) => (
               <FindingCard key={f.id} f={f} />
             ))}

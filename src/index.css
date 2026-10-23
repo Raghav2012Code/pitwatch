@@ -198,14 +198,23 @@ body {
 
   /* One finding in the list: severity edge, glyph, rule, explanation, figures. */
   .finding {
-    padding: 12px 14px 12px 12px;
-    border-radius: 6px;
-    border: 1px solid var(--color-line);
+    padding: 12px 4px 10px 12px;
+    border-bottom: 1px solid var(--color-line-strong);
     border-left: 3px solid var(--tone);
-    background: color-mix(in srgb, var(--tone) 5%, var(--color-panel));
   }
   .finding[data-selected] {
-    box-shadow: 0 0 0 2px var(--tone);
+    background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  }
+  .finding-list {
+    border-top: 2px solid var(--color-ink);
+  }
+  .finding .frow-more {
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+  }
+  .finding .frow-more p {
+    font-size: 12.5px;
   }
   .finding-figures {
     display: grid;
