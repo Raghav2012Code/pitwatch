@@ -85,7 +85,7 @@ export function RulesPage() {
                       ) : (
                         <span className="status-led" data-tone="clear" aria-hidden="true" />
                       )}
-                      {own.length ? countText(own) : 'Clear in this demo'}
+                      {own.length ? countText(own) : 'Clear'}
                     </>
                   ) : (
                     <>

@@ -23,7 +23,7 @@ import { SceneErrorBoundary } from './viewport/SceneErrorBoundary'
 /*
  * The landing page: what PitWatch does, shown on the live 3D model of the simulated surveys,
  * and one click into the dashboard. The model is driven by four buttons, and the sections
- * below it are wired back to the model, so the page reads as one demonstration.
+ * below it are wired back to the model, so the page reads as one piece.
  */
 
 // three.js is large; fetch it only for the landing model.
@@ -188,10 +188,7 @@ export function HomePage() {
           </a>
         </nav>
         <div className="ml-auto flex items-center gap-3">
-          <span className="stamp">
-            <span className="stamp-dot" aria-hidden="true" />
-            SIMULATED DATA
-          </span>
+          <span className="sim-note">Simulated data</span>
           <a href={OVERVIEW_HREF} className="btn-primary max-sm:hidden">
             Open the dashboard
           </a>
@@ -237,7 +234,7 @@ export function HomePage() {
                 <dd>3</dd>
               </div>
               <div>
-                <dt>Result on this demo</dt>
+                <dt>Result</dt>
                 <dd>{ready ? countText(findings) : 'Building the surveys…'}</dd>
               </div>
             </dl>
@@ -330,7 +327,7 @@ export function HomePage() {
               </h2>
               <p>
                 PitWatch tests every 8 m cell of the ground against each one. The result under each
-                rule is what the engine found on this demo.
+                rule is what the engine found on this mine.
               </p>
             </div>
             <ol className="rule-rows">
@@ -363,7 +360,7 @@ export function HomePage() {
                           ) : (
                             <span className="status-led" data-tone="clear" aria-hidden="true" />
                           )}
-                          {own.length ? countText(own) : 'Clear on this demo'}
+                          {own.length ? countText(own) : 'Clear'}
                         </>
                       ) : (
                         'Evaluating…'
@@ -422,7 +419,7 @@ export function HomePage() {
               <span className="brand-mark">
                 <PitMark className="h-5 w-8" />
               </span>
-              <span>PitWatch, a demo of permit compliance monitoring for open-pit mines.</span>
+              <span>PitWatch, permit compliance monitoring for open-pit mines.</span>
               <nav aria-label="Legal" className="close-links">
                 <a href={ROUTE_HREF.terms}>Terms and Conditions</a>
                 <a href={ROUTE_HREF.license}>License</a>

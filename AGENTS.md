@@ -8,7 +8,7 @@ This is the main repo, `abivan100-stack/pitwatch-3d`; work is committed and push
 
 - After every feature: run the checks below, add an entry to **Update log**, commit (Conventional Commits, no Co-Authored-By or other AI attribution), push to `origin/main`, then ask the user before starting the next feature.
 - Keep the session task list current while a run is in flight: mark a ticket in progress when you start it, and completed the moment its checks pass and it is pushed. Not once per batch, and not at the end — a list still showing pending work that has already shipped is worse than no list, because it makes the visible progress wrong.
-- UI must stay honest: SIMULATED DATA badge, provenance tag on values (measured | derived | simulated | unverified), ± uncertainty, no hardcoded alerts, no dead buttons. Unbuilt controls are disabled with a tooltip naming the milestone that enables them.
+- UI must stay honest: the dashboard shows the SIMULATED DATA badge and the landing page a small "simulated data" note (no large callout, no "demo" wording), provenance tag on values (measured | derived | simulated | unverified), ± uncertainty, no hardcoded alerts, no dead buttons. Unbuilt controls are disabled with a tooltip naming the milestone that enables them.
 - `src/domain`, `src/data`, `src/geo`, `src/compliance` are pure TypeScript. ESLint blocks react, three, @react-three/* and zustand imports there.
 
 ## Checks

@@ -6,11 +6,12 @@ import { expect, test } from '@playwright/test'
 const WIDTHS = [390, 800, 1440]
 
 for (const width of WIDTHS) {
-  test(`the simulated-data badge is visible at ${width}px`, async ({ page }) => {
+  test(`the simulated-data note and badge are visible at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
 
     await page.goto('/')
-    const homeBadge = page.locator('.stamp', { hasText: 'SIMULATED DATA' })
+    // The landing page only carries a small note; the dashboard keeps the full badge.
+    const homeBadge = page.locator('.sim-note', { hasText: 'Simulated data' })
     await expect(homeBadge).toBeVisible()
 
     // On phones the corner stacks, so the badge must not sit on top of the floating brand.

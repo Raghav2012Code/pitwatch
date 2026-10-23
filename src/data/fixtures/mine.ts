@@ -1,6 +1,6 @@
 import type { MineInfo, SurveyEpochInfo } from '../../domain/types'
 
-// Fictional mine. Names, operator and coordinates are invented for the demo.
+// Fictional mine. Names, operator and coordinates are invented.
 export const MINE_INFO: MineInfo = {
   id: 'venthar-ridge',
   name: 'Venthar Ridge Iron Pit',

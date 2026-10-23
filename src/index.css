@@ -152,6 +152,14 @@ body {
     );
   }
 
+  /* The landing page's quiet note that the values are simulated. */
+  .sim-note {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
   .stamp-dot {
     width: 6px;
     height: 6px;
