@@ -54,7 +54,7 @@ test('Show on map from the findings page lands on the map with that finding sele
   page,
 }) => {
   await page.goto('/#/findings')
-  const cards = page.locator('li.finding')
+  const cards = page.locator('li.frow')
   await expect(cards).toHaveCount(5, { timeout: 30_000 })
 
   await cards.first().getByRole('button', { name: 'Show on map' }).click()
@@ -115,7 +115,7 @@ test('leaving the map forgets the fly-to, so the next visit opens with the intro
   page,
 }) => {
   await page.goto('/#/findings')
-  await page.locator('li.finding').first().getByRole('button', { name: 'Show on map' }).click()
+  await page.locator('li.frow').first().getByRole('button', { name: 'Show on map' }).click()
   await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible({ timeout: 30_000 })
 
   const nav = page.getByRole('navigation', { name: 'Dashboard' })
