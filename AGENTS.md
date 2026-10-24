@@ -50,6 +50,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-24: simplified abstractions found in the repository audit
+
+- Replaced `WorkerTerrainProvider`'s reference counter and deferred teardown timer with one lazy page-lifetime provider. `App` stays mounted across hash navigation and StrictMode effect replay, while the provider still starts its worker only when survey data is requested. Provider module edits trigger a full reload after disposing the old worker, so the store cannot retain a stale instance across HMR.
+- Removed the unused `isDashboard` route predicate and its standalone test; repository search confirmed there were no production callers. Other route helpers and behavior are unchanged.
+- Verification: `npm run verify` passes (137 unit tests in 19 files); `npm run test:e2e -- --workers=1` passes all 69 checks. `git diff --check` also passes.
+
 ### 2026-10-24: issue #36 terrain resolution
 
 - Increased the synthetic elevation grid from 257 × 257 at 8 m spacing to 513 × 513 at 4 m spacing over the same 0–2048 m extent. Sub-sample offsets scale with cell size so their former ±2 m bound is preserved.
