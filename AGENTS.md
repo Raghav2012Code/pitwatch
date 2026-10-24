@@ -2,7 +2,7 @@
 
 3D mine monitoring and regulatory compliance demo. Frontend only, no backend. Every value is synthetic and labelled so.
 
-Work is committed and pushed to `origin/main`. This checkout is the fork `Raghav2012Code/pitwatch`; the parent `abivan100-stack/pitwatch-3d` is fetched through the `upstream` remote (`git@github.com:abivan100-stack/pitwatch-3d.git`) and in the parent `origin` is the parent itself. The parent merged this fork's work in PR #1 (2026-10-21) and its own copy of this file calls the parent the main repo, so the header here states the fork's view; the parent's log entries are kept as it wrote them, and log entries from the fork's work cite its issues as `Raghav2012Code/pitwatch#N`.
+Work is committed and pushed to `origin/main`. This checkout's `origin` is `abivan100-stack/pitwatch-3d`; verify the remote and current branch before any push. Historical log entries retain the repository and issue references that were accurate when those changes were made.
 
 ## Working rules
 
@@ -49,6 +49,16 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 ## Update log
 
 Newest first.
+
+### 2026-10-24: issue #36 terrain resolution
+
+- Increased the synthetic elevation grid from 257 × 257 at 8 m spacing to 513 × 513 at 4 m spacing over the same 0–2048 m extent. Sub-sample offsets scale with cell size so their former ±2 m bound is preserved.
+- Updated the compliance snapshot for the finer cells. The five finding IDs, rules and statuses are unchanged; affected areas and volumes were deliberately recalculated. Resolution copy now describes 4 m cells and a 513 × 513 grid.
+- Added geometry checks for vertex counts, extent, UV bounds, finite coordinates, upward-facing triangles and skirts. A 30 s setup budget is scoped to the slower two-survey compliance fixture.
+- Corrected the Findings E2E row selector to match the page's `li.frow` markup. The landing-terrain screenshot check now waits for the route-specific canvas, uses an 800 × 720 viewport, and allows 120 s for its four 3D comparisons; the map canvas is in `.scene-wrap`, while `.stage` contains the HUD.
+- Browser review at the Pit camera preset: the pit benches are visibly smoother. Startup was about 5.2 s at 8 m and 10.0 s at 4 m in the same browser and machine. Across three controlled orbit drags at 1440 × 900, the 4 m candidate's median frame interval was 16.7 ms and p95 was 16.8–16.9 ms; 6 of 731 intervals exceeded 33.3 ms, with a 100.1 ms maximum. The 8 m baseline had 0 of 638 intervals over 33.3 ms, with the same 16.7 ms median and 16.8 ms p95. This is sustained near-60 fps with occasional frame hitches; it is not a claim of zero dropped frames.
+- Verification: `npm run verify` passed (140 tests in 19 files). `npm run test:e2e -- --workers=1` passed all 69 checks in one run, including the 1440, 1100, 800 and 390 px resolution/overflow review. The screenshot test uses its route-specific canvas and an 800 × 720 viewport; the monitor accessibility and evidence-restoration checks have 60 s budgets, the terrain-resolution check 60 s and the screenshot comparison 120 s. `git diff --check` passed.
+- Issue #36 is complete and ready to close after its verified push. Issue #21 remains open for the planned final umbrella review after the other open issues are complete.
 
 ### 2026-10-23: remaining improvement issues and final bug check
 

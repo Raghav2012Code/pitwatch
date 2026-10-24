@@ -10,12 +10,8 @@ const photo = buildOrthophoto(GRID, elevations, natural, 'current', SEED, SIZE)
 
 /** Pixel colour at local metres (x, y). */
 const pixel = (x: number, y: number) => {
-  const i = Math.round(
-    ((x - GRID.originXY.x) / ((GRID.cols - 1) * GRID.cellSize)) * (SIZE - 1),
-  )
-  const j = Math.round(
-    ((y - GRID.originXY.y) / ((GRID.rows - 1) * GRID.cellSize)) * (SIZE - 1),
-  )
+  const i = Math.round(((x - GRID.originXY.x) / ((GRID.cols - 1) * GRID.cellSize)) * (SIZE - 1))
+  const j = Math.round(((y - GRID.originXY.y) / ((GRID.rows - 1) * GRID.cellSize)) * (SIZE - 1))
   const o = (j * SIZE + i) * 4
   return [photo.rgba[o], photo.rgba[o + 1], photo.rgba[o + 2]]
 }

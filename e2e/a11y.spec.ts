@@ -78,6 +78,8 @@ test('Keyboard stays inside the open phone navigation drawer', async ({ page }) 
 })
 
 test('monitor has no critical or serious accessibility violations', async ({ page }) => {
+  // The 513 × 513 terrain uses more software-rendering work than the former 257 × 257 grid.
+  test.setTimeout(60_000)
   await page.goto('/#/monitor')
   await expect(page.getByRole('banner').getByText('2 violations, 3 warnings')).toBeVisible({
     timeout: 30_000,
