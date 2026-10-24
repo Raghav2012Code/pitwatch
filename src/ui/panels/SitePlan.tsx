@@ -17,8 +17,6 @@ const CONTOUR_M = 25
 const SCALE_BAR_M = 500
 /** Marker separation and minimum touch target, CSS px. */
 const MARKER_PX = 44
-/** Height of the margin band under the map, metres. Furniture lives here, off the drawing. */
-const BAND_M = 150
 
 interface Placement {
   f: ComplianceFinding
@@ -295,29 +293,22 @@ export function SitePlan() {
             })}
           </div>
 
-          {/* Title block: scale, north and the grid, in the margin rather than on the drawing. */}
-          <svg
-            className="plan-band"
-            viewBox={`0 0 ${extent} ${BAND_M}`}
-            preserveAspectRatio="none"
-            aria-hidden="true"
-          >
-            <g transform={`translate(${g.cellSize * 10} ${BAND_M * 0.55})`}>
-              <path
-                d={`M0 0H${SCALE_BAR_M}M0 -22V22M${SCALE_BAR_M} -22V22`}
-                className="plan-scale"
+          {/* Title block: scale and north in the margin, at a size that does not shrink with the map. */}
+          <div className="plan-band" aria-hidden="true">
+            <span className="plan-scale">
+              <span className="plan-scale-label">{SCALE_BAR_M} m</span>
+              <span
+                className="plan-scale-bar"
+                style={{ width: size.w ? `${(SCALE_BAR_M / extent) * size.w}px` : 0 }}
               />
-              <text x={SCALE_BAR_M / 2} y={-44} className="plan-text" textAnchor="middle">
-                {SCALE_BAR_M} m
-              </text>
-            </g>
-            <g transform={`translate(${extent - g.cellSize * 16} ${BAND_M * 0.46})`}>
-              <path d="M0 -62L32 34L0 12L-32 34Z" className="plan-north" />
-              <text y={70} className="plan-text" textAnchor="middle">
-                N
-              </text>
-            </g>
-          </svg>
+            </span>
+            <span className="plan-north">
+              <svg viewBox="0 0 24 34">
+                <path d="M12 0L24 30L12 22L0 30Z" />
+              </svg>
+              N
+            </span>
+          </div>
         </div>
 
         <figcaption className="plan-key">

@@ -1495,15 +1495,51 @@ body {
   .plan-frame {
     position: relative;
   }
-  .plan-map,
-  .plan-band {
+  .plan-map {
     display: block;
     width: 100%;
     height: auto;
   }
+  /* The margin band: scale and north at a fixed pixel size, so they do not shrink with the map. */
   .plan-band {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 14px;
     border-top: 1px solid var(--color-line);
     background: var(--color-panel);
+  }
+  .plan-scale {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .plan-scale-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1;
+    color: var(--color-ink-dim);
+  }
+  .plan-scale-bar {
+    display: block;
+    height: 7px;
+    border: 2px solid var(--color-ink);
+    border-top: 0;
+  }
+  .plan-north {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1;
+    color: var(--color-ink-dim);
+  }
+  .plan-north svg {
+    width: 13px;
+    height: 19px;
+    fill: var(--color-ink);
   }
   .plan-ground {
     fill: var(--color-panel-2);
@@ -1560,23 +1596,6 @@ body {
     stroke-width: 12px;
     stroke-linejoin: round;
     pointer-events: none;
-  }
-  .plan-scale {
-    fill: none;
-    stroke: var(--color-ink);
-    stroke-width: 2;
-    vector-effect: non-scaling-stroke;
-  }
-  .plan-text {
-    font-family: var(--font-mono);
-    font-size: 58px;
-    fill: var(--color-ink-dim);
-    paint-order: stroke;
-    stroke: var(--color-panel);
-    stroke-width: 8px;
-  }
-  .plan-north {
-    fill: var(--color-ink);
   }
   .plan-leader {
     stroke-width: 1.5;
