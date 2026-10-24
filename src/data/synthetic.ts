@@ -334,12 +334,15 @@ export function naturalField(grid: GridSpec, seed: number): Float32Array {
 }
 
 /** Sub-sample offsets (metres) used to area-average each cell, as gridding a survey does. */
-const SUBSAMPLES: readonly [number, number][] = [
-  [-2, -2],
-  [2, -2],
-  [-2, 2],
-  [2, 2],
-]
+const subsamplesFor = (cellSize: number): readonly [number, number][] => {
+  const offset = cellSize / 4
+  return [
+    [-offset, -offset],
+    [offset, -offset],
+    [-offset, offset],
+    [offset, offset],
+  ]
+}
 
 /**
  * Elevation grid for one epoch, with independent Gaussian survey noise of `sigma`
@@ -356,15 +359,16 @@ export function buildSurface(
 ): Float32Array {
   const out = new Float32Array(grid.cols * grid.rows)
   const noise = gaussian(mulberry32(seed ^ (epoch === 'baseline' ? 0x1b5 : 0x2c7)))
+  const subsamples = subsamplesFor(grid.cellSize)
   for (let row = 0; row < grid.rows; row++) {
     for (let col = 0; col < grid.cols; col++) {
       const i = indexOf(grid, col, row)
       const c = cellCenter(grid, col, row)
       let sum = 0
-      for (const [ox, oy] of SUBSAMPLES) {
+      for (const [ox, oy] of subsamples) {
         sum += trueSurface({ x: c.x + ox, y: c.y + oy }, epoch, seed, natural[i])
       }
-      out[i] = sum / SUBSAMPLES.length + noise() * sigma
+      out[i] = sum / subsamples.length + noise() * sigma
     }
   }
   return out
