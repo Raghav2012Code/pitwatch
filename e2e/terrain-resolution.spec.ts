@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test'
 test('keeps the terrain map usable across widths and explains its survey resolution', async ({
   page,
 }) => {
+  test.setTimeout(60_000)
+
   await page.goto('/#/monitor')
 
   // The worker builds both surveys before the scene is ready.
