@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { acquireTerrainProvider, releaseTerrainProvider } from './data/WorkerTerrainProvider'
+import { getTerrainProvider } from './data/WorkerTerrainProvider'
 import { useTerrain } from './state/terrain'
 import { HomePage } from './ui/HomePage'
 import { AboutPage } from './ui/pages/AboutPage'
@@ -25,11 +25,10 @@ const PAGES: Record<DashboardRoute, () => React.JSX.Element> = {
 export default function App() {
   const route = useRoute()
 
-  // Build the synthetic surveys once, in a worker, as soon as the app opens. Every screen reads
-  // them from the store, so moving between screens neither rebuilds nor leaks the worker.
+  // App stays mounted across hash routes; the provider remains alive through route changes and
+  // StrictMode's effect replay, while its worker still starts only when the surveys are requested.
   useEffect(() => {
-    void useTerrain.getState().load(acquireTerrainProvider())
-    return () => releaseTerrainProvider()
+    void useTerrain.getState().load(getTerrainProvider())
   }, [])
 
   // An address that names no screen is rewritten to the home hash, so the address bar always

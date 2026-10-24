@@ -3,15 +3,15 @@ import { CURRENT_PIT, GRID, PLATEAU_RL, RAMP, ROADS, SEED } from './fixtures/sce
 import { buildOrthophoto } from './orthophoto'
 import { buildSurface, insidePit, naturalField, pitSurface, pitsOf } from './synthetic'
 
-const SIZE = 257 // one pixel per grid cell keeps the test fast
+const SIZE = GRID.cols // one pixel per grid column keeps the test fast
 const natural = naturalField(GRID, SEED)
 const elevations = buildSurface(GRID, 'current', SEED, 0.05, natural)
 const photo = buildOrthophoto(GRID, elevations, natural, 'current', SEED, SIZE)
 
 /** Pixel colour at local metres (x, y). */
 const pixel = (x: number, y: number) => {
-  const i = Math.round((x / ((GRID.cols - 1) * GRID.cellSize)) * (SIZE - 1))
-  const j = Math.round((y / ((GRID.rows - 1) * GRID.cellSize)) * (SIZE - 1))
+  const i = Math.round(((x - GRID.originXY.x) / ((GRID.cols - 1) * GRID.cellSize)) * (SIZE - 1))
+  const j = Math.round(((y - GRID.originXY.y) / ((GRID.rows - 1) * GRID.cellSize)) * (SIZE - 1))
   const o = (j * SIZE + i) * 4
   return [photo.rgba[o], photo.rgba[o + 1], photo.rgba[o + 2]]
 }

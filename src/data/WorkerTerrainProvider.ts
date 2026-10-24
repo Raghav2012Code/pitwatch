@@ -113,44 +113,19 @@ export class WorkerTerrainProvider implements TerrainProvider {
   }
 }
 
-/*
- * One provider for the page lifetime, shared by both screens.
- *
- * A provider used to be constructed on every mount. The constructor started a worker, and the
- * store refused the second load, so every navigation after the first orphaned a worker that
- * nothing could ever shut down. Sharing it means the surveys are built once, and the last
- * consumer to unmount tears the worker down.
- */
-let shared: { provider: WorkerTerrainProvider; users: number } | null = null
-let releaseTimer: ReturnType<typeof setTimeout> | null = null
+// App owns one provider for the page lifetime. Hash navigation changes the screen, not App,
+// and React StrictMode replays effects without ending that lifetime.
+let shared: WorkerTerrainProvider | null = null
 
-export function acquireTerrainProvider(): WorkerTerrainProvider {
-  if (releaseTimer !== null) {
-    clearTimeout(releaseTimer)
-    releaseTimer = null
-  }
-  if (!shared) shared = { provider: new WorkerTerrainProvider(), users: 0 }
-  shared.users += 1
-  return shared.provider
+export function getTerrainProvider(): WorkerTerrainProvider {
+  return (shared ??= new WorkerTerrainProvider())
 }
 
-/**
- * Drop a hold on the shared provider. When the last hold goes, the worker is shut down.
- *
- * A route change unmounts the old screen and mounts the next one in the same task, so the
- * count really does hit zero mid-navigation. The shutdown is deferred by a tick and cancelled
- * if someone acquires again, which keeps an in-flight first load from being failed by
- * simply moving between home and the monitor.
- */
-export function releaseTerrainProvider(): void {
-  if (!shared) return
-  shared.users -= 1
-  if (shared.users > 0 || releaseTimer !== null) return
-  releaseTimer = setTimeout(() => {
-    releaseTimer = null
-    if (shared && shared.users <= 0) {
-      shared.provider.dispose()
-      shared = null
-    }
-  }, 0)
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    shared?.dispose()
+    shared = null
+    // A full reload clears Zustand's reference to the disposed provider and starts fresh code.
+    window.location.reload()
+  })
 }

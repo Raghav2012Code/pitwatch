@@ -52,9 +52,6 @@ export type LegalRoute = (typeof LEGAL_ROUTES)[number]
 export const isLegal = (route: Route): route is LegalRoute =>
   (LEGAL_ROUTES as readonly string[]).includes(route)
 
-/** Everything except the landing page and the legal pages lives inside the dashboard shell. */
-export const isDashboard = (route: Route): boolean => route !== 'home' && !isLegal(route)
-
 /** Goes to a screen by changing the hash, which `useRoute` and the back button both follow. */
 export const navigate = (route: Route) => {
   if (window.location.hash !== ROUTE_HREF[route]) window.location.hash = ROUTE_HREF[route]

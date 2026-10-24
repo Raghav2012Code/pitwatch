@@ -1,9 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import {
-  acquireTerrainProvider,
-  releaseTerrainProvider,
-  WorkerTerrainProvider,
-} from './WorkerTerrainProvider'
+import { describe, expect, it, vi } from 'vitest'
+import { getTerrainProvider, WorkerTerrainProvider } from './WorkerTerrainProvider'
 
 /** Minimal stand-in for a Worker, enough for the provider's wiring. */
 function fakeWorker() {
@@ -19,8 +15,6 @@ function fakeWorker() {
   }
   return w
 }
-
-const settle = () => new Promise((r) => setTimeout(r, 5))
 
 describe('WorkerTerrainProvider', () => {
   it('does not start a worker until a survey is asked for', () => {
@@ -70,38 +64,7 @@ describe('WorkerTerrainProvider', () => {
 })
 
 describe('shared terrain provider', () => {
-  afterEach(async () => {
-    // Drop every hold this test left behind; the module keeps one provider for everyone.
-    for (let i = 0; i < 5; i++) releaseTerrainProvider()
-    await settle()
-  })
-
-  it('hands every consumer the same provider', () => {
-    const a = acquireTerrainProvider()
-    const b = acquireTerrainProvider()
-    expect(a).toBe(b)
-  })
-
-  it('shuts the worker down only when the last consumer leaves', async () => {
-    const a = acquireTerrainProvider()
-    acquireTerrainProvider()
-
-    releaseTerrainProvider()
-    expect(a.disposed).toBe(false)
-
-    releaseTerrainProvider()
-    await settle()
-    expect(a.disposed).toBe(true)
-  })
-
-  it('cancels a pending shutdown when a screen mounts straight back in', async () => {
-    const first = acquireTerrainProvider()
-    releaseTerrainProvider()
-    // A route change unmounts and mounts in the same task; acquiring again must rescue it.
-    const second = acquireTerrainProvider()
-
-    await settle()
-    expect(first.disposed).toBe(false)
-    expect(second).toBe(first)
+  it('returns the same page-lifetime provider', () => {
+    expect(getTerrainProvider()).toBe(getTerrainProvider())
   })
 })

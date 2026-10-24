@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { HOME_HREF, ROUTE_HREF, isDashboard, plannedHash } from './route'
+import { HOME_HREF, ROUTE_HREF, plannedHash } from './route'
 
 describe('plannedHash', () => {
   it('leaves the addresses that name a screen alone', () => {
@@ -17,22 +17,5 @@ describe('plannedHash', () => {
       '#/overview/',
     ])
       expect(plannedHash(hash)).toBe(HOME_HREF)
-  })
-})
-
-describe('isDashboard', () => {
-  it('treats every screen but the landing and legal pages as part of the dashboard', () => {
-    expect(isDashboard('home')).toBe(false)
-    for (const route of ['terms', 'license', 'contact'] as const)
-      expect(isDashboard(route)).toBe(false)
-    for (const route of [
-      'overview',
-      'monitor',
-      'findings',
-      'rules',
-      'uncertainty',
-      'about',
-    ] as const)
-      expect(isDashboard(route)).toBe(true)
   })
 })

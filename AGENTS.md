@@ -50,6 +50,30 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-24: fork synced to the parent (merge of `246c2af`)
+
+- `git merge upstream/main`: 18 commits, one conflict, in this file only. The parent's own log commit for #36 and its provider simplification are in; nothing else needed adjusting.
+- What came in: the survey grid is now 513 × 513 at 4 m over the same 0–2048 m (was 257 × 257 at 8 m), so `#36`'s resolution work is here; `WorkerTerrainProvider` lost its reference counter and deferred-teardown timer for one lazy page-lifetime provider; the unused `isDashboard` route predicate is gone; the compliance snapshot, resolution copy, geometry tests and the Findings/landing-terrain e2e fixes came with them.
+- Conflict resolution: the parent rewrote the header to say its `origin` is the parent, which is the parent's view, so the fork's header above is kept. Both log entries are kept, newest first, and the parent's are unchanged as it wrote them.
+- Issues: the fork copy of the closed parent #36 is #27, now closed with the reason. The parent's two new open issues already have fork copies from 2026-10-23: #44 → fork #30, #45 → fork #31. Nothing else moved; the parent's tracker #42 and its copy #29 are still unchecked lists.
+- Checks: `npm run verify` passes (137 unit tests in 19 files). `npm run test:e2e` passes all 69 checks.
+
+### 2026-10-24: simplified abstractions found in the repository audit
+
+- Replaced `WorkerTerrainProvider`'s reference counter and deferred teardown timer with one lazy page-lifetime provider. `App` stays mounted across hash navigation and StrictMode effect replay, while the provider still starts its worker only when survey data is requested. Provider module edits trigger a full reload after disposing the old worker, so the store cannot retain a stale instance across HMR.
+- Removed the unused `isDashboard` route predicate and its standalone test; repository search confirmed there were no production callers. Other route helpers and behavior are unchanged.
+- Verification: `npm run verify` passes (137 unit tests in 19 files); `npm run test:e2e -- --workers=1` passes all 69 checks. `git diff --check` also passes.
+
+### 2026-10-24: issue #36 terrain resolution
+
+- Increased the synthetic elevation grid from 257 × 257 at 8 m spacing to 513 × 513 at 4 m spacing over the same 0–2048 m extent. Sub-sample offsets scale with cell size so their former ±2 m bound is preserved.
+- Updated the compliance snapshot for the finer cells. The five finding IDs, rules and statuses are unchanged; affected areas and volumes were deliberately recalculated. Resolution copy now describes 4 m cells and a 513 × 513 grid.
+- Added geometry checks for vertex counts, extent, UV bounds, finite coordinates, upward-facing triangles and skirts. A 30 s setup budget is scoped to the slower two-survey compliance fixture.
+- Corrected the Findings E2E row selector to match the page's `li.frow` markup. The landing-terrain screenshot check now waits for the route-specific canvas, uses an 800 × 720 viewport, and allows 120 s for its four 3D comparisons; the map canvas is in `.scene-wrap`, while `.stage` contains the HUD.
+- Browser review at the Pit camera preset: the pit benches are visibly smoother. Startup was about 5.2 s at 8 m and 10.0 s at 4 m in the same browser and machine. Across three controlled orbit drags at 1440 × 900, the 4 m candidate's median frame interval was 16.7 ms and p95 was 16.8–16.9 ms; 6 of 731 intervals exceeded 33.3 ms, with a 100.1 ms maximum. The 8 m baseline had 0 of 638 intervals over 33.3 ms, with the same 16.7 ms median and 16.8 ms p95. This is sustained near-60 fps with occasional frame hitches; it is not a claim of zero dropped frames.
+- Verification: `npm run verify` passed (140 tests in 19 files). `npm run test:e2e -- --workers=1` passed all 69 checks in one run, including the 1440, 1100, 800 and 390 px resolution/overflow review. The screenshot test uses its route-specific canvas and an 800 × 720 viewport; the monitor accessibility and evidence-restoration checks have 60 s budgets, the terrain-resolution check 60 s and the screenshot comparison 120 s. `git diff --check` passed.
+- Issue #36 was closed after the verified push to `origin/main`. Issue #21 remains open for the planned final umbrella review after the other open issues are complete.
+
 ### 2026-10-23: fork synced to the parent (fast-forward to `41c450b`)
 
 - `git merge --ff-only upstream/main`, then pushed: 30 commits, no conflict resolution, no rewritten history. This brings in the parent's `improvements` PR #43 and PR #12 (this fork's branch, merged upstream), which closed 26 of the tracker's 28 items: home-page rework, Overview/Findings/Rules/Uncertainty redesigns, legal pages, new icons, rail sidebar, map timeline and touch hints, 1.6 m/px aerial image.

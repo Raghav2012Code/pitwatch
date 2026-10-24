@@ -101,7 +101,7 @@ npm run dev          # http://localhost:5173
 | `npm run preview`                 | Serve the production build                     |
 | `npm run format` / `format:check` | Prettier                                       |
 
-The terrain (two 257 × 257 surveys at 8 m plus their aerial images) is generated in a shared Web Worker when the page opens. Generation time depends on the device. If loading fails, **Try again** retries in place.
+The terrain (two 513 × 513 surveys at 4 m spacing plus their aerial images) is generated in a shared Web Worker when the page opens. Generation time depends on the device. If loading fails, **Try again** retries in place.
 
 The browser checks run against the production build, so run `npx playwright install chromium` once before the first `npm run test:e2e`. CI (GitHub Actions) runs `npm run verify`, the build and the Playwright suite on every push to `main` and every pull request, and uploads the report when a run fails.
 

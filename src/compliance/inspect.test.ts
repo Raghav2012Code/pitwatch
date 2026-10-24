@@ -19,7 +19,7 @@ beforeAll(async () => {
     p.getLimits(),
   ])
   findings = evaluate(baseline, current, limits).findings
-})
+}, 30_000)
 
 const read = (f: ComplianceFinding) =>
   readPoint(centerOfIndex(current.grid, f.cells[0]), baseline, current, limits, findings)

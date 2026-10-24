@@ -75,8 +75,8 @@ describe('synthetic terrain provider', async () => {
     return current.elevations[i] - baseline.elevations[i]
   }
 
-  it('builds the 257 × 257 grid at 8 m with both epochs', async () => {
-    expect(baseline.elevations.length).toBe(257 * 257)
+  it('builds the configured grid with both epochs', async () => {
+    expect(baseline.elevations.length).toBe(GRID.cols * GRID.rows)
     expect(current.grid).toEqual(GRID)
     expect((await provider.listSurveys()).map((s) => s.id)).toEqual(['baseline', 'current'])
     expect(baseline.verticalUncertainty).toBeGreaterThan(0)
@@ -123,7 +123,10 @@ describe('synthetic terrain provider', async () => {
     expect(dh(out.x, out.y)).toBeLessThan(-10)
 
     // 3. Sump below the approved floor.
-    const sumpZ = current.elevations[indexOf(GRID, 120, 128)]
+    const sumpZ = sampleBilinear(GRID, current.elevations, {
+      x: CHANGES.sump.cx,
+      y: CHANGES.sump.cy,
+    })!
     expect(sumpZ).toBeLessThan(PIT_ZONE.approvedFloorElevation - 3)
 
     // 4. Shallow scrape inside the lease, within the safety buffer.
