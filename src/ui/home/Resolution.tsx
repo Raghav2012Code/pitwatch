@@ -1,7 +1,7 @@
 /*
  * One cross-section of an idealised pit (480 m wide at the rim, seven 10 m benches), measured
  * three ways. Drawn as vector lines, so the difference is the data and not the picture:
- * coarse cells average the benches away, an 8 m grid keeps the steps, a drone keeps the edges.
+ * coarse cells average the benches away, a 4 m grid keeps the steps, a drone keeps the edges.
  */
 
 const W = 600
@@ -61,9 +61,9 @@ const PANELS = [
   },
   {
     title: 'PitWatch survey grid',
-    cell: '8 m cells',
-    text: 'The 257 × 257 grid this app compares. Each bench spans several cells, so the steps survive.',
-    path: sampled(8),
+    cell: '4 m cells',
+    text: 'The app compares two 513 × 513 surveys at 4 m spacing. Each bench spans several cells, so the steps survive.',
+    path: sampled(4),
   },
   {
     title: 'Drone survey',
