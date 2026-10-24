@@ -20,7 +20,8 @@ describe('terrain store', () => {
     expect(s.status).toBe('ready')
     expect(s.mine?.name).toBe('Venthar Ridge Iron Pit')
     expect(s.limits?.safetyBufferMetres).toBe(20)
-    expect(s.surveys.current?.elevations.length).toBe(257 * 257)
+    const grid = s.surveys.current?.grid
+    expect(s.surveys.current?.elevations.length).toBe(grid!.cols * grid!.rows)
     // The rule engine runs on load: the scenario's two violations are found.
     expect(s.findings.filter((f) => f.status === 'violation').map((f) => f.id)).toEqual([
       'R1-1',
