@@ -57,8 +57,9 @@ describe('513 × 513 terrain geometry', () => {
     const { positions, tops, index } = buildSkirtArrays(grid, elevations)
     const perimeterPoints = 4 * (grid.cols - 1)
 
-    expect(positions.length / 3).toBe(perimeterPoints * 2)
-    expect(tops.length).toBe(perimeterPoints * 2)
+    const skirtVertexCount = (2 * grid.cols + 2 * grid.rows) * 2
+    expect(positions.length / 3).toBe(skirtVertexCount)
+    expect(tops.length).toBe(skirtVertexCount)
     expect(index.length).toBe(perimeterPoints * 6)
 
     const covered = new Set<string>()
