@@ -330,7 +330,7 @@ export function HomePage() {
                 Three conditions in every mining lease
               </h2>
               <p>
-                PitWatch tests every 8 m cell of the ground against each one. The result under each
+                PitWatch tests every 4 m cell of the ground against each one. The result under each
                 rule is what the engine found on this mine.
               </p>
             </div>

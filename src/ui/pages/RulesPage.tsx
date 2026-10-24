@@ -49,7 +49,7 @@ export function RulesPage() {
     <Page>
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:gap-12">
         <p className="max-w-[44rem] text-[15.5px] leading-7 text-ink-dim">
-          A lease is written in sentences. PitWatch turns each condition into a test that every 8 m
+          A lease is written in sentences. PitWatch turns each condition into a test that every 4 m
           grid cell either passes or fails. R1 and R3 report a change only once it clears the survey
           noise ({k}σ, σ being the combined error of the two surveys) and a minimum-change allowance
           of {minChangeM} m on top of it. R2 measures the ground against a fixed approved floor
