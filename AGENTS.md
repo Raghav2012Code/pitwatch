@@ -56,7 +56,7 @@ Newest first.
 - What came in: the survey grid is now 513 × 513 at 4 m over the same 0–2048 m (was 257 × 257 at 8 m), so `#36`'s resolution work is here; `WorkerTerrainProvider` lost its reference counter and deferred-teardown timer for one lazy page-lifetime provider; the unused `isDashboard` route predicate is gone; the compliance snapshot, resolution copy, geometry tests and the Findings/landing-terrain e2e fixes came with them.
 - Conflict resolution: the parent rewrote the header to say its `origin` is the parent, which is the parent's view, so the fork's header above is kept. Both log entries are kept, newest first, and the parent's are unchanged as it wrote them.
 - Issues: the fork copy of the closed parent #36 is #27, now closed with the reason. The parent's two new open issues already have fork copies from 2026-10-23: #44 → fork #30, #45 → fork #31. Nothing else moved; the parent's tracker #42 and its copy #29 are still unchecked lists.
-- Checks: `npm run verify` passes (137 unit tests in 19 files). `npm run test:e2e` passes all 69 checks.
+- Checks: `npm run verify` passes (137 unit tests in 19 files). `npm run test:e2e` passes all 69 checks with `--workers=2`; at the default parallelism the same run had 13 timeouts, all 30 s test timeouts on pages waiting for the 4 m grid to finish generating on six cores, and every one of them passes once the suite is not oversubscribed.
 
 ### 2026-10-24: simplified abstractions found in the repository audit
 
