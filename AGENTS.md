@@ -58,7 +58,7 @@ Newest first.
 - Corrected the Findings E2E row selector to match the page's `li.frow` markup. The landing-terrain screenshot check now waits for the route-specific canvas, uses an 800 × 720 viewport, and allows 120 s for its four 3D comparisons; the map canvas is in `.scene-wrap`, while `.stage` contains the HUD.
 - Browser review at the Pit camera preset: the pit benches are visibly smoother. Startup was about 5.2 s at 8 m and 10.0 s at 4 m in the same browser and machine. Across three controlled orbit drags at 1440 × 900, the 4 m candidate's median frame interval was 16.7 ms and p95 was 16.8–16.9 ms; 6 of 731 intervals exceeded 33.3 ms, with a 100.1 ms maximum. The 8 m baseline had 0 of 638 intervals over 33.3 ms, with the same 16.7 ms median and 16.8 ms p95. This is sustained near-60 fps with occasional frame hitches; it is not a claim of zero dropped frames.
 - Verification: `npm run verify` passed (140 tests in 19 files). `npm run test:e2e -- --workers=1` passed all 69 checks in one run, including the 1440, 1100, 800 and 390 px resolution/overflow review. The screenshot test uses its route-specific canvas and an 800 × 720 viewport; the monitor accessibility and evidence-restoration checks have 60 s budgets, the terrain-resolution check 60 s and the screenshot comparison 120 s. `git diff --check` passed.
-- Issue #36 is complete and ready to close after its verified push. Issue #21 remains open for the planned final umbrella review after the other open issues are complete.
+- Issue #36 was closed after the verified push to `origin/main`. Issue #21 remains open for the planned final umbrella review after the other open issues are complete.
 
 ### 2026-10-23: remaining improvement issues and final bug check
 
