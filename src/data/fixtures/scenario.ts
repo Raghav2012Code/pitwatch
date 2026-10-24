@@ -16,7 +16,7 @@ import { MINE_INFO } from './mine'
 
 export const SEED = 20251114
 
-export const GRID: GridSpec = { cols: 257, rows: 257, cellSize: 8, originXY: { x: 0, y: 0 } }
+export const GRID: GridSpec = { cols: 513, rows: 513, cellSize: 4, originXY: { x: 0, y: 0 } }
 
 /** Lease boundary. The east edge at x ≈ 1380 m runs close to the pit on purpose. */
 export const LEASE: Polygon = [
