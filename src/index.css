@@ -1485,15 +1485,51 @@ body {
 /* ---------- Site plan (Overview) ---------- */
 
 @layer components {
-  .site-plan {
+  /* The sheet: the map field, then a margin band under it for the scale, north and the grid. */
+  .plan-sheet {
+    border: 1px solid var(--color-line);
+    border-radius: 8px;
+    background: var(--color-panel-2);
+    overflow: hidden;
+  }
+  .plan-frame {
+    position: relative;
+  }
+  .plan-map,
+  .plan-band {
     display: block;
     width: 100%;
     height: auto;
-    border-radius: 8px;
-    border: 1px solid var(--color-line);
+  }
+  .plan-band {
+    border-top: 1px solid var(--color-line);
+    background: var(--color-panel);
   }
   .plan-ground {
     fill: var(--color-panel-2);
+  }
+  .plan-contour {
+    fill: none;
+    stroke: var(--color-contour);
+    stroke-width: 1;
+    opacity: 0.35;
+    vector-effect: non-scaling-stroke;
+  }
+  .plan-contour-index {
+    stroke-width: 1.5;
+    opacity: 0.55;
+  }
+  /* The change layer is a shape, not a picture: a token-coloured fill with a crisp edge. */
+  .plan-change {
+    stroke-width: 1;
+    fill-opacity: 0.42;
+    vector-effect: non-scaling-stroke;
+  }
+  .plan-area {
+    fill: none;
+    stroke-width: 2;
+    stroke-dasharray: 6 3;
+    vector-effect: non-scaling-stroke;
   }
   .plan-line {
     fill: none;
@@ -1506,12 +1542,24 @@ body {
   .plan-pit {
     stroke: var(--color-ink-dim);
     stroke-width: 1.5;
-    stroke-dasharray: 7 4;
+    stroke-dasharray: 8 4;
   }
   .plan-dump {
     stroke: var(--color-ink-dim);
     stroke-width: 1.5;
     stroke-dasharray: 2 4;
+  }
+  .plan-label {
+    font-family: var(--font-sans);
+    font-size: 62px;
+    letter-spacing: 1px;
+    text-anchor: middle;
+    fill: var(--color-ink-dim);
+    paint-order: stroke;
+    stroke: var(--color-panel-2);
+    stroke-width: 12px;
+    stroke-linejoin: round;
+    pointer-events: none;
   }
   .plan-scale {
     fill: none;
@@ -1521,43 +1569,60 @@ body {
   }
   .plan-text {
     font-family: var(--font-mono);
-    font-size: 64px;
-    fill: var(--color-ink);
+    font-size: 58px;
+    fill: var(--color-ink-dim);
+    paint-order: stroke;
+    stroke: var(--color-panel);
+    stroke-width: 8px;
   }
   .plan-north {
     fill: var(--color-ink);
   }
   .plan-leader {
     stroke-width: 1.5;
+    stroke-dasharray: 3 3;
     vector-effect: non-scaling-stroke;
   }
+  /* Markers are HTML, so they are sized in pixels and stay a touch target at any figure width. */
   .plan-pin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 4px 2px;
+    background: none;
+    border: 0;
+    border-radius: 6px;
     cursor: pointer;
-    outline: none;
   }
-  .plan-pin-disc {
-    fill: var(--color-panel);
-    stroke: var(--color-ink);
-    stroke-width: 1;
-    vector-effect: non-scaling-stroke;
-    transition: fill 0.15s;
+  .plan-pin-id {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.4;
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: var(--color-ink);
+    background: color-mix(in oklab, var(--color-panel) 88%, transparent);
+    box-shadow: 0 0 0 1px var(--color-line);
   }
-  .plan-pin:hover .plan-pin-disc {
-    fill: var(--color-bg-2);
+  .plan-pin-glyph {
+    width: 22px;
+    height: 22px;
+    color: currentColor;
+    filter: drop-shadow(0 0 2px var(--color-panel)) drop-shadow(0 0 3px var(--color-panel));
   }
-  .plan-pin-ring {
-    fill: none;
-    stroke: var(--color-accent);
-    stroke-width: 3;
-    vector-effect: non-scaling-stroke;
-    opacity: 0;
-    transform-box: fill-box;
-    transform-origin: center;
-    scale: 1.35;
+  .plan-pin:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
   }
-  .plan-pin:focus-visible .plan-pin-ring,
-  .plan-pin[aria-pressed='true'] .plan-pin-ring {
-    opacity: 1;
+  .plan-pin[aria-pressed='true'] .plan-pin-id {
+    background: var(--color-ink);
+    color: var(--color-panel);
+    box-shadow: 0 0 0 1px var(--color-ink);
   }
   .plan-key {
     display: flex;
@@ -1587,6 +1652,12 @@ body {
   }
   .plan-swatch-dash {
     border-top: 2px dashed var(--color-ink-dim);
+  }
+  .plan-swatch-contour {
+    height: 0;
+    width: 16px;
+    border-radius: 0;
+    border-top: 1px solid var(--color-contour);
   }
 
   /* The map card's key folds away; its summary reads as the card's other section titles. */

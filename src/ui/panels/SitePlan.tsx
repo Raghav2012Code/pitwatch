@@ -1,229 +1,325 @@
-import { useMemo, type KeyboardEvent } from 'react'
-import type { ComplianceFinding, Polygon, Vec2 } from '../../domain/types'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ComplianceFinding, GridSpec, Vec2 } from '../../domain/types'
+import { cellBox, changeRings, contourLines, maskRings, type Trail } from '../../geo/plan'
 import { OVERLAY, TONE_COLOR } from '../../scene/palette'
 import { useAppStore } from '../../state/store'
 import { useTerrain } from '../../state/terrain'
 import { GLYPH, RULE_NAMES, toneOf } from '../findings'
+import { formatDate } from '../format'
 import { ProvenanceTag } from '../ProvenanceTag'
 import { navigate, ROUTE_HREF } from '../route'
 
-/** Marker size in metres on the plan (about 24 px at the width the Overview gives it). */
-const PIN = 104
+/**
+ * Contour interval on the plan, metres. The figure is about 600 px across for a 2048 m site, so a
+ * 5 m line would be one line every 1.5 px; 25 m is what reads as ground at this size.
+ */
+const CONTOUR_M = 25
 const SCALE_BAR_M = 500
-/** Smoothing factor for the change mask: output pixels per grid cell. */
-const SMOOTH = 6
+/** Marker separation and minimum touch target, CSS px. */
+const MARKER_PX = 44
+/** Height of the margin band under the map, metres. Furniture lives here, off the drawing. */
+const BAND_M = 150
+
+interface Placement {
+  f: ComplianceFinding
+  at: Vec2
+  moved: boolean
+}
 
 /**
- * Pins nudge away from each other so two nearby findings (R1-1 and R1-2 sit 30 m apart) can both
- * be read and clicked. A nudged pin keeps a leader line back to the spot it marks.
+ * Markers in CSS pixels, not metres, so a pin is the same size on a phone as on a desktop. They
+ * nudge away from each other in pixels (R1-1, R1-2 and R3-1 sit within 200 m at the east wall) and
+ * a nudged one keeps a leader line back to its finding.
  */
-function placePins(findings: readonly ComplianceFinding[]) {
-  const placed: { f: ComplianceFinding; at: Vec2; moved: boolean }[] = []
+function placeMarkers(
+  findings: readonly ComplianceFinding[],
+  view: { w: number; h: number; extent: number; north: number; x0: number; top: number },
+): Placement[] {
+  const { w, h, extent, north, x0, top } = view
+  if (w <= 0 || h <= 0) return []
+  const base = findings.map((f) => ({
+    f,
+    at: {
+      x: Math.min(w - MARKER_PX / 2, Math.max(MARKER_PX / 2, ((f.centroid.x - x0) / extent) * w)),
+      y: Math.min(h - MARKER_PX / 2, Math.max(MARKER_PX / 2, ((top - f.centroid.y) / north) * h)),
+    },
+  }))
   const tries = [
     [0, 0],
     [1, -1],
     [-1, -1],
     [1, 1],
     [-1, 1],
-    [0, -1.4],
-    [1.5, 0],
-    [-1.5, 0],
-  ]
-  for (const f of findings) {
+    [0, -1.7],
+    [1.7, 0],
+    [-1.7, 0],
+  ] as const
+  const placed: Placement[] = []
+  for (const { f, at } of base) {
+    let spot = at
+    let moved = false
     for (const [dx, dy] of tries) {
-      const at = { x: f.centroid.x + dx! * PIN, y: f.centroid.y + dy! * PIN }
-      if (placed.every((p) => Math.hypot(p.at.x - at.x, p.at.y - at.y) >= PIN * 0.95)) {
-        placed.push({ f, at, moved: dx !== 0 || dy !== 0 })
+      const candidate = { x: at.x + dx * MARKER_PX, y: at.y + dy * MARKER_PX }
+      if (
+        placed.every((p) => Math.hypot(p.at.x - candidate.x, p.at.y - candidate.y) >= MARKER_PX)
+      ) {
+        spot = candidate
+        moved = dx !== 0 || dy !== 0
         break
       }
     }
+    placed.push({ f, at: spot, moved })
   }
   return placed
 }
 
 /**
- * The mine from above: lease, permitted zones, the cells that changed beyond the noise and a pin
- * per finding. Drawn from the same data and engine output as the 3D map, so it can never
- * disagree with it, and every pin opens that finding on the map.
+ * The mine from above: contoured ground, the cells that changed beyond the noise as vector shapes,
+ * the lease and permitted extents, and the engine's findings as areas with a pin each. Drawn from
+ * the same data and engine output as the 3D map, so it can never disagree with it, and every pin
+ * opens that finding on the map.
  */
 export function SitePlan() {
   const change = useTerrain((s) => s.change)
   const limits = useTerrain((s) => s.limits)
   const findings = useTerrain((s) => s.findings)
+  const current = useTerrain((s) => s.surveys.current)
+  const mine = useTerrain((s) => s.mine)
   const selectedFinding = useAppStore((s) => s.selectedFinding)
   const selectFinding = useAppStore((s) => s.selectFinding)
 
-  // The change mask, smoothed: each class is drawn one pixel per cell, enlarged with bilinear
-  // filtering and cut at half strength, so its edge is a clean curve rather than a staircase.
-  const image = useMemo(() => {
-    if (!change) return null
-    const { cols, rows } = change.grid
-    const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
-    const out = document.createElement('canvas')
-    out.width = cols * SMOOTH
-    out.height = rows * SMOOTH
-    const outCtx = out.getContext('2d')
-    if (!outCtx) return null
-    const result = outCtx.createImageData(out.width, out.height)
-    const layer = (cells: ArrayLike<number | boolean>, colour: number[]) => {
-      const small = document.createElement('canvas')
-      small.width = cols
-      small.height = rows
-      const sctx = small.getContext('2d')
-      const big = document.createElement('canvas')
-      big.width = out.width
-      big.height = out.height
-      const bctx = big.getContext('2d')
-      if (!sctx || !bctx) return
-      const mask = sctx.createImageData(cols, rows)
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          // Row 0 is the southern edge, and the top of the picture is north.
-          if (cells[row * cols + col]) mask.data[((rows - 1 - row) * cols + col) * 4 + 3] = 255
-        }
-      }
-      sctx.putImageData(mask, 0, 0)
-      bctx.imageSmoothingEnabled = true
-      bctx.imageSmoothingQuality = 'high'
-      bctx.drawImage(small, 0, 0, big.width, big.height)
-      const px = bctx.getImageData(0, 0, big.width, big.height).data
-      for (let i = 0; i < px.length; i += 4) {
-        const edge = Math.min(1, Math.max(0, (px[i + 3]! - 96) / 64))
-        if (edge > 0) {
-          result.data.set([...colour, Math.round(235 * edge)], i)
-        }
-      }
-    }
-    layer(change.excavated, rgb(OVERLAY.cut))
-    layer(change.filled, rgb(OVERLAY.fill))
-    outCtx.putImageData(result, 0, 0)
-    return out.toDataURL()
+  // Marker sizes are pixel sizes, so the figure is measured rather than assumed.
+  const frame = useRef<HTMLDivElement | null>(null)
+  const [size, setSize] = useState({ w: 0, h: 0 })
+  useEffect(() => {
+    const el = frame.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      if (entry) setSize({ w: entry.contentRect.width, h: entry.contentRect.height })
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
   }, [change])
 
-  const pins = useMemo(() => placePins(findings), [findings])
+  const contours = useMemo(
+    () => (current ? contourLines(current.elevations, current.grid, CONTOUR_M) : []),
+    [current],
+  )
+  const rings = useMemo(() => (change ? changeRings(change) : null), [change])
+  // One mask per finding, scanned only inside its own cell box: a finding is a few thousand cells.
+  const areas = useMemo(() => {
+    if (!change) return []
+    const g = change.grid
+    return findings.map((f) => {
+      const mask = new Uint8Array(g.cols * g.rows)
+      for (const i of f.cells) mask[i] = 1
+      return { f, trails: maskRings(mask, g, cellBox(f.cells, g)) }
+    })
+  }, [change, findings])
+
+  const markers = useMemo(() => {
+    if (!change) return []
+    const g = change.grid
+    return placeMarkers(findings, {
+      w: size.w,
+      h: size.h,
+      extent: g.cols * g.cellSize,
+      north: g.rows * g.cellSize,
+      x0: g.originXY.x - g.cellSize / 2,
+      top: g.originXY.y + (g.rows - 1) * g.cellSize + g.cellSize / 2,
+    })
+  }, [change, findings, size])
 
   if (!change || !limits) return null
-  const g = change.grid
+
+  const g: GridSpec = change.grid
+  const extent = g.cols * g.cellSize
+  const north = g.rows * g.cellSize
   const x0 = g.originXY.x - g.cellSize / 2
-  const W = g.cols * g.cellSize
-  const H = g.rows * g.cellSize
-  const top = g.originXY.y + (g.rows - 1) * g.cellSize + g.cellSize / 2
-  const sx = (x: number) => x
-  const sy = (y: number) => top - y
-  const path = (poly: Polygon) =>
-    poly.map((p, i) => `${i ? 'L' : 'M'}${sx(p.x).toFixed(1)} ${sy(p.y).toFixed(1)}`).join('') + 'Z'
+  const top = g.originXY.y + north - g.cellSize / 2
+  const sx = (x: number) => (x - x0).toFixed(1)
+  const sy = (y: number) => (top - y).toFixed(1)
+  const toPath = (trails: Trail[]) =>
+    trails
+      .map(
+        (t) => `M${t.points.map((p) => `${sx(p.x)} ${sy(p.y)}`).join('L')}${t.closed ? 'Z' : ''}`,
+      )
+      .join('')
+  const polyPath = (poly: readonly Vec2[]) =>
+    poly.map((p, i) => `${i ? 'L' : 'M'}${sx(p.x)} ${sy(p.y)}`).join('') + 'Z'
+  const zoneName = (id: string) => mine?.approvedZones.find((z) => z.id === id)?.name ?? id
 
   const open = (f: ComplianceFinding) => {
     selectFinding(f.id, f.centroid)
     navigate('monitor')
   }
-  const onKey = (e: KeyboardEvent, f: ComplianceFinding) => {
-    if (e.key !== 'Enter' && e.key !== ' ') return
-    e.preventDefault()
-    open(f)
-  }
 
   return (
     <section aria-labelledby="site-plan" className="rule-section">
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="site-plan" className="section-title">
-          Site plan
-        </h2>
-        <div className="flex items-center gap-3">
-          <ProvenanceTag value="derived" />
-          <a href={ROUTE_HREF.monitor} className="btn-primary">
-            Explore in 3D
-          </a>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 id="site-plan" className="section-title">
+            Site plan
+          </h2>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-ink-faint">
+            <span>
+              {current ? `${current.label} survey, ${formatDate(current.date)}` : 'Current survey'}
+            </span>
+            <ProvenanceTag value="derived" />
+          </p>
         </div>
+        <a href={ROUTE_HREF.monitor} className="btn-primary shrink-0">
+          Explore in 3D
+        </a>
       </div>
-      <figure className="mt-3">
-        <svg
-          viewBox={`${x0} 0 ${W} ${H}`}
-          className="site-plan"
-          role="group"
-          aria-label="Plan of the mine from above, north at the top, with a pin on every finding"
-        >
-          <rect x={x0} y={0} width={W} height={H} className="plan-ground" />
-          {image && (
-            <image
-              href={image}
-              x={x0}
-              y={0}
-              width={W}
-              height={H}
+
+      <figure className="mt-3 max-w-[42.5rem]">
+        <div className="plan-sheet">
+          <div
+            className="plan-frame"
+            ref={frame}
+            role="group"
+            aria-label="Plan of the mine from above, north at the top, with a pin on every finding"
+          >
+            <svg
+              className="plan-map"
+              viewBox={`0 0 ${extent} ${north}`}
               preserveAspectRatio="none"
-              className="plan-change"
-            />
-          )}
-          {limits.dumpZones.map((z) => (
-            <path key={z.id} d={path(z.polygon)} className="plan-line plan-dump" />
-          ))}
-          {limits.pitZones.map((z) => (
-            <path key={z.id} d={path(z.polygon)} className="plan-line plan-pit" />
-          ))}
-          <path d={path(limits.leaseBoundary)} className="plan-line plan-lease" />
+              aria-hidden="true"
+            >
+              <rect x={0} y={0} width={extent} height={north} className="plan-ground" />
 
-          {/* Scale bar and north, in map units. */}
-          <g transform={`translate(${x0 + 90} ${H - 90})`} aria-hidden="true">
-            <path d={`M0 0H${SCALE_BAR_M}M0 -22V22M${SCALE_BAR_M} -22V22`} className="plan-scale" />
-            <text x={SCALE_BAR_M / 2} y={-40} className="plan-text" textAnchor="middle">
-              {SCALE_BAR_M} m
-            </text>
-          </g>
-          <g transform={`translate(${x0 + W - 110} 130)`} aria-hidden="true">
-            <path d="M0 -70L34 40L0 14L-34 40Z" className="plan-north" />
-            <text y={100} className="plan-text" textAnchor="middle">
-              N
-            </text>
-          </g>
+              {rings && (
+                <>
+                  <path
+                    d={toPath(rings.excavated)}
+                    className="plan-change"
+                    style={{ fill: OVERLAY.cut, stroke: OVERLAY.cut }}
+                    fillRule="evenodd"
+                  />
+                  <path
+                    d={toPath(rings.filled)}
+                    className="plan-change"
+                    style={{ fill: OVERLAY.fill, stroke: OVERLAY.fill }}
+                    fillRule="evenodd"
+                  />
+                </>
+              )}
 
-          {pins.map(({ f, at, moved }) => {
-            const tone = toneOf(f)
-            const Glyph = GLYPH[tone]
-            const cx = sx(at.x)
-            const cy = sy(at.y)
-            return (
-              <g key={f.id}>
-                {moved && (
+              {/* Ground over the change: two weights, so the pit and the dump still read as relief. */}
+              {contours.map((level) => (
+                <path
+                  key={level.rl}
+                  d={toPath(level.trails)}
+                  className={
+                    level.rl % (CONTOUR_M * 4) === 0
+                      ? 'plan-contour plan-contour-index'
+                      : 'plan-contour'
+                  }
+                />
+              ))}
+
+              {/* Findings as the ground they cover, not just a dot. */}
+              {areas.map(({ f, trails }) => (
+                <path
+                  key={f.id}
+                  d={toPath(trails)}
+                  className="plan-area"
+                  style={{ stroke: TONE_COLOR[toneOf(f)] }}
+                  fillRule="evenodd"
+                />
+              ))}
+
+              {limits.dumpZones.map((z) => (
+                <path key={z.id} d={polyPath(z.polygon)} className="plan-line plan-dump" />
+              ))}
+              {limits.pitZones.map((z) => (
+                <path key={z.id} d={polyPath(z.polygon)} className="plan-line plan-pit" />
+              ))}
+              <path d={polyPath(limits.leaseBoundary)} className="plan-line plan-lease" />
+
+              {[...limits.dumpZones, ...limits.pitZones].map((z) => {
+                // North edge of the zone rather than its centre: the centre is where the findings are.
+                const ys = z.polygon.map((p) => p.y)
+                const xs = z.polygon.map((p) => p.x)
+                const top = Math.max(...ys)
+                const height = top - Math.min(...ys)
+                return (
+                  <text
+                    key={`label-${z.id}`}
+                    x={sx((Math.min(...xs) + Math.max(...xs)) / 2)}
+                    y={sy(top - height * 0.06)}
+                    className="plan-label"
+                  >
+                    {zoneName(z.id)}
+                  </text>
+                )
+              })}
+
+              {markers
+                .filter((m) => m.moved)
+                .map(({ f, at }) => (
                   <line
+                    key={`leader-${f.id}`}
                     x1={sx(f.centroid.x)}
                     y1={sy(f.centroid.y)}
-                    x2={cx}
-                    y2={cy}
+                    x2={sx(x0 + (at.x / size.w) * extent)}
+                    y2={sy(top - (at.y / size.h) * north)}
                     className="plan-leader"
-                    style={{ stroke: TONE_COLOR[tone] }}
+                    style={{ stroke: TONE_COLOR[toneOf(f)] }}
                   />
-                )}
-                <circle
-                  cx={sx(f.centroid.x)}
-                  cy={sy(f.centroid.y)}
-                  r={PIN * 0.1}
-                  style={{ fill: TONE_COLOR[tone] }}
-                />
-                <g
-                  role="button"
-                  tabIndex={0}
+                ))}
+            </svg>
+
+            {markers.map(({ f, at }) => {
+              const tone = toneOf(f)
+              const Glyph = GLYPH[tone]
+              return (
+                <button
+                  key={f.id}
+                  type="button"
                   className="plan-pin"
                   aria-pressed={selectedFinding === f.id}
                   aria-label={`${f.id}, ${RULE_NAMES[f.ruleId]}, ${f.status}, ${f.severity} severity. Show on the map`}
+                  style={{
+                    left: `${(at.x / size.w) * 100}%`,
+                    top: `${(at.y / size.h) * 100}%`,
+                    color: TONE_COLOR[tone],
+                  }}
                   onClick={() => open(f)}
-                  onKeyDown={(e) => onKey(e, f)}
                 >
-                  <title>{`${f.id}: ${RULE_NAMES[f.ruleId]}`}</title>
-                  <circle cx={cx} cy={cy} r={PIN * 0.62} className="plan-pin-disc" />
-                  <circle cx={cx} cy={cy} r={PIN * 0.62} className="plan-pin-ring" />
-                  <Glyph
-                    x={cx - PIN / 2}
-                    y={cy - PIN / 2}
-                    width={PIN}
-                    height={PIN}
-                    style={{ color: TONE_COLOR[tone] }}
-                  />
-                </g>
-              </g>
-            )
-          })}
-        </svg>
+                  <span className="plan-pin-id">{f.id}</span>
+                  <Glyph className="plan-pin-glyph" />
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Title block: scale, north and the grid, in the margin rather than on the drawing. */}
+          <svg
+            className="plan-band"
+            viewBox={`0 0 ${extent} ${BAND_M}`}
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <g transform={`translate(${g.cellSize * 10} ${BAND_M * 0.55})`}>
+              <path
+                d={`M0 0H${SCALE_BAR_M}M0 -22V22M${SCALE_BAR_M} -22V22`}
+                className="plan-scale"
+              />
+              <text x={SCALE_BAR_M / 2} y={-44} className="plan-text" textAnchor="middle">
+                {SCALE_BAR_M} m
+              </text>
+            </g>
+            <g transform={`translate(${extent - g.cellSize * 16} ${BAND_M * 0.46})`}>
+              <path d="M0 -62L32 34L0 12L-32 34Z" className="plan-north" />
+              <text y={70} className="plan-text" textAnchor="middle">
+                N
+              </text>
+            </g>
+          </svg>
+        </div>
+
         <figcaption className="plan-key">
           <span>
             <i className="plan-swatch" style={{ background: OVERLAY.cut }} />
@@ -239,12 +335,17 @@ export function SitePlan() {
           </span>
           <span>
             <i className="plan-swatch plan-swatch-dash" />
-            Permitted zones
+            Permitted extents
+          </span>
+          <span>
+            <i className="plan-swatch plan-swatch-contour" />
+            {CONTOUR_M} m contours
           </span>
         </figcaption>
         <p className="mt-2 text-[12px] leading-5 text-ink-faint">
-          Pins are the engine&apos;s findings; select one to open it on the 3D map. Change is shown
-          only where it beats the survey noise.
+          Contours and the change layer come from the current survey; a finding is outlined over the
+          cells it covers. Change is shown only where it beats the survey noise. Select a pin to
+          open that finding on the 3D map.
         </p>
       </figure>
     </section>
