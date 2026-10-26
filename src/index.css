@@ -24,6 +24,8 @@
   --color-oxide: #8a3324;
   --color-ochre: #b07a1a;
   --color-contour: #9c6a3c;
+  --color-change-cut: #b5482a;
+  --color-change-fill: #2a6fb0;
 
   /* Sky behind the 3D model: cool haze above, warm horizon where fog meets it. */
   /* Map backdrop: survey paper the terrain block sits on (also the fog colour). */
@@ -1485,15 +1487,99 @@ body {
 /* ---------- Site plan (Overview) ---------- */
 
 @layer components {
+  .site-plan-figure {
+    overflow: hidden;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 8px;
+    background: var(--color-panel);
+  }
+  .plan-title-block {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 18px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--color-line);
+    background: var(--color-panel);
+  }
+  .plan-title-copy {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+  }
+  .plan-mine-name {
+    overflow: hidden;
+    color: var(--color-ink);
+    font-size: 14px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .plan-survey-date {
+    color: var(--color-ink-dim);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .plan-instruments {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 12px;
+  }
+  .plan-north-block {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--color-ink-dim);
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+  .plan-north-arrow {
+    color: var(--color-accent);
+    font-family: var(--font-sans);
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .plan-scale-block {
+    display: grid;
+    justify-items: end;
+    gap: 3px;
+    color: var(--color-ink);
+  }
+  .plan-scale-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .plan-scale-track {
+    position: relative;
+    display: block;
+    max-width: 100%;
+    height: 6px;
+    border-top: 2px solid var(--color-ink);
+  }
+  .plan-scale-track i {
+    position: absolute;
+    top: -3px;
+    left: 0;
+    width: 1px;
+    height: 6px;
+    background: var(--color-ink);
+  }
+  .plan-scale-track i + i {
+    right: 0;
+    left: auto;
+  }
   .site-plan {
     display: block;
     width: 100%;
     height: auto;
-    border-radius: 8px;
-    border: 1px solid var(--color-line);
+    background: var(--color-backdrop);
   }
   .plan-ground {
-    fill: var(--color-panel-2);
+    fill: var(--color-backdrop);
   }
   .plan-line {
     fill: none;
@@ -1501,49 +1587,124 @@ body {
   }
   .plan-lease {
     stroke: var(--color-ink);
-    stroke-width: 2.5;
+    stroke-width: 2.6;
   }
   .plan-pit {
-    stroke: var(--color-ink-dim);
+    stroke: var(--color-accent);
     stroke-width: 1.5;
     stroke-dasharray: 7 4;
   }
   .plan-dump {
-    stroke: var(--color-ink-dim);
+    stroke: var(--color-ochre);
     stroke-width: 1.5;
     stroke-dasharray: 2 4;
   }
-  .plan-scale {
+  .plan-change {
+    stroke-width: 0.8;
+    vector-effect: non-scaling-stroke;
+    stroke-linejoin: round;
+  }
+  .plan-cut {
+    fill: var(--color-change-cut);
+    fill-opacity: 0.66;
+    stroke: var(--color-change-cut);
+  }
+  .plan-fill {
+    fill: var(--color-change-fill);
+    fill-opacity: 0.62;
+    stroke: var(--color-change-fill);
+  }
+  .plan-contour {
     fill: none;
-    stroke: var(--color-ink);
-    stroke-width: 2;
+    stroke: var(--color-contour);
+    stroke-width: 0.75;
+    stroke-opacity: 0.62;
     vector-effect: non-scaling-stroke;
   }
-  .plan-text {
-    font-family: var(--font-mono);
-    font-size: 64px;
+  .plan-zone-label,
+  .plan-lease-label {
+    paint-order: stroke;
+    stroke: var(--color-backdrop);
+    stroke-linejoin: round;
+    font-family: var(--font-sans);
+    font-weight: 650;
+    text-anchor: middle;
+  }
+  .plan-zone-label {
     fill: var(--color-ink);
   }
-  .plan-north {
+  .plan-pit-label {
+    fill: var(--color-accent);
+  }
+  .plan-dump-label {
+    fill: var(--color-ochre);
+  }
+  .plan-lease-label {
     fill: var(--color-ink);
+    font-weight: 700;
+    text-anchor: start;
+  }
+  .plan-observed-label {
+    paint-order: stroke;
+    stroke: var(--color-backdrop);
+    stroke-linejoin: round;
+    text-anchor: middle;
+    font-family: var(--font-mono);
+    font-weight: 700;
+  }
+  .plan-observed-cut-label {
+    fill: var(--color-change-cut);
+  }
+  .plan-observed-leader {
+    fill: none;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .plan-observed-cut-leader {
+    stroke: var(--color-change-cut);
+  }
+  .plan-observed-fill-label {
+    fill: var(--color-change-fill);
+  }
+  .plan-observed-fill-leader {
+    stroke: var(--color-change-fill);
   }
   .plan-leader {
+    stroke: var(--tone);
     stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+  .plan-finding-origin {
+    fill: var(--tone);
+  }
+  .plan-finding-area {
+    fill: color-mix(in srgb, var(--tone) 7%, transparent);
+    stroke: var(--tone);
+    stroke-width: 1.25;
+    stroke-opacity: 0.86;
+    stroke-linejoin: round;
     vector-effect: non-scaling-stroke;
   }
   .plan-pin {
     cursor: pointer;
     outline: none;
   }
+  .plan-pin-hit {
+    fill: transparent;
+    pointer-events: all;
+  }
   .plan-pin-disc {
     fill: var(--color-panel);
-    stroke: var(--color-ink);
-    stroke-width: 1;
+    stroke: var(--tone);
+    stroke-width: 1.6;
     vector-effect: non-scaling-stroke;
-    transition: fill 0.15s;
+    transition: none;
+    pointer-events: none;
   }
-  .plan-pin:hover .plan-pin-disc {
-    fill: var(--color-bg-2);
+  .plan-pin-glyph {
+    color: var(--tone);
+    pointer-events: none;
   }
   .plan-pin-ring {
     fill: none;
@@ -1551,42 +1712,97 @@ body {
     stroke-width: 3;
     vector-effect: non-scaling-stroke;
     opacity: 0;
-    transform-box: fill-box;
-    transform-origin: center;
-    scale: 1.35;
+    pointer-events: none;
   }
   .plan-pin:focus-visible .plan-pin-ring,
   .plan-pin[aria-pressed='true'] .plan-pin-ring {
     opacity: 1;
   }
+  .plan-pin-label-bg {
+    fill: var(--color-panel);
+    stroke: var(--tone);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .plan-pin-label {
+    fill: var(--color-ink);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    pointer-events: none;
+  }
+  .plan-pin:hover .plan-pin-disc {
+    fill: var(--color-bg-2);
+  }
+  .plan-caption {
+    display: grid;
+    gap: 8px;
+    padding: 10px 14px 12px;
+    border-top: 1px solid var(--color-line);
+    background: var(--color-panel);
+  }
   .plan-key {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 16px;
-    margin-top: 10px;
-    font-size: 12px;
+    gap: 7px 14px;
+    font-size: 11px;
     color: var(--color-ink-dim);
   }
   .plan-key span {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
+    white-space: nowrap;
   }
   .plan-swatch {
     display: inline-block;
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
-  }
-  .plan-swatch-line,
-  .plan-swatch-dash {
-    height: 0;
+    flex: 0 0 auto;
     width: 16px;
-    border-radius: 0;
-    border-top: 2.5px solid var(--color-ink);
+    height: 4px;
+    border-radius: 1px;
   }
-  .plan-swatch-dash {
-    border-top: 2px dashed var(--color-ink-dim);
+  .plan-swatch-cut {
+    background: var(--color-change-cut);
+  }
+  .plan-swatch-fill {
+    background: var(--color-change-fill);
+  }
+  .plan-swatch-lease {
+    height: 0;
+    border-top: 2px solid var(--color-ink);
+  }
+  .plan-swatch-pit {
+    height: 0;
+    border-top: 1.5px dashed var(--color-accent);
+  }
+  .plan-swatch-dump {
+    height: 0;
+    border-top: 1.5px dotted var(--color-ochre);
+  }
+  .plan-swatch-contour {
+    height: 0;
+    border-top: 1px solid var(--color-contour);
+  }
+  .plan-note {
+    max-width: 70ch;
+    color: var(--color-ink-faint);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  @media (width <= 30rem) {
+    .plan-title-block {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+    }
+    .plan-instruments {
+      width: 100%;
+      justify-content: space-between;
+    }
+    .plan-caption {
+      padding-inline: 12px;
+    }
   }
 
   /* The map card's key folds away; its summary reads as the card's other section titles. */

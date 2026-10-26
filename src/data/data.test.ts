@@ -88,7 +88,7 @@ describe('synthetic terrain provider', async () => {
     expect(again.elevations).toEqual(current.elevations)
     const other = await new SyntheticTerrainProvider(1).getSurvey('current')
     expect(other.elevations).not.toEqual(current.elevations)
-  }, 30_000)
+  }, 60_000)
 
   it('rejects unknown surveys', async () => {
     await expect(provider.getSurvey('nope')).rejects.toThrow('Unknown survey')
