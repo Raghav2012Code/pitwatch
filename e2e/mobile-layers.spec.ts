@@ -20,9 +20,11 @@ test.use({ reducedMotion: 'reduce' })
 test('every layer switch and the exaggeration slider are reachable from the phone drawer', async ({
   page,
 }) => {
+  // Building the larger site takes a while under a parallel browser run.
+  test.setTimeout(90_000)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/monitor')
-  await page.getByRole('group', { name: 'Camera view' }).waitFor({ timeout: 30_000 })
+  await page.getByRole('group', { name: 'Camera view' }).waitFor({ timeout: 60_000 })
 
   // The floating card is gone at this width.
   await expect(page.getByRole('navigation', { name: 'Map' })).toBeHidden()
