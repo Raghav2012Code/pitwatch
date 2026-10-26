@@ -50,6 +50,10 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-26: full visual audit, landing loading bar
+
+- Screenshotted all seven pages at 1440 and 390 px and read each. No overflow, clipping, collision or contrast problem found. One gap: while the surveys build, the landing model card showed only a line of text on an empty panel. It now shows the same moving strata bar as the dashboard loading card.
+
 ### 2026-10-26: polish pass (speed, links, rail labels)
 
 - **Faster start:** the two surveys now build in two Web Workers at once (`WorkerTerrainProvider` keeps one worker per survey), so the wait is the slower survey, not the sum. Time to the first engine result in headless Chromium fell from 11.1 s to about 6.5 s. The first-principles profile (node, single thread) was natural field 0.6 s, baseline surface 1.3 s, current surface 2.5 s, each aerial image 2.1 s, rules 0.09 s; the image and the current surface are the next candidates if more is needed. Early-outs added to the dump functions are exact (they return 0 only where the function is already 0) and did not change a snapshot value.
