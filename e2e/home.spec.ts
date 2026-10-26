@@ -13,7 +13,7 @@ test('the landing page opens the dashboard', async ({ page }) => {
   await expect(
     page.getByRole('heading', { level: 2, name: '2 violations, 3 warnings' }),
   ).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByText('Venthar Ridge Iron Pit')).toBeVisible()
+  await expect(page.getByText('Venthar Ridge Iron Pit').first()).toBeVisible()
 })
 
 test('the landing model is driven by buttons, not by scrolling', async ({ page }) => {

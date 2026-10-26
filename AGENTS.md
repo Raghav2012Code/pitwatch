@@ -50,6 +50,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-26: issues #44 and #45, a bigger site and a redesigned plan
+
+- **#44, site plan:** the Overview plan is a vector drawing (contours, change traced as SVG paths, each finding's cells outlined, pins sized in CSS pixels with a 44 px hit area, title block with survey date, north and scale). The zone text labels were dropped because they collided with pins; the key names the zones instead.
+- **#45, the site:** main pit enlarged to about 910 × 620 m and 180 m deep (floor RL 242, approved 240; 12 benches). New satellite pit south of it (floor RL 336, approved 334, its own zone and ramp, smaller in the baseline), a second waste dump with its own zone (grows inside the zone, no finding), a settling pond, a seven-leg haul road network with two junctions and the lease gate, two broad rises and a wider creek floodplain. Pit and dump zones are now outlines that follow the workings (the pit rims scaled 1.14 and 1.22, lobed footprints for the dumps) instead of rectangles. The grid stays 513 × 513 at 4 m.
+- The five planted findings are unchanged in rule, status and severity (R1-1 critical, R2-1 high, R1-2 medium, R3-1 medium, R1-3 low). The compliance snapshot moved deliberately: the sump sits at (880, 1020) in the larger pit, and areas and volumes shifted by up to 3% (R1-1 7,632 to 7,696 m²; R2-1 1,520 to 1,552 m²).
+- Camera: the Pit preset moved back to [560, 900, 1120] so the larger pit frames with more than one wall profile; Oblique and Top need no change.
+- Measured, not guessed: survey build to findings on the Overview was 11.1 s in headless Chromium (about 10 s before). A frame-time A/B in the same software-GL browser, orbiting at the Pit preset, gave a median of 867 ms per frame before and 1,117 ms after (+29%). Software rendering makes both absolute figures meaningless; the geometry is the same vertex count, so the extra cost is fragment area from the larger view. A real GPU was not available to confirm 60 fps.
+- Tests: `data.test.ts` and `orthophoto.test.ts` follow the new positions; the pit-layout test now expects two approved workings. Verification: `npm run verify` (164 unit tests) and a full browser run are recorded with the commit that closes #45.
+
 ### 2026-10-24: simplified abstractions found in the repository audit
 
 - Replaced `WorkerTerrainProvider`'s reference counter and deferred teardown timer with one lazy page-lifetime provider. `App` stays mounted across hash navigation and StrictMode effect replay, while the provider still starts its worker only when survey data is requested. Provider module edits trigger a full reload after disposing the old worker, so the store cannot retain a stale instance across HMR.

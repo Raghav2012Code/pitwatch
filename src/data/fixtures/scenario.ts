@@ -91,12 +91,13 @@ export function randomOutline(
 export const PIT_SEED = SEED + 101
 
 /**
- * Main pit now: random outline (anticlockwise) inside the lease, 150 m deep, floor 2 m
- * above the approved floor. The east wall stops at x = 1320, clear of the lease buffer.
+ * Main pit now: random outline (anticlockwise) inside the lease, about 930 m long and 195 m
+ * deep (13 benches), floor 2 m above the approved floor. The east wall stops at x = 1330,
+ * clear of the lease buffer.
  */
 export const CURRENT_PIT: PitStage = {
-  floorRL: 272,
-  outline: randomOutline(PIT_SEED, { x0: 640, x1: 1320, y0: 790, y1: 1270 }),
+  floorRL: 242,
+  outline: randomOutline(PIT_SEED, { x0: 420, x1: 1330, y0: 710, y1: 1330 }),
 }
 
 /**
@@ -104,32 +105,62 @@ export const CURRENT_PIT: PitStage = {
  * (about 75 m at the far west) and before the last bench was mined.
  */
 export const BASELINE_PIT: PitStage = {
-  floorRL: 287,
+  floorRL: 257,
   outline: CURRENT_PIT.outline.map((p) => ({
-    x: p.x < 960 ? p.x + (960 - p.x) * 0.23 : p.x,
-    y: 1030 + (p.y - 1030) * 0.94,
+    x: p.x < 700 ? p.x + (700 - p.x) * 0.23 : p.x,
+    y: 1020 + (p.y - 1020) * 0.94,
   })),
+}
+
+/** Scale an outline about its centroid: permit zones follow the workings they cover. */
+export const scaleAbout = (poly: Polygon, factor: number): Polygon => {
+  const c = poly.reduce((a, p) => ({ x: a.x + p.x / poly.length, y: a.y + p.y / poly.length }), {
+    x: 0,
+    y: 0,
+  })
+  return poly.map((p) => ({ x: c.x + (p.x - c.x) * factor, y: c.y + (p.y - c.y) * factor }))
+}
+
+/** Rounded lobed footprint around a point, for a dump zone that follows the dump it covers. */
+export const blobAround = (cx: number, cy: number, r: number, phase: number, n = 24): Polygon =>
+  Array.from({ length: n }, (_, i) => {
+    const t = (i / n) * 2 * Math.PI
+    const rr = r * (1 + 0.07 * Math.sin(2 * t + phase) + 0.05 * Math.sin(3 * t - phase))
+    return { x: cx + rr * Math.cos(t), y: cy + rr * Math.sin(t) }
+  })
+
+/** Second working: a satellite pit south of the main one, 86 m deep. */
+export const SATELLITE_SEED = SEED + 211
+export const CURRENT_PIT_B: PitStage = {
+  floorRL: 336,
+  outline: randomOutline(SATELLITE_SEED, { x0: 760, x1: 1060, y0: 330, y1: 560 }, 18),
+}
+/** The satellite pit at the baseline survey: smaller, and a bench shallower. */
+export const BASELINE_PIT_B: PitStage = {
+  floorRL: 350,
+  outline: scaleAbout(CURRENT_PIT_B.outline, 0.8),
 }
 
 export const PIT_ZONE: PitZone = {
   id: 'pit-main',
-  polygon: [
-    { x: 560, y: 700 },
-    { x: 1370, y: 700 },
-    { x: 1370, y: 1360 },
-    { x: 560, y: 1360 },
-  ],
-  approvedFloorElevation: 270,
+  polygon: scaleAbout(CURRENT_PIT.outline, 1.14),
+  approvedFloorElevation: 240,
+}
+
+export const PIT_ZONE_B: PitZone = {
+  id: 'pit-south',
+  polygon: scaleAbout(CURRENT_PIT_B.outline, 1.22),
+  approvedFloorElevation: 334,
 }
 
 export const DUMP_ZONE: DumpZone = {
   id: 'dump-west',
-  polygon: [
-    { x: 380, y: 380 },
-    { x: 700, y: 380 },
-    { x: 700, y: 640 },
-    { x: 380, y: 640 },
-  ],
+  polygon: blobAround(540, 510, 165, 0.7),
+}
+
+export const DUMP_ZONE_B: DumpZone = {
+  id: 'dump-east',
+  polygon: blobAround(1280, 470, 140, 2.1),
 }
 
 /*
@@ -155,22 +186,33 @@ export const CHANGES = {
       [1200, 1020],
     ]),
   } satisfies PitStage,
-  sump: { cx: 960, cy: 1020, r: 22, depthBelowFloor: 6 },
+  sump: { cx: 880, cy: 1020, r: 22, depthBelowFloor: 6 },
   bufferScrape: { x0: 900, x1: 1010, y0: 1500, y1: 1510, depth: 1.2 },
   /** A cluster of truck-tipped heaps around (cx, cy). */
   strayDump: { cx: 1520, cy: 480, r: 45, height: 4 },
   /** The terraced west dump grows taller and wider (see BASELINE_DUMP). */
   zoneDump: { cx: 540, cy: 510, r: 115, height: 10 },
+  /** The east waste dump also grows inside its own zone: no finding. */
+  zoneDumpB: { cx: 1280, cy: 470, r: 100, height: 12 },
 } as const
 
 /** Terraced waste dump that already exists in the baseline survey, inside the dump zone. */
 export const BASELINE_DUMP = { cx: 530, cy: 505, r: 85, height: 5 } as const
+export const BASELINE_DUMP_B = { cx: 1275, cy: 465, r: 70, height: 6 } as const
+
+/** Settling pond at a low point south-west of the main pit, present in both surveys. */
+export const POND = { cx: 560, cy: 1400, r: 60, depth: 7 } as const
 
 /**
  * Haul ramp in the main pit: leaves the rim at the point nearest `start` (where the
  * haul road arrives) and runs anticlockwise down the wall at `grade` until the floor.
  */
-export const RAMP = { start: { x: 980, y: 760 }, grade: 0.1, width: 30 } as const
+export const RAMP = {
+  start: { x: 900, y: 715 },
+  startB: { x: 905, y: 560 },
+  grade: 0.1,
+  width: 30,
+} as const
 
 /** Crest line of Venthar Ridge, north of the lease (local metres). */
 export const RIDGE: readonly [number, number][] = [
@@ -181,7 +223,13 @@ export const RIDGE: readonly [number, number][] = [
   [2200, 1910],
 ]
 
-/** Dry creek bed east of the lease, draining south. */
+/** Broad rises on the plateau, so the block has shape away from the ridge too. */
+export const RISES: readonly { cx: number; cy: number; r: number; h: number }[] = [
+  { cx: 1800, cy: 1480, r: 300, h: 34 },
+  { cx: 90, cy: 760, r: 260, h: 26 },
+]
+
+/** Dry creek bed east of the lease, draining south, with a wide floodplain. */
 export const CREEK: readonly [number, number][] = [
   [2200, 1200],
   [1850, 930],
@@ -192,26 +240,51 @@ export const CREEK: readonly [number, number][] = [
 
 /**
  * Haul roads on the plateau (local metres). They only appear in the simulated aerial
- * image; on the ground they are flat enough not to matter at survey resolution.
+ * image; on the ground they are flat enough not to matter at survey resolution. A network:
+ * the main ramp and the satellite pit meet at a junction, which feeds the west dump, the
+ * east dump and the lease gate to the north.
  */
 export const ROADS: readonly (readonly [number, number][])[] = [
+  // Main pit ramp to the first junction.
   [
-    [980, 790],
-    [985, 745],
-    [1010, 640],
-    [880, 560],
-    [700, 520],
-    [600, 500],
+    [900, 715],
+    [930, 650],
+    [960, 600],
+  ],
+  // Satellite pit down to the same junction.
+  [
+    [905, 560],
+    [930, 580],
+    [960, 600],
+  ],
+  // Junction to the west dump.
+  [
+    [960, 600],
+    [800, 570],
+    [660, 520],
+    [560, 505],
+  ],
+  // Junction to the second junction, then the east dump and the stray-dump track.
+  [
+    [960, 600],
+    [1060, 560],
+    [1130, 500],
   ],
   [
-    [1010, 640],
-    [1120, 420],
+    [1130, 500],
+    [1230, 470],
+    [1300, 470],
+  ],
+  [
+    [1300, 470],
+    [1420, 470],
+    [1500, 475],
+  ],
+  // Out of the lease gate to the north.
+  [
+    [1130, 500],
+    [1150, 300],
     [1180, 0],
-  ],
-  [
-    [1120, 420],
-    [1330, 450],
-    [1500, 470],
   ],
 ]
 
@@ -220,9 +293,9 @@ export const SURVEY_SIGMA_M = { baseline: 0.05, current: 0.05 } as const
 export const LIMITS: PermittedLimits = {
   leaseBoundary: LEASE,
   safetyBufferMetres: SAFETY_BUFFER_M,
-  pitZones: [PIT_ZONE],
+  pitZones: [PIT_ZONE, PIT_ZONE_B],
   maxPitDepth: PLATEAU_RL - PIT_ZONE.approvedFloorElevation,
-  dumpZones: [DUMP_ZONE],
+  dumpZones: [DUMP_ZONE, DUMP_ZONE_B],
 }
 
 export const MINE: Mine = {
@@ -230,7 +303,9 @@ export const MINE: Mine = {
   leaseBoundary: LEASE,
   approvedZones: [
     { id: PIT_ZONE.id, name: 'Main pit', kind: 'pit', polygon: PIT_ZONE.polygon },
+    { id: PIT_ZONE_B.id, name: 'South pit', kind: 'pit', polygon: PIT_ZONE_B.polygon },
     { id: DUMP_ZONE.id, name: 'West waste dump', kind: 'dump', polygon: DUMP_ZONE.polygon },
+    { id: DUMP_ZONE_B.id, name: 'East waste dump', kind: 'dump', polygon: DUMP_ZONE_B.polygon },
   ],
   metadata: {
     benchHeight: `${BENCH_HEIGHT_M} m`,

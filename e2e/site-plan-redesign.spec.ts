@@ -96,15 +96,18 @@ test('the site plan is a labelled, data-backed vector map at supported widths', 
     expect(hasHorizontalOverflow, `document overflows at ${width}px`).toBe(false)
 
     for (const selector of ['.plan-observed-cut-label', '.plan-observed-fill-label']) {
-      const label = plan.locator(selector)
-      await expect(label).toBeVisible()
-      const labelBox = await label.boundingBox()
-      expect(labelBox, `${selector} should have a box at ${width}px`).not.toBeNull()
-      for (const [index, markerBox] of markerBoxes.entries()) {
-        expect(
-          boxesOverlap(labelBox!, markerBox),
-          `${selector} overlaps marker/ID ${FINDING_IDS[index]} at ${width}px: ${JSON.stringify({ labelBox, markerBox })}`,
-        ).toBe(false)
+      const labels = await plan.locator(selector).all()
+      expect(labels.length, `${selector} should exist at ${width}px`).toBeGreaterThan(0)
+      for (const label of labels) {
+        await expect(label).toBeVisible()
+        const labelBox = await label.boundingBox()
+        expect(labelBox, `${selector} should have a box at ${width}px`).not.toBeNull()
+        for (const [index, markerBox] of markerBoxes.entries()) {
+          expect(
+            boxesOverlap(labelBox!, markerBox),
+            `${selector} overlaps marker/ID ${FINDING_IDS[index]} at ${width}px: ${JSON.stringify({ labelBox, markerBox })}`,
+          ).toBe(false)
+        }
       }
     }
 

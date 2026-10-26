@@ -8,6 +8,7 @@ import {
   BASELINE_PIT,
   CURRENT_PIT,
   DUMP_ZONE,
+  DUMP_ZONE_B,
   FACE_RUN_M,
   GRID,
   LEASE,
@@ -112,7 +113,7 @@ describe('synthetic terrain provider', async () => {
 
   it('plants each scenario change where the rules will look for it', () => {
     // 1. Legitimate expansion inside the lease: ground lowered west of the old rim.
-    const west = { x: 680, y: 1080 }
+    const west = { x: 460, y: 1020 }
     expect(insidePit(west, preparePit(CURRENT_PIT))).toBeGreaterThan(0)
     expect(insidePit(west, preparePit(BASELINE_PIT))).toBeLessThan(0)
     expect(dh(west.x, west.y)).toBeLessThan(-5)
@@ -138,15 +139,17 @@ describe('synthetic terrain provider', async () => {
     // 5. Waste dumped outside the dump zone, and legitimately inside it.
     const stray = { x: CHANGES.strayDump.cx, y: CHANGES.strayDump.cy }
     expect(pointInPolygon(stray, DUMP_ZONE.polygon)).toBe(false)
+    expect(pointInPolygon(stray, DUMP_ZONE_B.polygon)).toBe(false)
     expect(dh(stray.x, stray.y)).toBeGreaterThan(3)
     expect(dh(CHANGES.zoneDump.cx, CHANGES.zoneDump.cy)).toBeGreaterThan(3)
+    expect(dh(CHANGES.zoneDumpB.cx, CHANGES.zoneDumpB.cy)).toBeGreaterThan(3)
   })
 })
 
 describe('pit layout', () => {
   it('keeps every approved stage inside the lease and clear of the buffer', () => {
     const approved = pitsOf('current').filter((p) => p.floorRL !== PLANTED_ENCROACHMENT.floorRL)
-    expect(approved).toHaveLength(1)
+    expect(approved).toHaveLength(2)
     for (const pit of approved) {
       for (const v of pit.rim) {
         expect(pointInPolygon(v, LEASE)).toBe(true)
