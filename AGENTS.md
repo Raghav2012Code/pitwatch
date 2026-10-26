@@ -50,6 +50,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-26: findings report export
+
+- The Findings page gains **Download CSV** and **Print report**. `src/compliance/report.ts` (pure, tested) writes one row per shown finding (id, rule, status, severity, area, volume, max excess, centre, explanation) and a final `data` column that says `simulated` on every row, so an exported file cannot be mistaken for a real result. The filters apply: the file holds what is on screen.
+- Print uses a print stylesheet: sidebar, header and controls are hidden, rows do not split across pages, and every explanation is opened for the print and closed again afterwards. The page prints a one-line "simulated data" header with the survey date.
+- Tests: four unit tests for the CSV (header, rounding and simulated marker, quoting, empty list) and one browser check that downloads the file and reads it back.
+- Considered and not done: deep links that restore a selected finding (the hash router rewrites unknown hashes, so it needs a router change first) and a GeoTIFF provider (needs real sample data to design against).
+
 ### 2026-10-26: issues #44 and #45, a bigger site and a redesigned plan
 
 - **#44, site plan:** the Overview plan is a vector drawing (contours, change traced as SVG paths, each finding's cells outlined, pins sized in CSS pixels with a 44 px hit area, title block with survey date, north and scale). The zone text labels were dropped because they collided with pins; the key names the zones instead.

@@ -2546,3 +2546,46 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- Print: the Findings page as a plain report ---------- */
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block !important;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .sidebar,
+  .shell-header,
+  .shell-scrim,
+  .no-print,
+  .seg,
+  .skip-link {
+    display: none !important;
+  }
+  html,
+  body,
+  .shell,
+  .page,
+  #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  .page {
+    padding: 0 !important;
+  }
+  .frow {
+    break-inside: avoid;
+  }
+  .frow-more > :not(summary) {
+    display: block !important;
+  }
+  .frow-go {
+    display: none !important;
+  }
+}

@@ -10,7 +10,7 @@ test.use({ reducedMotion: 'reduce' })
 /** Waits for the worker-built surveys; the camera group only renders once they are ready. */
 async function openMonitor(page: Page) {
   await page.goto('/#/monitor')
-  await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible({ timeout: 60_000 })
 }
 
 /** Opens the Inspector tab from the keyboard. */

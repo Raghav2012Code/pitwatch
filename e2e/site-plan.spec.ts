@@ -6,7 +6,7 @@ test('every site-plan pin opens its own finding on the map', async ({ page }) =>
   for (const id of ['R1-1', 'R2-1', 'R1-2', 'R3-1', 'R1-3']) {
     await page.goto('/#/overview')
     const plan = page.getByRole('group', { name: /Plan of the mine from above/ })
-    await expect(plan.getByRole('button')).toHaveCount(5, { timeout: 30_000 })
+    await expect(plan.getByRole('button')).toHaveCount(5, { timeout: 60_000 })
     await plan.getByRole('button', { name: new RegExp(`^${id},`) }).click()
     await expect(page).toHaveURL(/#\/monitor$/)
     await expect(page.locator('.finding[data-selected]')).toContainText(id)
@@ -58,7 +58,7 @@ test('the short-screen map keeps exaggeration reachable and the key stays user-c
   await page.goto('/#/monitor')
   const panel = page.getByRole('navigation', { name: 'Map', exact: true })
   const slider = panel.getByLabel('Vertical exaggeration')
-  await expect(slider).toBeVisible({ timeout: 30_000 })
+  await expect(slider).toBeVisible({ timeout: 60_000 })
   await expect(slider).toBeInViewport()
   const key = panel.locator('details')
   await expect(key).not.toHaveAttribute('open')

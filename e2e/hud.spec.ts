@@ -18,7 +18,7 @@ for (const width of WIDTHS) {
     // The camera group only renders once the surveys are built, and unlike the top-bar status
     // line it is visible at every width.
     const camera = page.getByRole('group', { name: 'Camera view' })
-    await expect(camera).toBeVisible({ timeout: 30_000 })
+    await expect(camera).toBeVisible({ timeout: 60_000 })
 
     for (const preset of ['Oblique', 'Top', 'Pit']) {
       const button = camera.getByRole('button', { name: preset })

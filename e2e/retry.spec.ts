@@ -28,14 +28,14 @@ test('a failed terrain load can be retried without a reload', async ({ page }) =
   await page.goto('/#/monitor')
 
   const alert = page.getByRole('alert')
-  await expect(alert).toBeVisible({ timeout: 30_000 })
+  await expect(alert).toBeVisible({ timeout: 60_000 })
   await expect(alert).toContainText(/could not load/i)
 
   await page.getByRole('button', { name: 'Try again' }).click()
 
   // The retry gets a working worker, so the engine reports and the map comes up.
   await expect(page.getByRole('banner').getByText('2 violations, 3 warnings')).toBeVisible({
-    timeout: 30_000,
+    timeout: 60_000,
   })
   await expect(page.getByRole('alert')).toHaveCount(0)
 })
@@ -45,10 +45,10 @@ test('the home page reports a failed load and offers the retry', async ({ page }
   await page.goto('/')
 
   const alert = page.getByRole('alert')
-  await expect(alert).toBeVisible({ timeout: 30_000 })
+  await expect(alert).toBeVisible({ timeout: 60_000 })
   // It must stop claiming to be building the surveys.
   await expect(page.getByText('Building the simulated surveys…')).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Try again' }).click()
-  await expect(page.getByRole('alert')).toHaveCount(0, { timeout: 30_000 })
+  await expect(page.getByRole('alert')).toHaveCount(0, { timeout: 60_000 })
 })

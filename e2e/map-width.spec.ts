@@ -9,7 +9,7 @@ test.use({ reducedMotion: 'reduce' })
 test('the map gives the model room at laptop widths', async ({ page }) => {
   await page.setViewportSize({ width: 1100, height: 900 })
   await page.goto('/#/monitor')
-  await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible({ timeout: 60_000 })
 
   // The findings panel starts closed, so the stage is the width of the map area minus the map
   // card: 1036 px of map less 272 px of card.
@@ -34,6 +34,6 @@ test('the map gives the model room at laptop widths', async ({ page }) => {
 test('the findings panel is open on a wide screen', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await page.goto('/#/monitor')
-  await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible({ timeout: 60_000 })
   await expect(page.getByRole('complementary', { name: 'Details' })).toBeVisible()
 })

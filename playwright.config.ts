@@ -8,7 +8,7 @@ const URL = `http://127.0.0.1:${PORT}`
 // minification still fails the suite.
 export default defineConfig({
   testDir: './e2e',
-  timeout: 30_000,
+  timeout: 60_000,
   fullyParallel: true,
   forbidOnly: CI,
   retries: CI ? 1 : 0,

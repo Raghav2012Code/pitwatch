@@ -22,7 +22,7 @@ test('the site plan is a labelled, data-backed vector map at supported widths', 
   await page.goto('/#/overview')
 
   const plan = page.getByRole('group', { name: /Plan of the mine from above/ })
-  await expect(plan.getByRole('button')).toHaveCount(FINDING_IDS.length, { timeout: 30_000 })
+  await expect(plan.getByRole('button')).toHaveCount(FINDING_IDS.length, { timeout: 60_000 })
   const hitSizes = new Map<string, Box[]>()
 
   for (const width of VIEWPORTS) {

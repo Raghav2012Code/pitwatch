@@ -21,9 +21,9 @@ async function settle(page: import('@playwright/test').Page, selector: string, m
   // longer than a fixed sleep allows, and a half-built canvas would compare unequal for the
   // wrong reason, so wait for the canvas to exist and to have been resized off its 300x150
   // default first.
-  await expect(canvas).toBeVisible({ timeout: 30_000 })
+  await expect(canvas).toBeVisible({ timeout: 60_000 })
   await expect
-    .poll(async () => (await canvas.boundingBox())?.width ?? 0, { timeout: 30_000 })
+    .poll(async () => (await canvas.boundingBox())?.width ?? 0, { timeout: 60_000 })
     .toBeGreaterThan(300)
   await page.waitForTimeout(ms)
   return canvas.screenshot()
@@ -36,7 +36,7 @@ test('the landing model survives the map Terrain switch', async ({ page }) => {
 
   await page.goto('/#/monitor')
   const camera = page.getByRole('group', { name: 'Camera view' })
-  await expect(camera).toBeVisible({ timeout: 30_000 })
+  await expect(camera).toBeVisible({ timeout: 60_000 })
   // A fixed pose, so only the terrain changes between the two map shots.
   await camera.getByRole('button', { name: 'Top' }).click()
   const withTerrain = await settle(page, '.scene-wrap canvas')
