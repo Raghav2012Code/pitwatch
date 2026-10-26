@@ -59,7 +59,7 @@ test('Show on map from the findings page lands on the map with that finding sele
 
   await cards.first().getByRole('button', { name: 'Show on map' }).click()
 
-  await expect(page).toHaveURL(/#\/monitor$/)
+  await expect(page).toHaveURL(/#\/monitor(\?finding=[\w-]+)?$/)
   await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible({ timeout: 60_000 })
   await expect(page.getByRole('tab', { name: 'Findings' })).toHaveAttribute('aria-selected', 'true')
   await expect(page.locator('#details-tabpanel li.finding[data-selected]')).toHaveCount(1)

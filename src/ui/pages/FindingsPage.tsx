@@ -6,7 +6,7 @@ import { useAppStore } from '../../state/store'
 import { useTerrain } from '../../state/terrain'
 import { countText, GLYPH, RULE_NAMES, toneOf } from '../findings'
 import { SeverityLegend, ThresholdNote } from '../panels/FindingsPanel'
-import { navigate } from '../route'
+import { findingLink, navigate } from '../route'
 import { Page } from '../shell/AppShell'
 import { LoadGate } from '../shell/LoadGate'
 import { ProvenanceTag } from '../ProvenanceTag'
@@ -173,6 +173,17 @@ function FindingRow({ f }: { f: ComplianceFinding }) {
   const Glyph = GLYPH[tone]
   const selected = useAppStore((s) => s.selectedFinding === f.id)
   const selectFinding = useAppStore((s) => s.selectFinding)
+  const [copied, setCopied] = useState(false)
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(findingLink(f.id))
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2500)
+    } catch {
+      // Clipboard access can be refused; the address bar link works after Show on map.
+    }
+  }
 
   return (
     <li className={`frow tone-${tone}`} data-selected={selected || undefined}>
@@ -200,16 +211,21 @@ function FindingRow({ f }: { f: ComplianceFinding }) {
           </div>
         ))}
       </dl>
-      <button
-        type="button"
-        className="btn frow-go"
-        onClick={() => {
-          selectFinding(f.id, f.centroid)
-          navigate('monitor')
-        }}
-      >
-        Show on map
-      </button>
+      <div className="frow-go">
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            selectFinding(f.id, f.centroid)
+            navigate('monitor')
+          }}
+        >
+          Show on map
+        </button>
+        <button type="button" className="frow-copy no-print" onClick={() => void copyLink()}>
+          {copied ? 'Link copied' : 'Copy link'}
+        </button>
+      </div>
       <details className="frow-more">
         <summary>Why it was flagged</summary>
         <p>{f.explanation}</p>

@@ -32,7 +32,7 @@ test('Show on map restores the current terrain, finding layer, and selected evid
   await expect(cards).toHaveCount(5, { timeout: 60_000 })
   await cards.first().getByRole('button', { name: 'Show on map' }).click()
 
-  await expect(page).toHaveURL(/#\/monitor$/)
+  await expect(page).toHaveURL(/#\/monitor(\?finding=[\w-]+)?$/)
   await expect(page.getByRole('slider', { name: 'Survey shown on the map' })).toHaveAttribute(
     'aria-valuetext',
     'Current survey',
@@ -65,7 +65,7 @@ test('Show on map restores the current terrain, finding layer, and selected evid
   await expect(plan.getByRole('button', { name: /^R2-1,/ })).toHaveAttribute('aria-pressed', 'true')
 
   await plan.getByRole('button', { name: /^R1-3,/ }).click()
-  await expect(page).toHaveURL(/#\/monitor$/)
+  await expect(page).toHaveURL(/#\/monitor(\?finding=[\w-]+)?$/)
   await expect(page.locator('#details-tabpanel li.finding[data-selected]')).toContainText('R1-3')
   await nav.getByRole('link', { name: 'Findings' }).click()
   await expect(page.locator('li.frow[data-selected]')).toContainText('R1-3')

@@ -18,18 +18,19 @@ const spawnWorker = (): Worker =>
 
 /**
  * Same data as SyntheticTerrainProvider, but the heavy surface and image generation runs
- * in a Web Worker so the page stays responsive while it builds. Mine and limits are
- * small fixtures and are served directly.
+ * in Web Workers so the page stays responsive while it builds. Each survey gets its own worker,
+ * so the two surveys are built in parallel: the wait is the slower survey, not the sum. Mine
+ * and limits are small fixtures and are served directly.
  *
- * The worker is started on the first survey request, not in the constructor, so a provider
- * that is never used costs nothing. `dispose` is the shutdown path: it terminates the worker
- * and fails anything still waiting on it.
+ * Workers start on the first request for their survey, not in the constructor, so a provider
+ * that is never used costs nothing. `dispose` is the shutdown path: it terminates every worker
+ * and fails anything still waiting on one.
  */
 export class WorkerTerrainProvider implements TerrainProvider {
-  private worker: Worker | null = null
+  private readonly workers = new Map<string, Worker>()
   private readonly pending = new Map<
     number,
-    { ok: (s: TerrainSurvey) => void; fail: (e: Error) => void }
+    { worker: Worker; ok: (s: TerrainSurvey) => void; fail: (e: Error) => void }
   >()
   private readonly cache = new Map<string, Promise<TerrainSurvey>>()
   private next = 0
@@ -41,17 +42,18 @@ export class WorkerTerrainProvider implements TerrainProvider {
     this.spawn = spawn
   }
 
-  /** True once the worker exists. A provider that never served a survey has none. */
+  /** True once any worker exists. A provider that never served a survey has none. */
   get started(): boolean {
-    return this.worker !== null
+    return this.workers.size > 0
   }
 
   get disposed(): boolean {
     return this.shut
   }
 
-  private get channel(): Worker {
-    if (this.worker) return this.worker
+  private channel(surveyId: string): Worker {
+    const existing = this.workers.get(surveyId)
+    if (existing) return existing
     const worker = this.spawn()
     worker.onmessage = ({ data }: MessageEvent<Reply>) => {
       const p = this.pending.get(data.id)
@@ -61,14 +63,16 @@ export class WorkerTerrainProvider implements TerrainProvider {
       else p.fail(new Error(data.error ?? 'Terrain worker failed'))
     }
     worker.onerror = (e) => {
-      for (const p of this.pending.values())
+      for (const [id, p] of this.pending) {
+        if (p.worker !== worker) continue
         p.fail(new Error(e.message || 'Terrain worker crashed'))
-      this.pending.clear()
+        this.pending.delete(id)
+      }
       // A crashed worker cannot answer again, so drop it: the next request starts a fresh one.
       worker.terminate()
-      if (this.worker === worker) this.worker = null
+      if (this.workers.get(surveyId) === worker) this.workers.delete(surveyId)
     }
-    this.worker = worker
+    this.workers.set(surveyId, worker)
     return worker
   }
 
@@ -90,8 +94,9 @@ export class WorkerTerrainProvider implements TerrainProvider {
     if (cached) return cached
     const p: Promise<TerrainSurvey> = new Promise<TerrainSurvey>((ok, fail) => {
       const id = this.next++
-      this.pending.set(id, { ok, fail })
-      this.channel.postMessage({ id, surveyId })
+      const worker = this.channel(surveyId)
+      this.pending.set(id, { worker, ok, fail })
+      worker.postMessage({ id, surveyId })
     })
     // A failed request must not stay in the cache, or a retry would replay the same rejection.
     p.catch(() => {
@@ -101,15 +106,15 @@ export class WorkerTerrainProvider implements TerrainProvider {
     return p
   }
 
-  /** Shut the worker down and fail anything still in flight. Safe to call more than once. */
+  /** Shut every worker down and fail anything still in flight. Safe to call more than once. */
   dispose(): void {
     if (this.shut) return
     this.shut = true
     for (const p of this.pending.values()) p.fail(new Error('Terrain provider was shut down'))
     this.pending.clear()
     this.cache.clear()
-    this.worker?.terminate()
-    this.worker = null
+    for (const worker of this.workers.values()) worker.terminate()
+    this.workers.clear()
   }
 }
 

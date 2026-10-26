@@ -8,7 +8,7 @@ test('every site-plan pin opens its own finding on the map', async ({ page }) =>
     const plan = page.getByRole('group', { name: /Plan of the mine from above/ })
     await expect(plan.getByRole('button')).toHaveCount(5, { timeout: 60_000 })
     await plan.getByRole('button', { name: new RegExp(`^${id},`) }).click()
-    await expect(page).toHaveURL(/#\/monitor$/)
+    await expect(page).toHaveURL(/#\/monitor(\?finding=[\w-]+)?$/)
     await expect(page.locator('.finding[data-selected]')).toContainText(id)
   }
 })
@@ -20,7 +20,7 @@ test('site-plan pins can be activated with Enter and Space', async ({ page }) =>
     await pin.focus()
     await expect(pin).toBeFocused()
     await page.keyboard.press(key)
-    await expect(page).toHaveURL(/#\/monitor$/)
+    await expect(page).toHaveURL(/#\/monitor(\?finding=[\w-]+)?$/)
     await expect(page.locator('.finding[data-selected]')).toContainText('R2-1')
   }
 })
@@ -43,7 +43,7 @@ test('the phone site plan fits and its pins can be tapped', async ({ browser }) 
     expect(box!.x).toBeGreaterThanOrEqual(0)
     expect(box!.x + box!.width).toBeLessThanOrEqual(390)
     await pin.tap()
-    await expect(page).toHaveURL(/#\/monitor$/)
+    await expect(page).toHaveURL(/#\/monitor(\?finding=[\w-]+)?$/)
     await page.getByRole('button', { name: 'Details', exact: true }).click()
     await expect(page.locator('.finding[data-selected]')).toContainText('R1-1')
   } finally {

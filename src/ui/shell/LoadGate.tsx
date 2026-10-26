@@ -29,6 +29,9 @@ export function LoadGate({ children }: { children: ReactNode }) {
   return (
     <div role="status" className="load-card">
       <p className="cond text-[20px] font-bold text-ink">Building the simulated surveys…</p>
+      <p className="mt-1 text-[13.5px] text-ink-dim">
+        Two surveys of 513 × 513 cells, generated in your browser. This takes a few seconds.
+      </p>
       <div className="loading-strata mt-3" aria-hidden="true" />
     </div>
   )

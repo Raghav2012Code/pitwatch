@@ -10,10 +10,10 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
 
 ## What it does today
 
-- **Landing page** (`#/`): the live 3D model, slowly turning, with four buttons (Baseline, Current, Change, Findings) that switch what it shows: the baseline survey, the current survey, the measured change coloured on the terrain (rust cut, blue fill) and the findings with the lease line and a pin for each. No scrolling story; a short section on the three permit rules follows.
+- **Landing page** (`#/`): the live 3D model (drag to turn it), with four buttons (Baseline, Current, Change, Findings) that switch what it shows: the baseline survey, the current survey, the measured change coloured on the terrain (rust cut, blue fill) and the findings with the lease line and a pin for each. No scrolling story; a short section on the three permit rules follows.
 - **Dashboard** with a sidebar (a slim icon rail on the 3D map, a drawer on phones):
   - **Overview** (`#/overview`): the verdict, four headline figures, the result for each permit rule, the findings to look at first, and the survey, surface and lease facts. An interactive site plan draws the lease, permitted zones, changed cells and finding pins from the same data as the 3D map; select a pin with a pointer, touch, Enter or Space to open its finding on the map.
-  - **Findings** (`#/findings`): every finding with its explanation and figures, and a Show on map button.
+  - **Findings** (`#/findings`): every finding as a ruled row with its figures, filters by status and rule, the explanation on demand, Show on map, **Copy link**, **Download CSV** (every row marked simulated) and a clean **Print report** view.
   - **Permit rules** (`#/rules`), **Uncertainty** (`#/uncertainty`: combined survey σ, the noise band and the threshold the rules report beyond, plus the resolution comparison) and **About the data** (`#/about`, with the keyboard shortcuts).
 - **3D map** (`#/monitor`):
   - 3D terrain of the current survey with a simulated aerial image draped over it. The block sides show a soil profile.
@@ -24,6 +24,7 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
   - A survey slider on the timeline switches the map between the baseline and current surveys. Findings can be opened from their pins and flown to from the Findings tab.
   - Overlay layers: lease boundary, safety buffer, pit and dump zone outlines, measured change (excavated and filled, only beyond the reporting threshold of 0.5 m plus twice the combined survey σ) and finding markers, all drawn from the engine output.
   - Header compliance status, and a details panel with a Findings tab (every finding with its explanation and figures) and an Inspector tab.
+  - A link such as `#/monitor?finding=R2-1` opens the map on that finding, and the address follows whichever finding is selected, so what is on screen can be shared.
   - Selecting a finding restores the current survey, terrain and finding markers, frames the chosen pin and opens the Findings tab. Selection stays synchronized with the Overview. On phones, the details drawer closes to reveal the terrain and retains the selected finding when reopened.
   - On phones the details drawer opens on the findings, with the layer switches and vertical exaggeration under a Map layers disclosure below them. On larger screens, the Map card holds these controls; its key can be folded to leave more room.
 - **Compliance engine** (`src/compliance/`): change detection, rules R1–R3, clustering into findings, severity and plain-English explanations. All of it is pure TypeScript and unit-tested.
@@ -66,7 +67,7 @@ Flagged cells are grouped into findings with 8-connected components. Each findin
 
 Each finding also gets an explanation such as:
 
-> Excavated 8,320 m² outside the lease boundary; deepest cut 52.0 m ± 0.14 m (2σ). About 183,700 m³ removed.
+> Excavated 7,696 m² outside the lease boundary; deepest cut 52.5 m ± 0.14 m (2σ). About 175,300 m³ removed.
 
 Every threshold (k, `minChangeM`, severity limits) lives in [`src/compliance/config.ts`](src/compliance/config.ts).
 

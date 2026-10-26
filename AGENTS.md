@@ -50,6 +50,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-26: polish pass (speed, links, rail labels)
+
+- **Faster start:** the two surveys now build in two Web Workers at once (`WorkerTerrainProvider` keeps one worker per survey), so the wait is the slower survey, not the sum. Time to the first engine result in headless Chromium fell from 11.1 s to about 6.5 s. The first-principles profile (node, single thread) was natural field 0.6 s, baseline surface 1.3 s, current surface 2.5 s, each aerial image 2.1 s, rules 0.09 s; the image and the current surface are the next candidates if more is needed. Early-outs added to the dump functions are exact (they return 0 only where the function is already 0) and did not change a snapshot value.
+- **Shared links:** `#/monitor?finding=R2-1` opens the map on that finding once the engine has reported, an unknown id is ignored, and the address follows the selected finding afterwards. `route.ts` matches on the part of the hash before `?`; a typo is still rewritten to home. Findings rows gain **Copy link**.
+- **Rail labels:** the icon rail shows an instant label beside the icon on hover and keyboard focus (the native tooltip was slow); on screens at least 540 px tall the rail no longer clips it.
+- **Landing:** the headline is three lines at 1440 and 1920 px (it was four after the honest rewording); the loading card says what is being built.
+- Tests: route unit tests for the query, four browser checks (shared link, address follows selection, unknown id, Copy link puts a working link on the clipboard), worker tests for two parallel workers. `README.md` and `STATUS.md` refreshed.
+
 ### 2026-10-26: findings report export
 
 - The Findings page gains **Download CSV** and **Print report**. `src/compliance/report.ts` (pure, tested) writes one row per shown finding (id, rule, status, severity, area, volume, max excess, centre, explanation) and a final `data` column that says `simulated` on every row, so an exported file cannot be mistaken for a real result. The filters apply: the file holds what is on screen.

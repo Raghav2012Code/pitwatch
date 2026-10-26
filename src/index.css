@@ -1116,6 +1116,34 @@ body {
     .shell[data-rail] .sidebar-collapse .nav-icon {
       rotate: 180deg;
     }
+    /* The rail has only a few items, so on a screen tall enough it need not scroll, which
+       would clip the tooltip beside each icon. */
+    @media (height >= 540px) {
+      .shell[data-rail] .sidebar,
+      .shell[data-rail] .sidebar-nav {
+        overflow: visible;
+      }
+    }
+    /* A quick label beside the icon on hover or keyboard focus; the native title is slow. */
+    .shell[data-rail] .nav-item[title]:hover::after,
+    .shell[data-rail] .nav-item[title]:focus-visible::after {
+      content: attr(title);
+      position: absolute;
+      left: calc(100% + 10px);
+      top: 50%;
+      translate: 0 -50%;
+      z-index: 80;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      color: var(--color-side-ink);
+      background: var(--color-side);
+      border: 1px solid var(--color-side-line);
+      box-shadow: 0 8px 20px -10px rgb(0 0 0 / 0.5);
+      pointer-events: none;
+    }
   }
 
   /* ---------- Dashboard pages ---------- */
@@ -1258,10 +1286,21 @@ body {
     color: var(--color-ink);
   }
   .frow-go {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
     grid-column: 2;
     grid-row: 1 / span 2;
     align-self: center;
     margin-right: 4px;
+  }
+  .frow-copy {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
   .frow-more {
     grid-column: 1 / -1;
@@ -1300,7 +1339,9 @@ body {
     .frow-go {
       grid-column: 1;
       grid-row: auto;
+      flex-direction: row;
       justify-self: start;
+      gap: 16px;
     }
     .frow-figures {
       gap: 20px;
@@ -1909,8 +1950,8 @@ body {
   }
   .hero-title {
     text-wrap: balance;
-    max-width: 11ch;
-    font-size: clamp(48px, 6.4vw, 92px);
+    max-width: 14ch;
+    font-size: clamp(48px, 5.6vw, 84px);
     font-weight: 700;
     line-height: 0.92;
     color: var(--color-ink);

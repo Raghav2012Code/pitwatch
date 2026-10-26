@@ -292,6 +292,8 @@ const smoothstep = (a: number, b: number, x: number) => {
 
 /** Flat-topped waste dump with a berm part way down its batter and an irregular footprint. */
 export function terracedDump(p: Vec2, m: Heap): number {
+  // Beyond 1.5 radii the footprint (at most about 1.33 radii) is certainly over: skip the trig.
+  if (Math.abs(p.x - m.cx) > m.r * 1.5 || Math.abs(p.y - m.cy) > m.r * 1.5) return 0
   const theta = Math.atan2(p.y - m.cy, p.x - m.cx)
   // Lobed footprint: dumps grow by tipping along a few fronts, so they are never round.
   const lobes = 0.16 * Math.sin(2 * theta + 0.7) + 0.1 * Math.sin(3 * theta - 1.2)
@@ -312,11 +314,14 @@ const TIP_OFFSETS: readonly [number, number][] = [
   [-4, 22],
 ]
 const tippedHeaps = (p: Vec2, m: Heap) =>
-  TIP_OFFSETS.reduce(
-    (z, [ox, oy]) =>
-      Math.max(z, mound(p, { cx: m.cx + ox, cy: m.cy + oy, r: 15, height: m.height })),
-    0,
-  )
+  // Every heap lies within 30 m of the centre and reaches 15 m: nothing is left past 45 m.
+  Math.abs(p.x - m.cx) > 45 || Math.abs(p.y - m.cy) > 45
+    ? 0
+    : TIP_OFFSETS.reduce(
+        (z, [ox, oy]) =>
+          Math.max(z, mound(p, { cx: m.cx + ox, cy: m.cy + oy, r: 15, height: m.height })),
+        0,
+      )
 
 /** Depth of the settling pond's bowl at a point (0 outside it). */
 export function pondDepth(p: Vec2): number {

@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useAppStore } from '../../state/store'
 import { useTerrain } from '../../state/terrain'
 import { toggleFullscreen } from '../fullscreen'
 import { LayerPanel } from '../LayerPanel'
 import { SidePanel } from '../SidePanel'
+import { findingFromHash, ROUTE_HREF } from '../route'
 import { Viewport } from '../Viewport'
 
 /** Full-bleed 3D map with the layer card and the details panel floating above it. */
@@ -11,6 +12,31 @@ export function MapPage() {
   const layersHidden = useAppStore((s) => s.layersHidden)
   const detailsHidden = useAppStore((s) => s.detailsHidden)
   const detailsUserSet = useAppStore((s) => s.detailsUserSet)
+  const selectedFinding = useAppStore((s) => s.selectedFinding)
+  const ready = useTerrain((s) => s.status === 'ready')
+  const findings = useTerrain((s) => s.findings)
+  const linked = useRef(false)
+
+  // A shared link (`#/monitor?finding=R1-1`) opens the map on that finding once the engine has
+  // reported. The address then follows the selection, so whatever is on screen can be shared.
+  useEffect(() => {
+    if (!ready) return
+    const id = findingFromHash(window.location.hash)
+    const f = id ? findings.find((x) => x.id === id) : undefined
+    if (f && useAppStore.getState().selectedFinding !== f.id) {
+      useAppStore.getState().selectFinding(f.id, f.centroid)
+    }
+    linked.current = true
+  }, [ready, findings])
+  useEffect(() => {
+    if (!linked.current) return
+    const id = useAppStore.getState().selectedFinding
+    const next = id ? `${ROUTE_HREF.monitor}?finding=${encodeURIComponent(id)}` : ROUTE_HREF.monitor
+    if (window.location.hash !== next) {
+      const { pathname, search } = window.location
+      window.history.replaceState(null, '', `${pathname}${search}${next}`)
+    }
+  }, [selectedFinding, ready])
 
   // On a laptop-width screen the model is the point of the map, and the two floating panels
   // leave it a narrow stage: at 1100 px the stage would be 372 px wide. Below 1280 px the
