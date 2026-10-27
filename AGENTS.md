@@ -50,6 +50,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-27: the docs match what shipped (no code change)
+
+- The three user-facing docs said work was still proposed after the improvement list had shipped. README now says the competition plan is delivered and that no issues are open, and describes the two parallel survey workers rather than one shared worker; it also drops the "proposed" label from icon-rail labels and landing-model dragging, which shipped, and keeps only the first-visit tour as a stated absence.
+- `STATUS.md` is dated 2026-10-27, records that the fork's last four working copies were closed against the parent's merged work, and states the checks by number (170 unit tests in 21 files, 74 browser checks) plus the forty-combination width sweep.
+- `docs/competition-ui-ux-improvement-plan.md` and `docs/plan-open-issues.md` gain a delivered status line; both are kept as the record of how the work was scoped.
+- No application code, test or fixture changed, so no new measurement was needed: the numbers quoted are the ones the 2026-10-27 merge ran.
+
 ### 2026-10-27: fork synced to the parent (merge of `8b64608`)
 
 - `git merge upstream/main`: 6 commits. The parent did its own #44 site-plan work on 2026-10-26, independently of this fork's #30, so the two competed for the same files.

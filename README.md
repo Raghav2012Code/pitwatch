@@ -29,7 +29,7 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
   - On phones the details drawer opens on the findings, with the layer switches and vertical exaggeration under a Map layers disclosure below them. On larger screens, the Map card holds these controls; its key can be folded to leave more room.
 - **Compliance engine** (`src/compliance/`): change detection, rules R1–R3, clustering into findings, severity and plain-English explanations. All of it is pure TypeScript and unit-tested.
 
-The original M1–M8 milestones are complete. Further interface improvements are tracked separately in the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md); only its first P0, finding selection that reveals its evidence, is implemented.
+The original M1–M8 milestones are complete, and so is every item on the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md): it is kept as the record of how that work was planned, not as a list of open work. No issues are open in this repo or in the parent it tracks.
 
 ## Try the inspection workflow
 
@@ -102,7 +102,7 @@ npm run dev          # http://localhost:5173
 | `npm run preview`                 | Serve the production build                     |
 | `npm run format` / `format:check` | Prettier                                       |
 
-The terrain (two 513 × 513 surveys at 4 m spacing plus their aerial images) is generated in a shared Web Worker when the page opens. Generation time depends on the device. If loading fails, **Try again** retries in place.
+The terrain (two 513 × 513 surveys at 4 m spacing plus their aerial images) is generated in Web Workers when the page opens: one worker per survey, running in parallel, so the wait is the slower survey rather than the sum. Generation time depends on the device. If loading fails, **Try again** retries in place.
 
 The browser checks run against the production build, so run `npx playwright install chromium` once before the first `npm run test:e2e`. CI (GitHub Actions) runs `npm run verify`, the build and the Playwright suite on every push to `main` and every pull request, and uploads the report when a run fails.
 
@@ -186,6 +186,6 @@ Vite, React 19, TypeScript (strict), three.js with @react-three/fiber and drei, 
 - This is a frontend demonstration using a fictional permit and synthetic surveys. There is no backend, real survey ingestion or regulatory certification.
 - Vertical survey uncertainty is modelled; horizontal position error is not. A coordinate outside the survey grid can still be inspected for position and lease status, but has no elevation or change reading.
 - Below 1280 px the details panel starts closed so the model keeps the room; the header's Details button or `]` brings it back, and `[` toggles the Map card. At 800 px the Map card still covers part of the model.
-- First-visit map guidance, visible icon-rail tooltips and desktop dragging of the landing model remain proposed improvements.
+- There is no first-visit tour. The map explains itself with contextual hints (click or tap to read a point, then A and B to measure), the icon rail labels each icon on hover and keyboard focus, and the landing model carries a "Drag to turn" label.
 
-See the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md) for proposed work, [STATUS.md](STATUS.md) for the redesign handoff, and [AGENTS.md](AGENTS.md) for the detailed update log and contributor workflow.
+See the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md) for how the interface work was planned (all of it delivered), [STATUS.md](STATUS.md) for the current handoff, and [AGENTS.md](AGENTS.md) for the detailed update log and contributor workflow.

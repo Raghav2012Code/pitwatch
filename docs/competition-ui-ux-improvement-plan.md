@@ -1,8 +1,8 @@
 # Competition UI/UX Improvement Plan
 
-**Status:** First P0 complete on `ui-redesign`; priorities after it remain proposed.
+**Status:** Delivered. Every priority in this plan shipped in the parent's issues #13–#40 (closed 2026-10-23 and 2026-10-26) and is on `main`; the plan is kept as the record of how the work was scoped.
 
-**Completed feature:** P0 — Finding selection reveals its evidence.
+**First shipped feature:** P0 — Finding selection reveals its evidence.
 
 **Based on:** PitWatch 3D interface audit, 21 October 2026
 

@@ -1,5 +1,7 @@
 # Plan: fix the nine open issues (fork copies #17–#25)
 
+**Status:** Delivered. All nine items are implemented, tested and closed; this file is kept as the record of how they were planned, not as a list of work to do.
+
 The parent repo `abivan100-stack/pitwatch-3d` tracks nine open issues. They are copied into this
 fork as #17–#25 (the mapping is in the table below) so the fixes can be planned and built here.
 Each copy is byte-identical to its parent issue, plus one line saying where it came from.
