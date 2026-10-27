@@ -13,7 +13,7 @@ test('Show on map restores the current terrain, finding layer, and selected evid
   const map = page.getByRole('navigation', { name: 'Map', exact: true })
   const terrain = map.getByRole('switch', { name: 'Terrain' })
   const findings = map.getByRole('switch', { name: 'Findings' })
-  await expect(terrain).toBeEnabled({ timeout: 30_000 })
+  await expect(terrain).toBeEnabled({ timeout: 60_000 })
   await page.getByRole('button', { name: /Baseline/ }).click()
   await terrain.click()
   await findings.click()
@@ -29,10 +29,10 @@ test('Show on map restores the current terrain, finding layer, and selected evid
   const nav = page.getByRole('navigation', { name: 'Dashboard' })
   await nav.getByRole('link', { name: 'Findings' }).click()
   const cards = page.locator('li.frow')
-  await expect(cards).toHaveCount(5, { timeout: 30_000 })
+  await expect(cards).toHaveCount(5, { timeout: 60_000 })
   await cards.first().getByRole('button', { name: 'Show on map' }).click()
 
-  await expect(page).toHaveURL(/#\/monitor$/)
+  await expect(page).toHaveURL(/#\/monitor(\?finding=[\w-]+)?$/)
   await expect(page.getByRole('slider', { name: 'Survey shown on the map' })).toHaveAttribute(
     'aria-valuetext',
     'Current survey',
@@ -65,7 +65,7 @@ test('Show on map restores the current terrain, finding layer, and selected evid
   await expect(plan.getByRole('button', { name: /^R2-1,/ })).toHaveAttribute('aria-pressed', 'true')
 
   await plan.getByRole('button', { name: /^R1-3,/ }).click()
-  await expect(page).toHaveURL(/#\/monitor$/)
+  await expect(page).toHaveURL(/#\/monitor(\?finding=[\w-]+)?$/)
   await expect(page.locator('#details-tabpanel li.finding[data-selected]')).toContainText('R1-3')
   await nav.getByRole('link', { name: 'Findings' }).click()
   await expect(page.locator('li.frow[data-selected]')).toContainText('R1-3')
@@ -82,7 +82,7 @@ test('the phone map clears the drawer after selection and keeps the finding on r
   await expect(toggle).toHaveAttribute('aria-expanded', 'false')
   await toggle.click()
   await expect(drawer).toBeVisible()
-  await expect(drawer.locator('li.finding')).toHaveCount(5, { timeout: 30_000 })
+  await expect(drawer.locator('li.finding')).toHaveCount(5, { timeout: 60_000 })
 
   await drawer.locator('li.finding').nth(1).getByRole('button', { name: 'Show on map' }).click()
 

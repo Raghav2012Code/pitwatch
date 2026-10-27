@@ -24,6 +24,8 @@
   --color-oxide: #8a3324;
   --color-ochre: #b07a1a;
   --color-contour: #9c6a3c;
+  --color-change-cut: #b5482a;
+  --color-change-fill: #2a6fb0;
 
   /* Sky behind the 3D model: cool haze above, warm horizon where fog meets it. */
   /* Map backdrop: survey paper the terrain block sits on (also the fog colour). */
@@ -1114,6 +1116,34 @@ body {
     .shell[data-rail] .sidebar-collapse .nav-icon {
       rotate: 180deg;
     }
+    /* The rail has only a few items, so on a screen tall enough it need not scroll, which
+       would clip the tooltip beside each icon. */
+    @media (height >= 540px) {
+      .shell[data-rail] .sidebar,
+      .shell[data-rail] .sidebar-nav {
+        overflow: visible;
+      }
+    }
+    /* A quick label beside the icon on hover or keyboard focus; the native title is slow. */
+    .shell[data-rail] .nav-item[title]:hover::after,
+    .shell[data-rail] .nav-item[title]:focus-visible::after {
+      content: attr(title);
+      position: absolute;
+      left: calc(100% + 10px);
+      top: 50%;
+      translate: 0 -50%;
+      z-index: 80;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      color: var(--color-side-ink);
+      background: var(--color-side);
+      border: 1px solid var(--color-side-line);
+      box-shadow: 0 8px 20px -10px rgb(0 0 0 / 0.5);
+      pointer-events: none;
+    }
   }
 
   /* ---------- Dashboard pages ---------- */
@@ -1256,10 +1286,21 @@ body {
     color: var(--color-ink);
   }
   .frow-go {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
     grid-column: 2;
     grid-row: 1 / span 2;
     align-self: center;
     margin-right: 4px;
+  }
+  .frow-copy {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
   .frow-more {
     grid-column: 1 / -1;
@@ -1298,7 +1339,9 @@ body {
     .frow-go {
       grid-column: 1;
       grid-row: auto;
+      flex-direction: row;
       justify-self: start;
+      gap: 16px;
     }
     .frow-figures {
       gap: 20px;
@@ -1485,87 +1528,99 @@ body {
 /* ---------- Site plan (Overview) ---------- */
 
 @layer components {
-  /* The sheet: the map field, then a margin band under it for the scale, north and the grid. */
-  .plan-sheet {
-    border: 1px solid var(--color-line);
-    border-radius: 8px;
-    background: var(--color-panel-2);
+  .site-plan-figure {
     overflow: hidden;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 8px;
+    background: var(--color-panel);
   }
-  .plan-frame {
-    position: relative;
-  }
-  .plan-map {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-  /* The margin band: scale and north at a fixed pixel size, so they do not shrink with the map. */
-  .plan-band {
+  .plan-title-block {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    padding: 10px 14px;
-    border-top: 1px solid var(--color-line);
+    gap: 12px 18px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--color-line);
     background: var(--color-panel);
   }
-  .plan-scale {
+  .plan-title-copy {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+  }
+  .plan-mine-name {
+    overflow: hidden;
+    color: var(--color-ink);
+    font-size: 14px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .plan-survey-date {
+    color: var(--color-ink-dim);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .plan-instruments {
     display: flex;
-    flex-direction: column;
-    gap: 5px;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 12px;
+  }
+  .plan-north-block {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--color-ink-dim);
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+  .plan-north-arrow {
+    color: var(--color-accent);
+    font-family: var(--font-sans);
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .plan-scale-block {
+    display: grid;
+    justify-items: end;
+    gap: 3px;
+    color: var(--color-ink);
   }
   .plan-scale-label {
     font-family: var(--font-mono);
-    font-size: 11px;
-    line-height: 1;
-    color: var(--color-ink-dim);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
   }
-  .plan-scale-bar {
+  .plan-scale-track {
+    position: relative;
     display: block;
-    height: 7px;
-    border: 2px solid var(--color-ink);
-    border-top: 0;
+    max-width: 100%;
+    height: 6px;
+    border-top: 2px solid var(--color-ink);
   }
-  .plan-north {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    line-height: 1;
-    color: var(--color-ink-dim);
+  .plan-scale-track i {
+    position: absolute;
+    top: -3px;
+    left: 0;
+    width: 1px;
+    height: 6px;
+    background: var(--color-ink);
   }
-  .plan-north svg {
-    width: 13px;
-    height: 19px;
-    fill: var(--color-ink);
+  .plan-scale-track i + i {
+    right: 0;
+    left: auto;
+  }
+  .site-plan {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--color-backdrop);
   }
   .plan-ground {
-    fill: var(--color-panel-2);
-  }
-  .plan-contour {
-    fill: none;
-    stroke: var(--color-contour);
-    stroke-width: 1;
-    opacity: 0.35;
-    vector-effect: non-scaling-stroke;
-  }
-  .plan-contour-index {
-    stroke-width: 1.5;
-    opacity: 0.55;
-  }
-  /* The change layer is a shape, not a picture: a token-coloured fill with a crisp edge. */
-  .plan-change {
-    stroke-width: 1;
-    fill-opacity: 0.42;
-    vector-effect: non-scaling-stroke;
-  }
-  .plan-area {
-    fill: none;
-    stroke-width: 2;
-    stroke-dasharray: 6 3;
-    vector-effect: non-scaling-stroke;
+    fill: var(--color-backdrop);
   }
   .plan-line {
     fill: none;
@@ -1573,110 +1628,222 @@ body {
   }
   .plan-lease {
     stroke: var(--color-ink);
-    stroke-width: 2.5;
+    stroke-width: 2.6;
   }
   .plan-pit {
-    stroke: var(--color-ink-dim);
+    stroke: var(--color-accent);
     stroke-width: 1.5;
-    stroke-dasharray: 8 4;
+    stroke-dasharray: 7 4;
   }
   .plan-dump {
-    stroke: var(--color-ink-dim);
+    stroke: var(--color-ochre);
     stroke-width: 1.5;
     stroke-dasharray: 2 4;
   }
-  .plan-label {
-    font-family: var(--font-sans);
-    font-size: 62px;
-    letter-spacing: 1px;
-    text-anchor: middle;
-    fill: var(--color-ink-dim);
-    paint-order: stroke;
-    stroke: var(--color-panel-2);
-    stroke-width: 12px;
+  .plan-change {
+    stroke-width: 0.8;
+    vector-effect: non-scaling-stroke;
     stroke-linejoin: round;
-    pointer-events: none;
   }
-  .plan-leader {
-    stroke-width: 1.5;
-    stroke-dasharray: 3 3;
+  .plan-cut {
+    fill: var(--color-change-cut);
+    fill-opacity: 0.66;
+    stroke: var(--color-change-cut);
+  }
+  .plan-fill {
+    fill: var(--color-change-fill);
+    fill-opacity: 0.62;
+    stroke: var(--color-change-fill);
+  }
+  .plan-contour {
+    fill: none;
+    stroke: var(--color-contour);
+    stroke-width: 0.75;
+    stroke-opacity: 0.62;
     vector-effect: non-scaling-stroke;
   }
-  /* Markers are HTML, so they are sized in pixels and stay a touch target at any figure width. */
-  .plan-pin {
-    position: absolute;
-    transform: translate(-50%, -50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0 4px 2px;
-    background: none;
-    border: 0;
-    border-radius: 6px;
-    cursor: pointer;
+  .plan-zone-label,
+  .plan-lease-label {
+    paint-order: stroke;
+    stroke: var(--color-backdrop);
+    stroke-linejoin: round;
+    font-family: var(--font-sans);
+    font-weight: 650;
+    text-anchor: middle;
   }
-  .plan-pin-id {
+  .plan-zone-label {
+    fill: var(--color-ink);
+  }
+  .plan-pit-label {
+    fill: var(--color-accent);
+  }
+  .plan-dump-label {
+    fill: var(--color-ochre);
+  }
+  .plan-lease-label {
+    fill: var(--color-ink);
+    font-weight: 700;
+    text-anchor: start;
+  }
+  .plan-observed-label {
+    paint-order: stroke;
+    stroke: var(--color-backdrop);
+    stroke-linejoin: round;
+    text-anchor: middle;
     font-family: var(--font-mono);
-    font-size: 11px;
-    line-height: 1.4;
-    padding: 1px 4px;
-    border-radius: 3px;
-    color: var(--color-ink);
-    background: color-mix(in oklab, var(--color-panel) 88%, transparent);
-    box-shadow: 0 0 0 1px var(--color-line);
+    font-weight: 700;
+  }
+  .plan-observed-cut-label {
+    fill: var(--color-change-cut);
+  }
+  .plan-observed-leader {
+    fill: none;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .plan-observed-cut-leader {
+    stroke: var(--color-change-cut);
+  }
+  .plan-observed-fill-label {
+    fill: var(--color-change-fill);
+  }
+  .plan-observed-fill-leader {
+    stroke: var(--color-change-fill);
+  }
+  .plan-leader {
+    stroke: var(--tone);
+    stroke-width: 1.5;
+    vector-effect: non-scaling-stroke;
+  }
+  .plan-finding-origin {
+    fill: var(--tone);
+  }
+  .plan-finding-area {
+    fill: color-mix(in srgb, var(--tone) 7%, transparent);
+    stroke: var(--tone);
+    stroke-width: 1.25;
+    stroke-opacity: 0.86;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+  .plan-pin {
+    cursor: pointer;
+    outline: none;
+  }
+  .plan-pin-hit {
+    fill: transparent;
+    pointer-events: all;
+  }
+  .plan-pin-disc {
+    fill: var(--color-panel);
+    stroke: var(--tone);
+    stroke-width: 1.6;
+    vector-effect: non-scaling-stroke;
+    transition: none;
+    pointer-events: none;
   }
   .plan-pin-glyph {
-    width: 22px;
-    height: 22px;
-    color: currentColor;
-    filter: drop-shadow(0 0 2px var(--color-panel)) drop-shadow(0 0 3px var(--color-panel));
+    color: var(--tone);
+    pointer-events: none;
   }
-  .plan-pin:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
+  .plan-pin-ring {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 3;
+    vector-effect: non-scaling-stroke;
+    opacity: 0;
+    pointer-events: none;
   }
-  .plan-pin[aria-pressed='true'] .plan-pin-id {
-    background: var(--color-ink);
-    color: var(--color-panel);
-    box-shadow: 0 0 0 1px var(--color-ink);
+  .plan-pin:focus-visible .plan-pin-ring,
+  .plan-pin[aria-pressed='true'] .plan-pin-ring {
+    opacity: 1;
+  }
+  .plan-pin-label-bg {
+    fill: var(--color-panel);
+    stroke: var(--tone);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    pointer-events: none;
+  }
+  .plan-pin-label {
+    fill: var(--color-ink);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    pointer-events: none;
+  }
+  .plan-pin:hover .plan-pin-disc {
+    fill: var(--color-bg-2);
+  }
+  .plan-caption {
+    display: grid;
+    gap: 8px;
+    padding: 10px 14px 12px;
+    border-top: 1px solid var(--color-line);
+    background: var(--color-panel);
   }
   .plan-key {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 16px;
-    margin-top: 10px;
-    font-size: 12px;
+    gap: 7px 14px;
+    font-size: 11px;
     color: var(--color-ink-dim);
   }
   .plan-key span {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
+    white-space: nowrap;
   }
   .plan-swatch {
     display: inline-block;
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
-  }
-  .plan-swatch-line,
-  .plan-swatch-dash {
-    height: 0;
+    flex: 0 0 auto;
     width: 16px;
-    border-radius: 0;
-    border-top: 2.5px solid var(--color-ink);
+    height: 4px;
+    border-radius: 1px;
   }
-  .plan-swatch-dash {
-    border-top: 2px dashed var(--color-ink-dim);
+  .plan-swatch-cut {
+    background: var(--color-change-cut);
+  }
+  .plan-swatch-fill {
+    background: var(--color-change-fill);
+  }
+  .plan-swatch-lease {
+    height: 0;
+    border-top: 2px solid var(--color-ink);
+  }
+  .plan-swatch-pit {
+    height: 0;
+    border-top: 1.5px dashed var(--color-accent);
+  }
+  .plan-swatch-dump {
+    height: 0;
+    border-top: 1.5px dotted var(--color-ochre);
   }
   .plan-swatch-contour {
     height: 0;
-    width: 16px;
-    border-radius: 0;
     border-top: 1px solid var(--color-contour);
+  }
+  .plan-note {
+    max-width: 70ch;
+    color: var(--color-ink-faint);
+    font-size: 11px;
+    line-height: 1.45;
+  }
+  @media (width <= 30rem) {
+    .plan-title-block {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 12px;
+    }
+    .plan-instruments {
+      width: 100%;
+      justify-content: space-between;
+    }
+    .plan-caption {
+      padding-inline: 12px;
+    }
   }
 
   /* The map card's key folds away; its summary reads as the card's other section titles. */
@@ -1783,8 +1950,8 @@ body {
   }
   .hero-title {
     text-wrap: balance;
-    max-width: 11ch;
-    font-size: clamp(48px, 6.4vw, 92px);
+    max-width: 14ch;
+    font-size: clamp(48px, 5.6vw, 84px);
     font-weight: 700;
     line-height: 0.92;
     color: var(--color-ink);
@@ -2418,5 +2585,48 @@ body {
     animation: none !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Print: the Findings page as a plain report ---------- */
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block !important;
+    margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .sidebar,
+  .shell-header,
+  .shell-scrim,
+  .no-print,
+  .seg,
+  .skip-link {
+    display: none !important;
+  }
+  html,
+  body,
+  .shell,
+  .page,
+  #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  .page {
+    padding: 0 !important;
+  }
+  .frow {
+    break-inside: avoid;
+  }
+  .frow-more > :not(summary) {
+    display: block !important;
+  }
+  .frow-go {
+    display: none !important;
   }
 }

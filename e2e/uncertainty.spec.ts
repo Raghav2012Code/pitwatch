@@ -62,7 +62,7 @@ test('no page claims a real permit was broken', async ({ page }) => {
   const findings = page.locator('main')
   // The page waits for the surveys, which take longer under a full parallel run.
   await expect(findings).toContainText("the demo engine's classifications of a simulated change", {
-    timeout: 30_000,
+    timeout: 60_000,
   })
   await expect(findings).toContainText('not a legal determination')
 

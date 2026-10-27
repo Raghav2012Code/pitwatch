@@ -3,16 +3,21 @@ import { cellCenter, indexOf } from '../geo/grid'
 import { centroidOf, distanceToBoundary, distanceToSegment, pointInPolygon } from '../geo/polygon'
 import {
   BASELINE_DUMP,
+  BASELINE_DUMP_B,
   BASELINE_PIT,
+  BASELINE_PIT_B,
   BENCH_HEIGHT_M,
   BERM_WIDTH_M,
   CHANGES,
   CREEK,
   CURRENT_PIT,
+  CURRENT_PIT_B,
   FACE_RUN_M,
   PLATEAU_RL,
+  POND,
   RAMP,
   RIDGE,
+  RISES,
   SEED,
   type PitStage,
 } from './fixtures/scenario'
@@ -24,8 +29,9 @@ import { gaussian, mulberry32 } from './rng'
  * Nothing here is real survey data.
  */
 
-/** Rough centre of the pit workings; natural relief is calmed near it. */
-const PIT_CENTRE = { x: 985, y: 1035 }
+/** Rough centres of the two workings; natural relief is calmed near them. */
+const PIT_CENTRE = { x: 875, y: 1020 }
+const SATELLITE_CENTRE = { x: 910, y: 445 }
 
 function distanceToLine(p: Vec2, line: readonly (readonly [number, number])[]): number {
   let d = Infinity
@@ -58,7 +64,12 @@ export function naturalGround(p: Vec2, seed: number): number {
   const broad = fbm(wx, wy, seed, 5) * 24
   const crest = (1 - Math.abs(fbm(p.x / 450, p.y / 450, seed + 21, 4))) ** 2 * 8 - 4
   const toPit = Math.hypot(p.x - PIT_CENTRE.x, p.y - PIT_CENTRE.y)
-  const calm = Math.min(1, Math.max(0, (toPit - 380) / 420)) ** 2
+  const toSatellite = Math.hypot(p.x - SATELLITE_CENTRE.x, p.y - SATELLITE_CENTRE.y)
+  const calm =
+    Math.min(
+      Math.min(1, Math.max(0, (toPit - 560) / 480)),
+      Math.min(1, Math.max(0, (toSatellite - 230) / 300)),
+    ) ** 2
 
   // The ridge: its height varies along the crest.
   const q = { x: p.x + 70 * fbm(p.x / 500, p.y / 500 + 9.3, seed + 71, 3), y: p.y }
@@ -66,11 +77,18 @@ export function naturalGround(p: Vec2, seed: number): number {
   const crestHeight = 34 + 14 * fbm(p.x / 600, 4.2, seed + 73, 3)
   const ridge = crestHeight * Math.exp(-((toRidge / 260) ** 2))
 
-  // Dry creek: a shallow channel with soft banks.
-  const creek = -3.5 * (1 - smoothstep(6, 30, creekDistance(p, seed)))
+  // Broad rises on the plateau.
+  const rises = RISES.reduce(
+    (sum, r) => sum + r.h * Math.exp(-(((p.x - r.cx) ** 2 + (p.y - r.cy) ** 2) / r.r ** 2)),
+    0,
+  )
+
+  // Dry creek: a shallow channel with soft banks, and a wider, shallower floodplain.
+  const toCreek = creekDistance(p, seed)
+  const creek = -3.5 * (1 - smoothstep(6, 30, toCreek)) - 2 * (1 - smoothstep(30, 150, toCreek))
 
   const fine = fbm(p.x / 90, p.y / 90, seed + 7, 3) * 1.2
-  return PLATEAU_RL + (broad + crest) * calm + ridge + creek + fine
+  return PLATEAU_RL + (broad + crest) * calm + ridge + rises + creek + fine
 }
 
 /** Depth below the rim for a point `s` metres inside it: stepped benches with berms. */
@@ -125,13 +143,13 @@ const insetFor = (depth: number) => (depth * (BERM_WIDTH_M + FACE_RUN_M)) / BENC
  * Walk the rim anticlockwise from the point nearest RAMP.start, keeping the ramp as far
  * inside the wall as its depth requires, until it reaches the floor.
  */
-function buildRamp(rim: Polygon, floorRL: number): Ramp {
+function buildRamp(rim: Polygon, floorRL: number, start: Vec2): Ramp {
   const n = rim.length
   let k0 = 0
   for (let k = 1; k < n; k++) {
     if (
-      Math.hypot(rim[k].x - RAMP.start.x, rim[k].y - RAMP.start.y) <
-      Math.hypot(rim[k0].x - RAMP.start.x, rim[k0].y - RAMP.start.y)
+      Math.hypot(rim[k].x - start.x, rim[k].y - start.y) <
+      Math.hypot(rim[k0].x - start.x, rim[k0].y - start.y)
     )
       k0 = k
   }
@@ -179,7 +197,7 @@ function buildRamp(rim: Polygon, floorRL: number): Ramp {
   return { points, depth }
 }
 
-export function preparePit(stage: PitStage, withRamp = false): Pit {
+export function preparePit(stage: PitStage, rampStart?: Vec2): Pit {
   const rim = roundOutline(stage.outline)
   const xs = rim.map((p) => p.x)
   const ys = rim.map((p) => p.y)
@@ -192,13 +210,13 @@ export function preparePit(stage: PitStage, withRamp = false): Pit {
       y0: Math.min(...ys),
       y1: Math.max(...ys),
     },
-    ramp: withRamp ? buildRamp(rim, stage.floorRL) : undefined,
+    ramp: rampStart ? buildRamp(rim, stage.floorRL, rampStart) : undefined,
   }
 }
 
 const PITS = {
-  baseline: [preparePit(BASELINE_PIT, true)],
-  current: [preparePit(CURRENT_PIT, true)],
+  baseline: [preparePit(BASELINE_PIT, RAMP.start), preparePit(BASELINE_PIT_B, RAMP.startB)],
+  current: [preparePit(CURRENT_PIT, RAMP.start), preparePit(CURRENT_PIT_B, RAMP.startB)],
   encroachment: preparePit(CHANGES.encroachment),
 }
 
@@ -274,6 +292,8 @@ const smoothstep = (a: number, b: number, x: number) => {
 
 /** Flat-topped waste dump with a berm part way down its batter and an irregular footprint. */
 export function terracedDump(p: Vec2, m: Heap): number {
+  // Beyond 1.5 radii the footprint (at most about 1.33 radii) is certainly over: skip the trig.
+  if (Math.abs(p.x - m.cx) > m.r * 1.5 || Math.abs(p.y - m.cy) > m.r * 1.5) return 0
   const theta = Math.atan2(p.y - m.cy, p.x - m.cx)
   // Lobed footprint: dumps grow by tipping along a few fronts, so they are never round.
   const lobes = 0.16 * Math.sin(2 * theta + 0.7) + 0.1 * Math.sin(3 * theta - 1.2)
@@ -294,11 +314,20 @@ const TIP_OFFSETS: readonly [number, number][] = [
   [-4, 22],
 ]
 const tippedHeaps = (p: Vec2, m: Heap) =>
-  TIP_OFFSETS.reduce(
-    (z, [ox, oy]) =>
-      Math.max(z, mound(p, { cx: m.cx + ox, cy: m.cy + oy, r: 15, height: m.height })),
-    0,
-  )
+  // Every heap lies within 30 m of the centre and reaches 15 m: nothing is left past 45 m.
+  Math.abs(p.x - m.cx) > 45 || Math.abs(p.y - m.cy) > 45
+    ? 0
+    : TIP_OFFSETS.reduce(
+        (z, [ox, oy]) =>
+          Math.max(z, mound(p, { cx: m.cx + ox, cy: m.cy + oy, r: 15, height: m.height })),
+        0,
+      )
+
+/** Depth of the settling pond's bowl at a point (0 outside it). */
+export function pondDepth(p: Vec2): number {
+  const d = Math.hypot(p.x - POND.cx, p.y - POND.cy) / POND.r
+  return d >= 1 ? 0 : POND.depth * 0.5 * (1 + Math.cos(Math.PI * d))
+}
 
 /** True ground level (no survey noise) for each epoch. */
 export function trueSurface(
@@ -309,7 +338,10 @@ export function trueSurface(
 ): number {
   let z = ground
   for (const pit of pitsOf(epoch)) z = Math.min(z, pitSurface(p, pit))
-  if (epoch === 'baseline') return z + terracedDump(p, BASELINE_DUMP)
+  // The settling pond is a hollow in the ground in both surveys.
+  z -= pondDepth(p)
+  if (epoch === 'baseline')
+    return z + terracedDump(p, BASELINE_DUMP) + terracedDump(p, BASELINE_DUMP_B)
   // Mining only removes rock: where the ramp now crosses old benches it is cut, never
   // built up above the earlier surface.
   for (const pit of pitsOf('baseline')) z = Math.min(z, pitSurface(p, pit))
@@ -319,7 +351,9 @@ export function trueSurface(
     z = Math.min(z, CURRENT_PIT.floorRL - c.sump.depthBelowFloor)
   }
   if (inBox(p, c.bufferScrape)) z = Math.min(z, ground - c.bufferScrape.depth)
-  return z + tippedHeaps(p, c.strayDump) + terracedDump(p, c.zoneDump)
+  return (
+    z + tippedHeaps(p, c.strayDump) + terracedDump(p, c.zoneDump) + terracedDump(p, c.zoneDumpB)
+  )
 }
 
 /** Original ground level at every cell centre. The same for both epochs, so build it once. */

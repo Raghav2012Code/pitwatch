@@ -29,25 +29,35 @@ describe('WorkerTerrainProvider', () => {
     expect(spawn).toHaveBeenCalledTimes(1)
   })
 
-  it('reuses one worker for both surveys', () => {
+  it('builds the two surveys in parallel, one worker each, and reuses them', () => {
     const spawn = vi.fn(() => fakeWorker() as unknown as Worker)
     const provider = new WorkerTerrainProvider(spawn)
 
     void provider.getSurvey('baseline')
     void provider.getSurvey('current')
+    expect(spawn).toHaveBeenCalledTimes(2)
 
-    expect(spawn).toHaveBeenCalledTimes(1)
+    // Asking again is served from the cache and starts nothing.
+    void provider.getSurvey('baseline')
+    void provider.getSurvey('current')
+    expect(spawn).toHaveBeenCalledTimes(2)
   })
 
-  it('terminates the worker on dispose and fails late callers', async () => {
-    const worker = fakeWorker()
-    const provider = new WorkerTerrainProvider(() => worker as unknown as Worker)
+  it('terminates every worker on dispose and fails late callers', async () => {
+    const made: ReturnType<typeof fakeWorker>[] = []
+    const provider = new WorkerTerrainProvider(() => {
+      const w = fakeWorker()
+      made.push(w)
+      return w as unknown as Worker
+    })
 
     const inFlight = provider.getSurvey('baseline')
+    void provider.getSurvey('current').catch(() => {})
     provider.dispose()
 
     await expect(inFlight).rejects.toThrow(/shut down/)
-    expect(worker.terminate).toHaveBeenCalledTimes(1)
+    expect(made).toHaveLength(2)
+    for (const w of made) expect(w.terminate).toHaveBeenCalledTimes(1)
     expect(provider.disposed).toBe(true)
     await expect(provider.getSurvey('current')).rejects.toThrow(/shut down/)
   })

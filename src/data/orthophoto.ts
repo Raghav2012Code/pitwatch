@@ -1,7 +1,7 @@
 import type { GridSpec, Orthophoto } from '../domain/types'
 import { cellCenter } from '../geo/grid'
 import { distanceToSegment } from '../geo/polygon'
-import { BASELINE_PIT, CURRENT_PIT, ROADS } from './fixtures/scenario'
+import { BASELINE_PIT, CURRENT_PIT, POND, ROADS } from './fixtures/scenario'
 import { fbm, valueNoise } from './noise'
 import { RAMP } from './fixtures/scenario'
 import { creekDistance, insidePit, pitsOf, rampDistance } from './synthetic'
@@ -119,7 +119,7 @@ export function buildOrthophoto(
       veg[i] = fbm(p.x / 260, p.y / 260, seed + 31, 3)
       pitIn[i] = Math.max(-500, ...pits.map((k) => insidePit(p, k)))
       creek[i] = creekDistance(p, seed)
-      ramp[i] = pitIn[i] > 0 ? Math.min(500, rampDistance(p, pits[0])) : 500
+      ramp[i] = pitIn[i] > 0 ? Math.min(500, ...pits.map((k) => rampDistance(p, k))) : 500
       road[i] = distanceToRoads(p.x, p.y)
       blotchF[i] = valueNoise(p.x / 28, p.y / 28, seed + 43)
     }
@@ -167,7 +167,16 @@ export function buildOrthophoto(
       const blotch = sBlotch(fx, fy)
       const inPit = sPit(fx, fy)
 
-      if (cut < -0.4) {
+      const toPond = Math.hypot(px - POND.cx, py - POND.cy)
+      if (toPond < POND.r * 0.85) {
+        // The settling pond: murky standing water.
+        set(SURFACE.water)
+        toward(SURFACE.floor, 0.2 * grain)
+      } else if (toPond < POND.r) {
+        // Wet mud around its edge.
+        set(SURFACE.floor)
+        toward(SURFACE.soil, 0.3 * grain)
+      } else if (cut < -0.4) {
         // Waste rock: pale and granular, darker on the tipped batters.
         set(SURFACE.waste)
         toward(SURFACE.freshCut, 0.15 * blotch)

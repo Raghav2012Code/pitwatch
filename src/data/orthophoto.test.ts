@@ -35,9 +35,10 @@ describe('simulated orthophoto', () => {
   })
 
   it('draws haul roads paler than the scrub around them', () => {
-    const [x, y] = ROADS[1][2]
-    const onRoad = pixel(1150, 210)
-    const offRoad = pixel(1150 + 120, 210)
+    // The lease-gate road, on the leg from (1150, 300) to (1180, 0).
+    const [x, y] = ROADS[ROADS.length - 1]![2]!
+    const onRoad = pixel(1159, 210)
+    const offRoad = pixel(1159 + 120, 210)
     expect(x).toBeGreaterThan(0)
     expect(y).toBe(0)
     expect(lum(onRoad)).toBeGreaterThan(lum(offRoad))

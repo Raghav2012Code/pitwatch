@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import type { ComplianceFinding, RuleId } from '../../domain/types'
+import { findingsToCsv } from '../../compliance/report'
+import { SURVEY_EPOCHS } from '../../data/fixtures/mine'
 import { useAppStore } from '../../state/store'
 import { useTerrain } from '../../state/terrain'
 import { countText, GLYPH, RULE_NAMES, toneOf } from '../findings'
 import { SeverityLegend, ThresholdNote } from '../panels/FindingsPanel'
-import { navigate } from '../route'
+import { findingLink, navigate } from '../route'
 import { Page } from '../shell/AppShell'
 import { LoadGate } from '../shell/LoadGate'
 import { ProvenanceTag } from '../ProvenanceTag'
@@ -32,6 +34,28 @@ export function FindingsPage() {
       </LoadGate>
     </Page>
   )
+}
+
+/** Saves the findings as a CSV file named for the survey they describe. */
+function downloadCsv(findings: readonly ComplianceFinding[]) {
+  const current = SURVEY_EPOCHS[1]
+  const blob = new Blob([findingsToCsv(findings)], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `pitwatch-findings-${current?.date ?? 'current'}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+/** Prints with every explanation open, then puts the page back as the reader had it. */
+function printReport() {
+  const closed = [...document.querySelectorAll<HTMLDetailsElement>('.frow-more:not([open])')]
+  for (const d of closed) d.open = true
+  window.addEventListener('afterprint', () => closed.forEach((d) => (d.open = false)), {
+    once: true,
+  })
+  window.print()
 }
 
 function Filter<T extends string>({
@@ -71,7 +95,10 @@ function List() {
   )
 
   return (
-    <section aria-labelledby="all-findings">
+    <section aria-labelledby="all-findings" className="print-area">
+      <p className="print-only">
+        PitWatch 3D findings report. Simulated data: survey of {SURVEY_EPOCHS[1]?.date}.
+      </p>
       <div className="flex flex-wrap items-center gap-3">
         <h2 id="all-findings" className="cond text-[clamp(26px,2.6vw,32px)] leading-none font-bold">
           {countText(findings)}
@@ -113,6 +140,14 @@ function List() {
             <p role="status" className="text-[13px] text-ink-faint">
               Showing {shown.length} of {findings.length}
             </p>
+            <div className="no-print ml-auto flex gap-2">
+              <button type="button" className="btn" onClick={() => downloadCsv(shown)}>
+                Download CSV
+              </button>
+              <button type="button" className="btn" onClick={printReport}>
+                Print report
+              </button>
+            </div>
           </div>
           {shown.length === 0 ? (
             <p className="mt-6 text-[14px] text-ink-dim">No finding matches those filters.</p>
@@ -138,6 +173,17 @@ function FindingRow({ f }: { f: ComplianceFinding }) {
   const Glyph = GLYPH[tone]
   const selected = useAppStore((s) => s.selectedFinding === f.id)
   const selectFinding = useAppStore((s) => s.selectFinding)
+  const [copied, setCopied] = useState(false)
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(findingLink(f.id))
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2500)
+    } catch {
+      // Clipboard access can be refused; the address bar link works after Show on map.
+    }
+  }
 
   return (
     <li className={`frow tone-${tone}`} data-selected={selected || undefined}>
@@ -165,16 +211,21 @@ function FindingRow({ f }: { f: ComplianceFinding }) {
           </div>
         ))}
       </dl>
-      <button
-        type="button"
-        className="btn frow-go"
-        onClick={() => {
-          selectFinding(f.id, f.centroid)
-          navigate('monitor')
-        }}
-      >
-        Show on map
-      </button>
+      <div className="frow-go">
+        <button
+          type="button"
+          className="btn"
+          onClick={() => {
+            selectFinding(f.id, f.centroid)
+            navigate('monitor')
+          }}
+        >
+          Show on map
+        </button>
+        <button type="button" className="frow-copy no-print" onClick={() => void copyLink()}>
+          {copied ? 'Link copied' : 'Copy link'}
+        </button>
+      </div>
       <details className="frow-more">
         <summary>Why it was flagged</summary>
         <p>{f.explanation}</p>

@@ -10,7 +10,7 @@ async function openFigure(page: import('@playwright/test').Page) {
   await page.goto('/#/overview')
   const figure = page.locator(FIGURE).filter({ hasText: 'Removed outside the lease' })
   // The figures are built by the rule engine, so they are the readiness signal.
-  await expect(figure).toBeVisible({ timeout: 30_000 })
+  await expect(figure).toBeVisible({ timeout: 60_000 })
   return figure
 }
 

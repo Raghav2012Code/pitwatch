@@ -37,7 +37,18 @@ const BY_HASH = new Map<string, Route>(
   (Object.entries(ROUTE_HREF) as [Route, string][]).map(([route, hash]) => [hash, route]),
 )
 
-const read = (): Route => BY_HASH.get(window.location.hash) ?? 'home'
+/** The part of a hash that names the screen: `#/monitor?finding=R1-1` is the `#/monitor` screen. */
+const pathOf = (hash: string): string => hash.split('?')[0]!
+
+const read = (): Route => BY_HASH.get(pathOf(window.location.hash)) ?? 'home'
+
+/** The finding a shared link points at (`#/monitor?finding=R1-1`), or null. */
+export const findingFromHash = (hash: string): string | null =>
+  new URLSearchParams(hash.split('?')[1] ?? '').get('finding')
+
+/** A link that opens the 3D map on one finding, for sharing. */
+export const findingLink = (id: string): string =>
+  `${window.location.origin}${window.location.pathname}${window.location.search}${ROUTE_HREF.monitor}?finding=${encodeURIComponent(id)}`
 
 const subscribe = (onChange: () => void) => {
   window.addEventListener('hashchange', onChange)
@@ -65,4 +76,4 @@ export const navigate = (route: Route) => {
  * visitor is. The empty hash is the root address and is left alone.
  */
 export const plannedHash = (hash: string): string | null =>
-  hash === '' || BY_HASH.has(hash) ? null : HOME_HREF
+  hash === '' || BY_HASH.has(pathOf(hash)) ? null : HOME_HREF

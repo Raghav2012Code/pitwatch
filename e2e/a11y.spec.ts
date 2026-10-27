@@ -35,7 +35,7 @@ for (const route of ['overview', 'findings', 'rules', 'uncertainty', 'about']) {
   test(`${route} has no critical or serious accessibility violations`, async ({ page }) => {
     await page.goto(`/#/${route}`)
     await expect(page.getByRole('banner').getByText('2 violations, 3 warnings')).toBeVisible({
-      timeout: 30_000,
+      timeout: 60_000,
     })
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 
@@ -82,9 +82,9 @@ test('monitor has no critical or serious accessibility violations', async ({ pag
   test.setTimeout(60_000)
   await page.goto('/#/monitor')
   await expect(page.getByRole('banner').getByText('2 violations, 3 warnings')).toBeVisible({
-    timeout: 30_000,
+    timeout: 60_000,
   })
-  await expect(page.getByText('Building the terrain model')).toHaveCount(0, { timeout: 30_000 })
+  await expect(page.getByText('Building the terrain model')).toHaveCount(0, { timeout: 60_000 })
 
   expect(await seriousViolations(page)).toEqual([])
 })
@@ -92,7 +92,7 @@ test('monitor has no critical or serious accessibility violations', async ({ pag
 test('the phone monitor and its open drawer are clean', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/monitor')
-  await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('group', { name: 'Camera view' })).toBeVisible({ timeout: 60_000 })
 
   // The drawer holds the layer switches below `md`; it has to be open to be scanned.
   await page.getByRole('button', { name: 'Details' }).click()

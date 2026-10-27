@@ -11,14 +11,14 @@ test('renders the 3D canvas without errors', async ({ page }) => {
 
   // The worker builds both surveys on first load; readiness is the top bar's engine output.
   await expect(page.getByRole('banner').getByText('2 violations, 3 warnings')).toBeVisible({
-    timeout: 30_000,
+    timeout: 60_000,
   })
   await expect(page.getByText('Building the terrain model')).toHaveCount(0)
 
   const canvas = page.locator('canvas')
   // The scene chunk is fetched after the surveys are ready, and the suite runs several browsers
   // in parallel, so this needs the same budget as the readiness wait above.
-  await expect(canvas).toBeVisible({ timeout: 30_000 })
+  await expect(canvas).toBeVisible({ timeout: 60_000 })
 
   // R3F sizes the canvas from a ResizeObserver, so it briefly keeps the 300x150 default.
   await expect

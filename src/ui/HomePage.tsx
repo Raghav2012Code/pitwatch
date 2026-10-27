@@ -258,7 +258,10 @@ export function HomePage() {
               ) : status === 'error' ? (
                 <p className="plan-status">The simulated surveys could not be built.</p>
               ) : (
-                <p className="plan-status">Building the simulated surveys…</p>
+                <div className="plan-status w-full max-w-[260px]">
+                  <p>Building the simulated surveys…</p>
+                  <div className="loading-strata mt-3" />
+                </div>
               )}
             </div>
 

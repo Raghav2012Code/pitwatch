@@ -20,9 +20,11 @@ test.use({ reducedMotion: 'reduce' })
 test('every layer switch and the exaggeration slider are reachable from the phone drawer', async ({
   page,
 }) => {
+  // Building the larger site takes a while under a parallel browser run.
+  test.setTimeout(90_000)
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/monitor')
-  await page.getByRole('group', { name: 'Camera view' }).waitFor({ timeout: 30_000 })
+  await page.getByRole('group', { name: 'Camera view' }).waitFor({ timeout: 60_000 })
 
   // The floating card is gone at this width.
   await expect(page.getByRole('navigation', { name: 'Map' })).toBeHidden()
@@ -54,7 +56,7 @@ test('every layer switch and the exaggeration slider are reachable from the phon
 test('the first finding is visible when the drawer opens on a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/monitor')
-  await page.getByRole('group', { name: 'Camera view' }).waitFor({ timeout: 30_000 })
+  await page.getByRole('group', { name: 'Camera view' }).waitFor({ timeout: 60_000 })
 
   await page.getByRole('button', { name: 'Details' }).click()
   const drawer = page.getByRole('complementary', { name: 'Details' })
@@ -74,7 +76,7 @@ test('the first finding is visible when the drawer opens on a phone', async ({ p
 test('no width shows two sets of layer controls', async ({ page }) => {
   await page.setViewportSize({ width: 800, height: 900 })
   await page.goto('/#/monitor')
-  await page.getByRole('group', { name: 'Camera view' }).waitFor({ timeout: 30_000 })
+  await page.getByRole('group', { name: 'Camera view' }).waitFor({ timeout: 60_000 })
 
   // Tablet: the floating card carries them, the drawer must not.
   await expect(page.getByRole('navigation', { name: 'Map' })).toBeVisible()

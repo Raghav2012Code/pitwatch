@@ -6,7 +6,7 @@ test('loads the monitor and shows the seeded findings', async ({ page }) => {
   // The top bar's overall status comes straight from the rule engine. The worker needs a
   // moment to build both surveys, hence the generous timeout.
   await expect(page.getByRole('banner').getByText('2 violations, 3 warnings')).toBeVisible({
-    timeout: 30_000,
+    timeout: 60_000,
   })
 
   await page.getByRole('tab', { name: 'Findings' }).click()

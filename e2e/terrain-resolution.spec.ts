@@ -9,11 +9,11 @@ test('keeps the terrain map usable across widths and explains its survey resolut
 
   // The worker builds both surveys before the scene is ready.
   await expect(page.getByRole('banner').getByText('2 violations, 3 warnings')).toBeVisible({
-    timeout: 30_000,
+    timeout: 60_000,
   })
 
   const canvas = page.locator('canvas')
-  await expect(canvas).toBeVisible({ timeout: 30_000 })
+  await expect(canvas).toBeVisible({ timeout: 60_000 })
 
   for (const width of [1440, 1100, 800, 390]) {
     await page.setViewportSize({ width, height: 900 })

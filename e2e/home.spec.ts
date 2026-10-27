@@ -12,8 +12,8 @@ test('the landing page opens the dashboard', async ({ page }) => {
   // The overview waits for the rule engine, so its verdict is the readiness signal.
   await expect(
     page.getByRole('heading', { level: 2, name: '2 violations, 3 warnings' }),
-  ).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByText('Venthar Ridge Iron Pit')).toBeVisible()
+  ).toBeVisible({ timeout: 60_000 })
+  await expect(page.getByText('Venthar Ridge Iron Pit').first()).toBeVisible()
 })
 
 test('the landing model is driven by buttons, not by scrolling', async ({ page }) => {
@@ -62,7 +62,7 @@ for (const viewport of [
     await expect(stage).toBeInViewport({ ratio: 0.9 })
 
     // The live model itself, once the surveys are built.
-    await expect(page.locator('.hero-model canvas')).toBeVisible({ timeout: 30_000 })
+    await expect(page.locator('.hero-model canvas')).toBeVisible({ timeout: 60_000 })
 
     await expect(page.locator('.hero-copy a[href="#/overview"]')).toBeInViewport({ ratio: 1 })
     await expect(page.locator('.hero-copy a[href="#/monitor"]')).toBeInViewport({ ratio: 1 })
@@ -97,7 +97,7 @@ test('each step can be shown on the model, and the rules report the engine resul
 
   // Live result per rule, from the same engine the dashboard uses.
   const rules = page.getByRole('list').filter({ hasText: 'Stay inside the lease' })
-  await expect(rules).toContainText('1 violation, 2 warnings', { timeout: 30_000 })
+  await expect(rules).toContainText('1 violation, 2 warnings', { timeout: 60_000 })
   await expect(rules).toContainText('1 violation')
   await expect(rules).toContainText('1 warning')
 })
