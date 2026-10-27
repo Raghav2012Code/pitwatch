@@ -54,6 +54,12 @@ export const TONE_COLOR = {
   critical: OVERLAY.critical,
 } as const
 
+/** Scene lighting (three.js cannot read CSS tokens): cool sky fill, warm low sun. */
+export const LIGHT = { sky: '#e4ebee', ground: '#6b5a48', sun: '#fff0dc' } as const
+
+/** Used only if `--color-backdrop` cannot be read. Same value as the token in index.css. */
+export const BACKDROP_FALLBACK = '#e8e4d9'
+
 /** Contour line colour. */
 export const CONTOUR_INK = '#3b2a20'
 

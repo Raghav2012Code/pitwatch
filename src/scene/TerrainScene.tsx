@@ -7,6 +7,7 @@ import { useTerrain } from '../state/terrain'
 import { CameraRig } from './CameraRig'
 import { buildMarks } from './marks'
 import { Overlays } from './Overlays'
+import { BACKDROP_FALLBACK, LIGHT } from './palette'
 import { Terrain } from './Terrain'
 import { fromScene, toScene } from './terrainGeometry'
 import { ViewOffset } from './ViewOffset'
@@ -14,7 +15,7 @@ import { ViewOffset } from './ViewOffset'
 /** Backdrop colour behind the model; fog fades distant terrain into it. */
 const horizon = () =>
   getComputedStyle(document.documentElement).getPropertyValue('--color-backdrop').trim() ||
-  '#e8e4d9'
+  BACKDROP_FALLBACK
 
 /** Asks the on-demand canvas for a frame when `on` changes (it does not render by itself). */
 function Redraw({ on }: { on: unknown }) {
@@ -73,10 +74,10 @@ export default function TerrainScene() {
     >
       <fog attach="fog" args={[fog, 5200, 12000]} />
       {/* Cool sky fill and a warm, fairly low sun from the north-west. */}
-      <hemisphereLight args={['#e4ebee', '#6b5a48', 0.95]} />
+      <hemisphereLight args={[LIGHT.sky, LIGHT.ground, 0.95]} />
       <directionalLight
         position={[-1700, 1400, -1100]}
-        color="#fff0dc"
+        color={LIGHT.sun}
         intensity={2.4}
         castShadow
         shadow-mapSize={[2048, 2048]}

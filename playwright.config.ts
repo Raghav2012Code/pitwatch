@@ -12,7 +12,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: CI,
   retries: CI ? 1 : 0,
-  workers: CI ? 1 : undefined,
+  workers: CI ? 1 : 3, // software WebGL starves under more parallel browsers
   reporter: CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: URL,

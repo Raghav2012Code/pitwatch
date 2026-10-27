@@ -50,6 +50,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-27: audit, scene colours moved to the palette (issue #46)
+
+- Audit result: `npm run verify` and `npm audit --omit=dev` clean; one rule violation found. Seven hex literals in `TerrainScene.tsx` and `HomeScene.tsx` broke "never hardcode a colour in a component". Scene lighting (`LIGHT`), the backdrop fallback (`BACKDROP_FALLBACK`) and the lease line (`OVERLAY.lease`) now come from `src/scene/palette.ts`; no hex or rgb literal remains in `src/**/*.tsx` apart from the data-driven swatch in `MapHud`.
+- Playwright now runs 3 workers locally (was one per core). On a loaded machine software-WebGL browsers starved and three checks (`home` at 800, `hud` at 768, `mobile-layers`) timed out in the full run; each passed alone.
+- Verification: `npm run verify` (170 unit tests) and `npm run test:e2e` (74 checks) pass in one run. An earlier run on a busy PC timed out two `terrain.test.ts` tests, also on a clean tree; they passed once the load dropped.
+
 ### 2026-10-26: full visual audit, landing loading bar
 
 - Screenshotted all seven pages at 1440 and 390 px and read each. No overflow, clipping, collision or contrast problem found. One gap: while the surveys build, the landing model card showed only a line of text on an empty panel. It now shows the same moving strata bar as the dashboard loading card.
