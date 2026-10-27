@@ -50,6 +50,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-27: findings PDF export
+
+- The Findings page gains **Download PDF** next to Download CSV and Print report. `src/ui/reportPdf.ts` builds an A4 report with jsPDF (new dependency, loaded on demand so the first screen does not pay for it): title and survey dates, a "SIMULATED DATA, not a legal determination" line, a vector plan of the lease (lease solid, pit zones dashed, dump zones dotted, each finding marked by id), then one block per shown finding (rule, status, severity, area, volume, max excess, centre, explanation). Every page footer says the data is simulated. The filters apply, as for the CSV.
+- The plan is drawn from the permit polygons and finding centroids, not a screenshot of the 3D canvas, which is not mounted on the Findings page.
+- Test: one browser check downloads the file and asserts the name, the `%PDF-` header and a non-trivial size. The page layout was not inspected visually (no PDF renderer on this machine); only the file structure was checked.
+
 ### 2026-10-27: audit, scene colours moved to the palette (issue #46)
 
 - Audit result: `npm run verify` and `npm audit --omit=dev` clean; one rule violation found. Seven hex literals in `TerrainScene.tsx` and `HomeScene.tsx` broke "never hardcode a colour in a component". Scene lighting (`LIGHT`), the backdrop fallback (`BACKDROP_FALLBACK`) and the lease line (`OVERLAY.lease`) now come from `src/scene/palette.ts`; no hex or rgb literal remains in `src/**/*.tsx` apart from the data-driven swatch in `MapHud`.
