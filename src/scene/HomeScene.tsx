@@ -9,7 +9,7 @@ import { useStory } from '../state/story'
 import { useTerrain } from '../state/terrain'
 import { buildMarks, toneOf } from './marks'
 import { leaseLine } from './overlayGeometry'
-import { TONE_COLOR } from './palette'
+import { TONE_COLOR, OVERLAY, backdropColour, SCENE } from './palette'
 import { Terrain } from './Terrain'
 import { BASE_RL, toScene } from './terrainGeometry'
 
@@ -20,10 +20,6 @@ import { BASE_RL, toScene } from './terrainGeometry'
  *   line and pins.
  * It never turns by itself. A horizontal drag turns it; vertical swipes still scroll the page.
  */
-
-const backdrop = () =>
-  getComputedStyle(document.documentElement).getPropertyValue('--color-backdrop').trim() ||
-  '#e8e4d9'
 
 /** Scroll position in time, 0 = baseline, 1 = current (read every frame). */
 const readTime = () => useStory.getState().t
@@ -125,7 +121,7 @@ export default function HomeScene({ step, active }: { step: number; active: bool
   const limits = useTerrain((s) => s.limits)
   const findings = useTerrain((s) => s.findings)
   const ex = useAppStore((s) => s.exaggeration)
-  const fog = useMemo(() => backdrop(), [])
+  const fog = useMemo(() => backdropColour(), [])
 
   const change = useTerrain((s) => s.change)
   const marks = useMemo(
@@ -157,10 +153,10 @@ export default function HomeScene({ step, active }: { step: number; active: bool
       style={{ touchAction: 'pan-y', cursor: 'grab' }}
     >
       <fog attach="fog" args={[fog, 5200, 12000]} />
-      <hemisphereLight args={['#e4ebee', '#6b5a48', 0.95]} />
+      <hemisphereLight args={[SCENE.sky, SCENE.ground, 0.95]} />
       <directionalLight
         position={[-1700, 1400, -1100]}
-        color="#fff0dc"
+        color={SCENE.sun}
         intensity={2.4}
         castShadow
         shadow-mapSize={[2048, 2048]}
@@ -181,7 +177,7 @@ export default function HomeScene({ step, active }: { step: number; active: bool
         overlay={overlay}
         visible
       />
-      {step >= 4 && lease && <Line points={lease} color="#fbfaf6" lineWidth={2.5} />}
+      {step >= 4 && lease && <Line points={lease} color={OVERLAY.lease} lineWidth={2.5} />}
       {step >= 4 && findings.map((f) => <Pin key={f.id} f={f} survey={current} ex={ex} />)}
       <Orbit target={target} />
     </Canvas>

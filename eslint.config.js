@@ -28,8 +28,10 @@ export default tseslint.config(
     },
   },
   {
-    // Subscribing to a whole zustand store re-renders on every write, including state the
-    // component never reads. Select the slices instead.
+    // Two rules for component files:
+    //  - subscribing to a whole zustand store re-renders on every write, including state the
+    //    component never reads, so select the slices instead;
+    //  - a colour belongs in src/scene/palette.ts or a token in @theme, never in a component.
     files: ['src/**/*.tsx'],
     rules: {
       'no-restricted-syntax': [
@@ -38,6 +40,16 @@ export default tseslint.config(
           selector: "CallExpression[callee.name='useTerrain'][arguments.length=0]",
           message:
             'Read only the slices you use: useTerrain((s) => s.surveys), not the whole store.',
+        },
+        {
+          selector: 'Literal[value=/^#[0-9a-fA-F]{3,8}$/]',
+          message:
+            'Colours live in src/scene/palette.ts or a token in @theme; a component does not hardcode them.',
+        },
+        {
+          selector: 'Literal[value=/^rgba?\\(/]',
+          message:
+            'Colours live in src/scene/palette.ts or a token in @theme; a component does not hardcode them.',
         },
       ],
     },

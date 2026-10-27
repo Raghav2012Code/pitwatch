@@ -57,6 +57,31 @@ export const TONE_COLOR = {
 /** Contour line colour. */
 export const CONTOUR_INK = '#3b2a20'
 
+/**
+ * Scene lighting and the page backdrop. Three cannot read `var(--color-*)`, so the value is named
+ * here once and both scenes share it; `backdrop` mirrors `--color-backdrop` in `@theme`.
+ */
+export const SCENE = {
+  /** `--color-backdrop`: survey paper, the colour the fog fades into. */
+  backdrop: '#e8e4d9',
+  /** Hemisphere light from above: cool sky fill. */
+  sky: '#e4ebee',
+  /** Hemisphere light from below: warm dust bounced off the ground. */
+  ground: '#6b5a48',
+  /** Key light: a warm, low sun from the north-west. */
+  sun: '#fff0dc',
+} as const
+
+/**
+ * The backdrop colour at runtime: the CSS token when there is a document, `SCENE.backdrop`
+ * otherwise (the unit tests run in node).
+ */
+export const backdropColour = () =>
+  (typeof document === 'undefined'
+    ? ''
+    : getComputedStyle(document.documentElement).getPropertyValue('--color-backdrop').trim()) ||
+  SCENE.backdrop
+
 export type RGB = [number, number, number]
 
 export function hexToRgb(hex: string): RGB {

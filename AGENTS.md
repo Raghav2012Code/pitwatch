@@ -50,6 +50,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-27: scene colours come from the palette, not the components (#46)
+
+- Seven hex literals in the two 3D scenes — the only ones left in `src/**/*.tsx` — are gone. `src/scene/palette.ts` gains a `SCENE` block holding the backdrop fallback, the hemisphere light's sky and ground fills, and the key light; the home page's lease line now uses `OVERLAY.lease`, which already held that value and is what the monitor draws for the same line.
+- The backdrop read was duplicated (`horizon()` in `TerrainScene.tsx`, `backdrop()` in `HomeScene.tsx`), each with its own `#e8e4d9` fallback. Both now call `backdropColour()`, which reads `--color-backdrop` once per scene exactly as before and falls back to `SCENE.backdrop` where there is no document (the unit tests run in node).
+- No colour changed: every value was copied from the code it replaced, and `--color-backdrop` is still `#e8e4d9` in `@theme`. Proof, not assurance: the monitor canvas at the Pit preset, screenshotted before and after at 1440 × 900, is byte-identical (same SHA-256), which covers the backdrop, the fog and both lights; the landing hero was compared at the same size and is unchanged.
+- Enforced by lint rather than remembered: the existing `src/**/*.tsx` `no-restricted-syntax` block gains two selectors, one rejecting a hex colour literal and one rejecting an `rgb(`/`rgba(` string, both pointing at `src/scene/palette.ts`. Verified with a throwaway probe file (`color: "#123456"`) that lint rejects and then deleted. Hash routes such as `#/monitor` do not match the pattern, and `MapHud.tsx`'s computed `rgb(${…})` is a template, not a literal.
+- Tests: one added in `scene.test.ts` pins the node path — with no `document`, `backdropColour()` returns `SCENE.backdrop`. 171 unit tests in 21 files; `npm run test:e2e -- --workers=2` passes all 74 checks.
+
 ### 2026-10-26: full visual audit, landing loading bar
 
 - Screenshotted all seven pages at 1440 and 390 px and read each. No overflow, clipping, collision or contrast problem found. One gap: while the surveys build, the landing model card showed only a line of text on an empty panel. It now shows the same moving strata bar as the dashboard loading card.

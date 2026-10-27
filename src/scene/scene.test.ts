@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { GridSpec } from '../domain/types'
-import { hexToRgb, RAMP, rampAt, rampGradient, srgbToLinear } from './palette'
+import {
+  backdropColour,
+  hexToRgb,
+  RAMP,
+  rampAt,
+  rampGradient,
+  SCENE,
+  srgbToLinear,
+} from './palette'
 import { focusPose, headingOf, metresPerPixel, northUp, presetPose, scaleBar } from './presets'
 import {
   BASE_RL,
@@ -34,6 +42,12 @@ describe('palette', () => {
 
   it('builds a CSS gradient from the same stops', () => {
     expect(rampGradient()).toMatch(/^linear-gradient\(to right, #2f4b66 0%, .* #8f4f3e 100%\)$/)
+  })
+
+  it('falls back to the backdrop value when there is no document', () => {
+    // The unit tests run in node: the token cannot be read, and the scene still needs a colour.
+    expect(typeof document).toBe('undefined')
+    expect(backdropColour()).toBe(SCENE.backdrop)
   })
 })
 
