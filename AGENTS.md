@@ -50,6 +50,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-29: six follow-up tickets opened (#32–#37), all `ready-for-agent`
+
+- `/to-tickets` over what the sync and the bug check left open: **#32** the lint guard that makes "colours live in the palette" a rule rather than a habit (the half of #46 upstream skipped), **#33** the PDF drawing real symbols through a subset font instead of spelling `± m² (2σ)` out, **#34** a long finding continuing onto the next page (blocked by #33, set as a native GitHub dependency and repeated in the body), **#35** the Map card folding away at 800 px, **#36** the first-visit tour, and **#37** horizontal survey error on a point reading. Each carries the behaviour it makes work, acceptance criteria, and its blockers; nothing is assigned.
+- Two of them were first created on the **parent's** tracker by mistake: `gh` resolves the repo from the remotes, and this clone has both, so it picked `upstream`. My permissions there do not include deleting an issue, so both were closed with a comment saying where the ticket really lives and the six were recreated in the fork. `gh repo set-default Raghav2012Code/pitwatch` now pins the clone to the fork, and `docs/agents/issue-tracker.md` says to check that before creating anything.
+- README and STATUS stopped claiming no issues are open, and the three limits they list now name the ticket that would remove them (#35, #36, #37).
+- No code, test or fixture changed; the checks quoted in STATUS are the ones the bug check ran on 2026-10-29.
+
 ### 2026-10-29: full bug check of the whole repo (five defects found and fixed)
 
 - **The new PDF printed mangled text, and that was not cosmetic.** jsPDF's built-in Helvetica only draws Latin-1, and jsPDF mangles an _entire_ string when one character is outside it. Every explanation contains `± … (2σ)`, so each finding's paragraph came out with replacement glyphs — the one thing the upstream entry said could not be checked because there was no PDF renderer on that machine. Checked here by opening the downloaded file in this machine's Chromium PDF viewer, which is possible and should have been done: page 1 of a 2-page report had a nearly empty page 2, and R1-1 and R1-2 printed their ids on top of each other (they sit about 30 m apart on a 100 mm plan).
