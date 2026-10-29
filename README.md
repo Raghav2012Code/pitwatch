@@ -148,7 +148,7 @@ flowchart LR
   A --> UI
 ```
 
-- `src/domain`, `src/data`, `src/geo` and `src/compliance` are pure TypeScript. ESLint blocks React, three.js and Zustand imports there, so the geometry and rules are testable on their own.
+- `src/domain`, `src/data`, `src/geo` and `src/compliance` are pure TypeScript. ESLint blocks React, three.js and Zustand imports there, so the geometry and rules are testable on their own. The same lint pass rejects a hardcoded colour anywhere in `src` other than the palette, so the colour rule is enforced rather than remembered.
 - `TerrainProvider` (`getMine`, `listSurveys`, `getSurvey`, `getLimits`) is the seam for real data. A GeoTIFF DEM or surveyed-surface provider can replace the synthetic one without touching rendering or rules.
 - Coordinates are a local metric grid (X east, Y north, RL in metres). The fictional origin lat/lon is for display only; a real system would use a projected CRS such as UTM.
 

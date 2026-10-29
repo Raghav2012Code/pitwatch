@@ -7,6 +7,11 @@ kept as the record of how the work was scoped. Upstream took steps 1–3 with di
 lint guard that keeps hex out of `.tsx`) was not added, so `npm run lint` still would not catch a
 new literal; the "no literal remains" claim rests on the one-off `git grep` in the upstream log.
 
+**Step 4 landed on 2026-10-29 as ticket #32**, with a wider scope than planned: the same rule covers
+`src/**/*.ts` as well as `.tsx`, because the two inks that had actually been hiding were in the PDF
+report's `.ts` module. The plan's `Literal`-only approach was kept, plus static `rgb()`/`hsl()`
+strings, and the probes that proved it fires are recorded in the update log.
+
 Upstream issue `abivan100-stack/pitwatch-3d#46`. AGENTS.md says every colour is a token in
 `@theme` and a component never hardcodes one. Seven literals in the two 3D scene files break that.
 This plan removes them without changing a single pixel: every value is copied verbatim, so the

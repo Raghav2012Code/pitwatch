@@ -50,6 +50,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-29: the palette rule is lint, not habit (ticket #32, closes #46's last step)
+
+- `eslint.config.js` now rejects a colour written in code: `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, and static `rgb(`/`rgba(`/`hsl(`/`hsla(` strings. The message names `src/scene/palette.ts` and the `@theme` tokens, and says to add the value to the palette and import it.
+- Scope is wider than the #46 plan's `.tsx`-only step, because the two inks that had actually been hiding sat in the PDF report's `.ts` module: one shared selector pair now applies to `src/**/*.tsx` (beside the existing whole-store rule) and to `src/**/*.ts`. Flat config replaces a rule's settings rather than merging them, so the store rule and the colour rule share one array instead of two blocks that would silently drop one another.
+- `src/scene/palette.ts` is the allowed home and `src/**/*.test.ts` may assert on values; both are excluded. The one legitimate computed colour — the elevation key's swatch, built at runtime from `rampAt()` — is a template literal, so it is not a literal and never matched.
+- Proof, with throwaway probe files deleted afterwards: `#ff0000` and `#abc` in a `.tsx` failed, `rgb(0 0 0)`, `rgba(0 0 0 / 0.5)` and `hsl(20 40% 50%)` in a `.ts` failed, while `'#/monitor'`, `'#content'`, `'#sidebar'` and `'#ab'` passed; a file calling `useTerrain()` and writing a hex produced both messages, which proves the existing store rule survived the merge. `npm run lint` on the real tree is clean, so the rule added no exceptions.
+- `README.md` says the colour rule is enforced, and `docs/plan-issue-46-scene-colours.md` records that its step 4 landed here, wider than planned.
+
 ### 2026-10-29: six follow-up tickets opened (#32–#37), all `ready-for-agent`
 
 - `/to-tickets` over what the sync and the bug check left open: **#32** the lint guard that makes "colours live in the palette" a rule rather than a habit (the half of #46 upstream skipped), **#33** the PDF drawing real symbols through a subset font instead of spelling `± m² (2σ)` out, **#34** a long finding continuing onto the next page (blocked by #33, set as a native GitHub dependency and repeated in the body), **#35** the Map card folding away at 800 px, **#36** the first-visit tour, and **#37** horizontal survey error on a point reading. Each carries the behaviour it makes work, acceptance criteria, and its blockers; nothing is assigned.
