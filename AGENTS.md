@@ -57,6 +57,7 @@ Newest first.
 - `src/scene/palette.ts` is the allowed home and `src/**/*.test.ts` may assert on values; both are excluded. The one legitimate computed colour — the elevation key's swatch, built at runtime from `rampAt()` — is a template literal, so it is not a literal and never matched.
 - Proof, with throwaway probe files deleted afterwards: `#ff0000` and `#abc` in a `.tsx` failed, `rgb(0 0 0)`, `rgba(0 0 0 / 0.5)` and `hsl(20 40% 50%)` in a `.ts` failed, while `'#/monitor'`, `'#content'`, `'#sidebar'` and `'#ab'` passed; a file calling `useTerrain()` and writing a hex produced both messages, which proves the existing store rule survived the merge. `npm run lint` on the real tree is clean, so the rule added no exceptions.
 - `README.md` says the colour rule is enforced, and `docs/plan-issue-46-scene-colours.md` records that its step 4 landed here, wider than planned.
+- Named ceiling: the selectors match a whole string literal, so a colour embedded in a longer CSS fragment (`'0 0 0 2px #fff'`) would pass. Nothing in the tree writes colours that way — they come from `palette.ts`, and the palette was excluded for a reason — so the rule stays exact rather than fuzzy; if such a string appears, add a boundary-anchored selector rather than loosening these.
 
 ### 2026-10-29: six follow-up tickets opened (#32–#37), all `ready-for-agent`
 
