@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ComplianceFinding } from '../domain/types'
-import { findingsToCsv, REPORT_COLUMNS } from './report'
+import { findingsToCsv, pdfSafeText, REPORT_COLUMNS } from './report'
 
 const finding = (over: Partial<ComplianceFinding> = {}): ComplianceFinding => ({
   id: 'R1-1',
@@ -41,5 +41,22 @@ describe('findingsToCsv', () => {
 
   it('is just the header when there are no findings', () => {
     expect(findingsToCsv([])).toBe(`${REPORT_COLUMNS.join(',')}\r\n`)
+  })
+})
+
+describe('pdfSafeText', () => {
+  it('spells out the symbols the PDF font cannot draw, as the engine writes them', () => {
+    expect(
+      pdfSafeText(
+        'Excavated 300 m² outside the lease boundary; deepest cut 6.0 m ± 0.14 m (2σ). About 1,200 m³ removed.',
+      ),
+    ).toBe(
+      'Excavated 300 m2 outside the lease boundary; deepest cut 6.0 m +/- 0.14 m (2 sigma). About 1,200 m3 removed.',
+    )
+  })
+
+  it('leaves ASCII alone', () => {
+    const plain = 'R1-1  Lease boundary and buffer. 7,696 m2 at E 1405 N 1032.'
+    expect(pdfSafeText(plain)).toBe(plain)
   })
 })

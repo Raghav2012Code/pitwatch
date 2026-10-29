@@ -154,4 +154,23 @@ test('the findings can be downloaded as a PDF that says it is simulated', async 
   const bytes = await (await import('node:fs/promises')).readFile((await download.path())!)
   expect(bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-')
   expect(bytes.length).toBeGreaterThan(5_000)
+
+  // The built-in font only draws Latin-1, and jsPDF mangles a whole string when one character is
+  // outside it (the engine writes "± … (2σ)"). Read the drawn text back: ASCII only, units spelled.
+  const zlib = await import('node:zlib')
+  const raw = bytes.toString('latin1')
+  let content = ''
+  for (const m of raw.matchAll(/[^d]stream\r?\n/g)) {
+    const start = m.index + m[0].length
+    const slice = bytes.subarray(start, raw.indexOf('endstream', start))
+    try {
+      content += zlib.inflateSync(slice).toString('latin1')
+    } catch {
+      content += slice.toString('latin1')
+    }
+  }
+  const drawn = [...content.matchAll(/\((.*?)\)\s*Tj/gs)].map((m) => m[1]!)
+  expect(drawn.length).toBeGreaterThan(10)
+  expect(drawn.filter((s) => [...s].some((c) => c.codePointAt(0)! > 0x7e))).toEqual([])
+  expect(drawn.some((s) => s.includes('2 sigma'))).toBe(true)
 })

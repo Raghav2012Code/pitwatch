@@ -12,7 +12,7 @@ Updated 2026-10-27. See `README.md` for features and `AGENTS.md` for the working
 
 ## Checks
 
-`npm run verify` (170 unit tests in 21 files) and `npm run test:e2e -- --workers=2` (74 checks) pass on `main`. All ten routes were swept on 2026-10-27 at 1440, 1100, 800 and 390 px: no horizontal overflow and no console errors at any of the forty combinations.
+`npm run verify` (174 unit tests in 22 files) and `npm run test:e2e` (75 checks) pass on `main`. All ten routes were swept at 1440, 1100, 800 and 390 px on 2026-10-29: no horizontal overflow, no console or page errors, and no critical or serious axe violation at 1440 or 390 px, in all forty combinations.
 
 ## Known limits
 

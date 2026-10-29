@@ -1,5 +1,6 @@
 import type { ComplianceFinding, Mine, PermittedLimits, Polygon } from '../domain/types'
-import { OVERLAY, TONE_COLOR } from '../scene/palette'
+import { pdfSafeText } from '../compliance/report'
+import { OVERLAY, PRINT_INK, TONE_COLOR } from '../scene/palette'
 import { RULE_NAMES, toneOf } from './findings'
 
 /** What the PDF describes: the findings on screen and the permit they were checked against. */
@@ -12,8 +13,8 @@ export interface PdfReportInput {
 }
 
 const PAGE = { w: 210, h: 297, margin: 16 }
-const INK = '#23262b'
-const FAINT = '#5a5f66'
+const INK = PRINT_INK.ink
+const FAINT = PRINT_INK.faint
 
 /**
  * Builds and saves a one-click PDF of the findings: a plan of the lease with every finding
@@ -32,7 +33,9 @@ export async function savePdfReport(input: PdfReportInput): Promise<void> {
   doc.text('Findings report', PAGE.margin, 24)
   doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(FAINT)
   doc.text(
-    `${mine.name}, ${mine.operator}. Baseline survey ${baselineDate}, current survey ${currentDate}.`,
+    pdfSafeText(
+      `${mine.name}, ${mine.operator}. Baseline survey ${baselineDate}, current survey ${currentDate}.`,
+    ),
     PAGE.margin,
     31,
   )
@@ -49,21 +52,24 @@ export async function savePdfReport(input: PdfReportInput): Promise<void> {
     'Dotted: waste dump zone',
     `${findings.length} finding${findings.length === 1 ? '' : 's'} marked by id`,
   ]
-  key.forEach((line, i) => doc.text(line, plan.x + plan.size + 8, plan.y + 8 + i * 6))
+  key.forEach((line, i) => doc.text(pdfSafeText(line), plan.x + plan.size + 8, plan.y + 8 + i * 6))
 
   let y = plan.y + plan.size + 14
   for (const f of findings) {
-    const body = doc.splitTextToSize(f.explanation, inner) as string[]
-    const height = 18 + body.length * 4.6
-    if (y + height > PAGE.h - 20) {
+    const body = doc.splitTextToSize(pdfSafeText(f.explanation), inner) as string[]
+    // What the block actually needs: title, figure line, then one line per explanation line.
+    const height = 13.4 + body.length * 4.6
+    if (y + height > PAGE.h - 16) {
       doc.addPage()
       y = PAGE.margin + 4
     }
     doc.setFont('helvetica', 'bold').setFontSize(12).setTextColor(INK)
-    doc.text(`${f.id}  ${RULE_NAMES[f.ruleId]}`, PAGE.margin, y)
+    doc.text(pdfSafeText(`${f.id}  ${RULE_NAMES[f.ruleId]}`), PAGE.margin, y)
     doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(FAINT)
     doc.text(
-      `${f.status}, ${f.severity}. Area ${Math.round(f.areaM2).toLocaleString('en-GB')} m2, volume ${Math.round(f.volumeM3).toLocaleString('en-GB')} m3, max excess ${f.maxExceedance.toFixed(2)} m, centre E ${Math.round(f.centroid.x)} N ${Math.round(f.centroid.y)}.`,
+      pdfSafeText(
+        `${f.status}, ${f.severity}. Area ${Math.round(f.areaM2).toLocaleString('en-GB')} m2, volume ${Math.round(f.volumeM3).toLocaleString('en-GB')} m3, max excess ${f.maxExceedance.toFixed(2)} m, centre E ${Math.round(f.centroid.x)} N ${Math.round(f.centroid.y)}.`,
+      ),
       PAGE.margin,
       y + 5.5,
     )
@@ -129,12 +135,46 @@ function drawPlan(
   doc.setLineDashPattern([], 0)
 
   doc.setFont('helvetica', 'bold').setFontSize(7)
-  for (const f of findings) {
-    const tone = toneOf(f)
-    doc.setFillColor(TONE_COLOR[tone] ?? OVERLAY.violation)
+  const markers = findings.map((f) => ({ f, x: px(f.centroid.x), y: py(f.centroid.y) }))
+  for (const m of markers) {
+    doc.setFillColor(TONE_COLOR[toneOf(m.f)] ?? OVERLAY.violation)
     doc.setDrawColor(INK).setLineWidth(0.2)
-    doc.circle(px(f.centroid.x), py(f.centroid.y), 1.6, 'FD')
-    doc.setTextColor(INK)
-    doc.text(f.id, px(f.centroid.x) + 2.4, py(f.centroid.y) - 1.2)
+    doc.circle(m.x, m.y, 1.6, 'FD')
   }
+  doc.setTextColor(INK)
+  for (const label of placeLabels(
+    markers.map((m) => ({ x: m.x + 2.4, y: m.y - 1.2, text: m.f.id })),
+  )) {
+    doc.text(label.text, label.x, label.y)
+  }
+}
+
+/**
+ * Label positions that do not overprint each other. Findings close together (R1-1 and R1-2 are
+ * about 30 m apart on a 100 mm plan) would otherwise draw both ids on the same spot; each one that
+ * collides with an already placed label steps up by one line.
+ */
+export function placeLabels(
+  labels: readonly { x: number; y: number; text: string }[],
+  charWidth = 1.35,
+  lineHeight = 2.8,
+): { x: number; y: number; text: string }[] {
+  const placed: { x: number; y: number; w: number; h: number }[] = []
+  const out: { x: number; y: number; text: string }[] = []
+  for (const label of labels) {
+    let y = label.y
+    for (let guard = 0; guard < 12; guard++) {
+      const box = { x: label.x, y: y - 2.2, w: label.text.length * charWidth, h: 2.8 }
+      const hits = placed.some(
+        (b) => box.x < b.x + b.w && box.x + box.w > b.x && box.y < b.y + b.h && box.y + box.h > b.y,
+      )
+      if (!hits) {
+        placed.push(box)
+        break
+      }
+      y -= lineHeight
+    }
+    out.push({ x: label.x, y, text: label.text })
+  }
+  return out
 }

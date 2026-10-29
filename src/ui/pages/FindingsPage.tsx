@@ -103,10 +103,18 @@ function List() {
   const findings = useTerrain((s) => s.findings)
   const [status, setStatus] = useState<StatusFilter>('all')
   const [rule, setRule] = useState<RuleFilter>('all')
+  const [pdf, setPdf] = useState<'idle' | 'building' | 'failed'>('idle')
 
   const shown = findings.filter(
     (f) => (status === 'all' || f.status === status) && (rule === 'all' || f.ruleId === rule),
   )
+
+  const downloadPdf = () => {
+    setPdf('building')
+    void exportPdf(shown)
+      .then(() => setPdf('idle'))
+      .catch(() => setPdf('failed'))
+  }
 
   return (
     <section aria-labelledby="all-findings" className="print-area">
@@ -158,14 +166,24 @@ function List() {
               <button type="button" className="btn" onClick={() => downloadCsv(shown)}>
                 Download CSV
               </button>
-              <button type="button" className="btn" onClick={() => void exportPdf(shown)}>
-                Download PDF
+              <button
+                type="button"
+                className="btn"
+                disabled={pdf === 'building'}
+                onClick={downloadPdf}
+              >
+                {pdf === 'building' ? 'Building PDF…' : 'Download PDF'}
               </button>
               <button type="button" className="btn" onClick={printReport}>
                 Print report
               </button>
             </div>
           </div>
+          {pdf === 'failed' && (
+            <p role="status" className="no-print mt-3 text-[13px] text-violation">
+              The PDF could not be built. Try again.
+            </p>
+          )}
           {shown.length === 0 ? (
             <p className="mt-6 text-[14px] text-ink-dim">No finding matches those filters.</p>
           ) : (

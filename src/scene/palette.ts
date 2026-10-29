@@ -63,6 +63,9 @@ export const BACKDROP_FALLBACK = '#e8e4d9'
 /** Contour line colour. */
 export const CONTOUR_INK = '#3b2a20'
 
+/** Ink for the PDF report (jsPDF cannot read CSS tokens), same values as the @theme tokens. */
+export const PRINT_INK = { ink: '#23262b', faint: '#5a5f66' } as const
+
 export type RGB = [number, number, number]
 
 export function hexToRgb(hex: string): RGB {
