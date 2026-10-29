@@ -29,7 +29,7 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
   - On phones the details drawer opens on the findings, with the layer switches and vertical exaggeration under a Map layers disclosure below them. On larger screens, the Map card holds these controls; its key can be folded to leave more room.
 - **Compliance engine** (`src/compliance/`): change detection, rules R1–R3, clustering into findings, severity and plain-English explanations. All of it is pure TypeScript and unit-tested.
 
-The original M1–M8 milestones are complete, and so is every item on the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md): it is kept as the record of how that work was planned, not as a list of open work. Six follow-up tickets are open in this repo (#32–#37, each `ready-for-agent`): the lint guard for the palette rule, the report's real symbols and its page splitting, the map card at 800 px, a first-visit tour, and horizontal survey error on a point reading. The parent it tracks has none.
+The original M1–M8 milestones are complete, and so is every item on the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md): it is kept as the record of how that work was planned, not as a list of open work. The palette lint guard (#32) shipped on 2026-10-29. Five follow-up tickets remain open in this repo, each `ready-for-agent`: #33 the report's real symbols, #34 its page splitting (blocked by #33), #35 the map card at 800 px, #36 a first-visit tour, #37 horizontal survey error on a point reading. The parent it tracks has none.
 
 ## Try the inspection workflow
 
