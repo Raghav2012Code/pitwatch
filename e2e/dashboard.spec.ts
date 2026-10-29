@@ -141,3 +141,17 @@ test('the findings can be downloaded as a CSV that says it is simulated', async 
   expect(lines[0]).toContain('id,rule,status,severity')
   for (const line of lines.slice(1)) expect(line.endsWith(',simulated')).toBe(true)
 })
+
+test('the findings can be downloaded as a PDF that says it is simulated', async ({ page }) => {
+  await page.goto('/#/findings')
+  await expect(page.locator('li.frow')).toHaveCount(5, { timeout: 60_000 })
+
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Download PDF' }).click(),
+  ])
+  expect(download.suggestedFilename()).toMatch(/^pitwatch-findings-.*\.pdf$/)
+  const bytes = await (await import('node:fs/promises')).readFile((await download.path())!)
+  expect(bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-')
+  expect(bytes.length).toBeGreaterThan(5_000)
+})

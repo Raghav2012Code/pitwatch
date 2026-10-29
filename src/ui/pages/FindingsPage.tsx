@@ -4,6 +4,7 @@ import { findingsToCsv } from '../../compliance/report'
 import { SURVEY_EPOCHS } from '../../data/fixtures/mine'
 import { useAppStore } from '../../state/store'
 import { useTerrain } from '../../state/terrain'
+import { savePdfReport } from '../reportPdf'
 import { countText, GLYPH, RULE_NAMES, toneOf } from '../findings'
 import { SeverityLegend, ThresholdNote } from '../panels/FindingsPanel'
 import { findingLink, navigate } from '../route'
@@ -46,6 +47,19 @@ function downloadCsv(findings: readonly ComplianceFinding[]) {
   a.download = `pitwatch-findings-${current?.date ?? 'current'}.csv`
   a.click()
   URL.revokeObjectURL(url)
+}
+
+/** Saves the shown findings as a PDF with a plan of the lease, from the loaded survey and permit. */
+function exportPdf(findings: readonly ComplianceFinding[]) {
+  const { limits, mine } = useTerrain.getState()
+  if (!limits || !mine) return Promise.resolve()
+  return savePdfReport({
+    findings,
+    limits,
+    mine,
+    baselineDate: SURVEY_EPOCHS[0]?.date ?? '',
+    currentDate: SURVEY_EPOCHS[1]?.date ?? '',
+  })
 }
 
 /** Prints with every explanation open, then puts the page back as the reader had it. */
@@ -143,6 +157,9 @@ function List() {
             <div className="no-print ml-auto flex gap-2">
               <button type="button" className="btn" onClick={() => downloadCsv(shown)}>
                 Download CSV
+              </button>
+              <button type="button" className="btn" onClick={() => void exportPdf(shown)}>
+                Download PDF
               </button>
               <button type="button" className="btn" onClick={printReport}>
                 Print report

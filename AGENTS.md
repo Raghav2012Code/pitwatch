@@ -50,12 +50,27 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
-### 2026-10-27: the docs match what shipped (no code change)
+### 2026-10-29: fork synced to the parent (merge of `af552c9`)
 
-- The three user-facing docs said work was still proposed after the improvement list had shipped. README now says the competition plan is delivered and that no issues are open, and describes the two parallel survey workers rather than one shared worker; it also drops the "proposed" label from icon-rail labels and landing-model dragging, which shipped, and keeps only the first-visit tour as a stated absence.
-- `STATUS.md` is dated 2026-10-27, records that the fork's last four working copies were closed against the parent's merged work, and states the checks by number (170 unit tests in 21 files, 74 browser checks) plus the forty-combination width sweep.
-- `docs/competition-ui-ux-improvement-plan.md` and `docs/plan-open-issues.md` gain a delivered status line; both are kept as the record of how the work was scoped.
-- No application code, test or fixture changed, so no new measurement was needed: the numbers quoted are the ones the 2026-10-27 merge ran.
+- `git merge upstream/main`: 2 commits, one conflict, in this file only. Upstream got to #46 first, so the fork's plan for it is marked delivered rather than built twice.
+- **#46, scene colours** (`d3be126`): the seven hex literals are gone from `TerrainScene.tsx` and `HomeScene.tsx`; `src/scene/palette.ts` gains `LIGHT` (sky, ground, sun), `BACKDROP_FALLBACK` and the already-present `OVERLAY.lease` now covers the home lease line. Upstream's names differ from the fork's plan (`SCENE` and a `backdropColour()` helper), and it did not take the plan's step 4, so `npm run lint` still does not stop a new literal in a `.tsx`; the "no literal remains" claim rests on the one-off `git grep` in its log. `docs/plan-issue-46-scene-colours.md` carries both facts and is kept as the record of how the work was scoped.
+- **Findings PDF** (`af552c9`): **Download PDF** beside Download CSV and Print report. `src/ui/reportPdf.ts` builds an A4 report with jsPDF (new dependency, imported on demand so the first screen does not pay for it): title and survey dates, a "SIMULATED DATA, not a legal determination" line, a vector plan of the lease with every finding marked by id, then one block per shown finding, and a simulated-data footer on every page. The plan is drawn from the permit polygons, not a screenshot, since the 3D canvas is not mounted on that page. The status and rule filters apply, as for the CSV.
+- Playwright now runs 3 workers locally (was one per core), because software-WebGL browsers starve under more parallelism; CI keeps one.
+- Conflict resolution: both sides had added entries at the top of this log. Both are kept, newest first, the parent's unchanged; the header keeps the fork's view of the remotes. No source, test or fixture conflict anywhere else, so the compliance snapshot and all 170 unit tests are as they were.
+- Docs touched by this merge: README and STATUS name the PDF export; the #46 plan doc gains its delivered status.
+- Checks: `npm run verify` passes (170 unit tests in 21 files). `npm run test:e2e` passes all 75 checks in one run, including the new PDF download check.
+
+### 2026-10-27: findings PDF export
+
+- The Findings page gains **Download PDF** next to Download CSV and Print report. `src/ui/reportPdf.ts` builds an A4 report with jsPDF (new dependency, loaded on demand so the first screen does not pay for it): title and survey dates, a "SIMULATED DATA, not a legal determination" line, a vector plan of the lease (lease solid, pit zones dashed, dump zones dotted, each finding marked by id), then one block per shown finding (rule, status, severity, area, volume, max excess, centre, explanation). Every page footer says the data is simulated. The filters apply, as for the CSV.
+- The plan is drawn from the permit polygons and finding centroids, not a screenshot of the 3D canvas, which is not mounted on the Findings page.
+- Test: one browser check downloads the file and asserts the name, the `%PDF-` header and a non-trivial size. The page layout was not inspected visually (no PDF renderer on this machine); only the file structure was checked.
+
+### 2026-10-27: audit, scene colours moved to the palette (issue #46)
+
+- Audit result: `npm run verify` and `npm audit --omit=dev` clean; one rule violation found. Seven hex literals in `TerrainScene.tsx` and `HomeScene.tsx` broke "never hardcode a colour in a component". Scene lighting (`LIGHT`), the backdrop fallback (`BACKDROP_FALLBACK`) and the lease line (`OVERLAY.lease`) now come from `src/scene/palette.ts`; no hex or rgb literal remains in `src/**/*.tsx` apart from the data-driven swatch in `MapHud`.
+- Playwright now runs 3 workers locally (was one per core). On a loaded machine software-WebGL browsers starved and three checks (`home` at 800, `hud` at 768, `mobile-layers`) timed out in the full run; each passed alone.
+- Verification: `npm run verify` (170 unit tests) and `npm run test:e2e` (74 checks) pass in one run. An earlier run on a busy PC timed out two `terrain.test.ts` tests, also on a clean tree; they passed once the load dropped.
 
 ### 2026-10-27: fork synced to the parent (merge of `8b64608`)
 
@@ -64,6 +79,13 @@ Newest first.
 - The header keeps the fork's view of the remotes (the parent's own copy correctly calls itself `origin`), with the parent's added "verify the remote and current branch" line.
 - What came in beyond the site plan: #45's larger site (two pits, two dumps, a pond, a road network, outline zones), the vector site plan with SVG pins and a title block, CSV/print export on Findings (`src/compliance/report.ts`), `#/monitor?finding=R2-1` shared links with **Copy link**, two parallel survey workers, instant rail labels, and the landing loading bar. The compliance snapshot moved with the new site: same five findings, same rules and statuses, areas and volumes within 3%.
 - Checks: `npm run verify` passes (170 unit tests in 21 files). `npm run test:e2e -- --workers=2` passes all 74 checks. Browser review at 1440, 1100 and 800 px of the landing page, the Overview (site plan figure, pins, key), the Findings page (CSV/print, Copy link) and the 3D map: no overflow, no console errors, the model renders both pits and all five pins.
+
+### 2026-10-27: the docs match what shipped (no code change)
+
+- The three user-facing docs said work was still proposed after the improvement list had shipped. README now says the competition plan is delivered and that no issues are open, and describes the two parallel survey workers rather than one shared worker; it also drops the "proposed" label from icon-rail labels and landing-model dragging, which shipped, and keeps only the first-visit tour as a stated absence.
+- `STATUS.md` is dated 2026-10-27, records that the fork's last four working copies were closed against the parent's merged work, and states the checks by number (170 unit tests in 21 files, 74 browser checks) plus the forty-combination width sweep.
+- `docs/competition-ui-ux-improvement-plan.md` and `docs/plan-open-issues.md` gain a delivered status line; both are kept as the record of how the work was scoped.
+- No application code, test or fixture changed, so no new measurement was needed: the numbers quoted are the ones the 2026-10-27 merge ran.
 
 ### 2026-10-26: full visual audit, landing loading bar
 

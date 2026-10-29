@@ -8,7 +8,7 @@ Updated 2026-10-27. See `README.md` for features and `AGENTS.md` for the working
 - The app is a landing page (`#/`) and a dashboard (`#/overview`, `#/monitor`, `#/findings`, `#/rules`, `#/uncertainty`, `#/about`), plus Terms, License and Contact pages.
 - The simulated mine has two pits, two waste dumps, a settling pond, a road network and permit zones that follow the workings. The five planted findings are R1-1 (critical), R2-1 (high), R1-2 (medium), R3-1 (medium) and R1-3 (low).
 - The two surveys (513 × 513 cells at 4 m) build in parallel in two Web Workers, about 6.5 s to the first result in headless Chromium.
-- Findings can be copied as a link, downloaded as CSV (every row marked simulated) and printed as a report. A link such as `#/monitor?finding=R2-1` opens the map on that finding.
+- Findings can be copied as a link, downloaded as CSV (every row marked simulated) or as a PDF with a plan of the lease (every page marked simulated), and printed as a report. A link such as `#/monitor?finding=R2-1` opens the map on that finding.
 
 ## Checks
 

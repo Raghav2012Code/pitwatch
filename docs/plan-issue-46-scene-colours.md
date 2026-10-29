@@ -1,5 +1,12 @@
 # Plan: fix #46, scene colours out of the components
 
+**Delivered upstream on 2026-10-27 in `d3be126`**, before this fork got to it, so the plan below is
+kept as the record of how the work was scoped. Upstream took steps 1–3 with different names: one
+`LIGHT` block instead of `SCENE`, a plain `BACKDROP_FALLBACK` constant instead of a
+`backdropColour()` helper, and the existing `OVERLAY.lease` for the home lease line. Step 4 (the
+lint guard that keeps hex out of `.tsx`) was not added, so `npm run lint` still would not catch a
+new literal; the "no literal remains" claim rests on the one-off `git grep` in the upstream log.
+
 Upstream issue `abivan100-stack/pitwatch-3d#46`. AGENTS.md says every colour is a token in
 `@theme` and a component never hardcodes one. Seven literals in the two 3D scene files break that.
 This plan removes them without changing a single pixel: every value is copied verbatim, so the
