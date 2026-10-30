@@ -38,7 +38,7 @@ export function Header({ route }: { route: DashboardRoute }) {
 
       <div className="min-w-0 leading-tight">
         <h1 className="cond truncate text-[20px] font-bold text-ink">{title}</h1>
-        <p className="hidden truncate text-[12.5px] text-ink-faint sm:block">{subtitle}</p>
+        <p className="hidden truncate text-[12.5px] text-ink-faint lg:block">{subtitle}</p>
       </div>
 
       <div className="ml-auto flex items-center gap-2.5">

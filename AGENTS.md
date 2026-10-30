@@ -50,6 +50,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-10-30: header chip polish
+
+- The dashboard header's right cluster read as two unrelated islands: the status chip and the SIMULATED DATA stamp had different heights, paddings, borders and a loud diagonal-hatch fill on the stamp. The stamp loses the hatch; it is now a flat chip like the status chip (warn tint at 5% background, 38% border, same padding and line-height), and the status chip gains the same 3% ink background so the two read as one row of matched chips. Both still say exactly what they said.
+- At 768 px the map subtitle truncated mid-word ("…switch survey and ins…"). The subtitle is now hidden below `lg` instead of `sm`, so tablet shows the title alone rather than a cheap ellipsis; 1440 px still shows it.
+- Visual check at 1440 and 768 px on Overview and the 3D map: chips same height, no truncation. No markup, store or engine change; `src/ui/shell/Header.tsx` changes one Tailwind class, `src/index.css` the two chip rules.
+- Checks: `npm run verify` (174 unit tests in 22 files) and `npm run test:e2e` (75 checks) pass.
+
 ### 2026-10-29: the palette rule is lint, not habit (ticket #32, closes #46's last step)
 
 - `eslint.config.js` now rejects a colour written in code: `#rgb`, `#rgba`, `#rrggbb`, `#rrggbbaa`, and static `rgb(`/`rgba(`/`hsl(`/`hsla(` strings. The message names `src/scene/palette.ts` and the `@theme` tokens, and says to add the value to the palette and import it.

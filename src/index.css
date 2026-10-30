@@ -143,15 +143,12 @@ body {
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.06em;
+    line-height: 1.4;
     color: var(--color-warn);
-    padding: 5px 10px;
+    padding: 4px 10px;
     border-radius: 3px;
-    border: 1px solid color-mix(in srgb, var(--color-warn) 55%, transparent);
-    background: repeating-linear-gradient(
-      -45deg,
-      color-mix(in srgb, var(--color-warn) 14%, transparent) 0 5px,
-      transparent 5px 10px
-    );
+    border: 1px solid color-mix(in srgb, var(--color-warn) 38%, transparent);
+    background: color-mix(in srgb, var(--color-warn) 5%, var(--color-panel));
   }
 
   /* The landing page's quiet note that the values are simulated. */
@@ -174,9 +171,11 @@ body {
     gap: 8px;
     padding: 4px 12px 4px 10px;
     font-size: 12.5px;
+    line-height: 1.4;
     color: var(--color-ink-dim);
     border-radius: 3px;
     border: 1px solid var(--color-line);
+    background: color-mix(in srgb, var(--color-ink) 3%, var(--color-panel));
   }
 
   .status-led {
