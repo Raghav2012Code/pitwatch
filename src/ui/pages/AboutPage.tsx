@@ -1,8 +1,10 @@
 import type { Provenance } from '../../domain/types'
 import { COMPLIANCE_CONFIG } from '../../compliance/config'
-import { ROUTE_HREF } from '../route'
+import { useAppStore } from '../../state/store'
+import { ROUTE_HREF, navigate } from '../route'
 import { Page } from '../shell/AppShell'
 import { ProvenanceTag } from '../ProvenanceTag'
+import { resetTour } from '../tourMemory'
 
 const PIPELINE = [
   ['Survey twice', 'Two drone surveys of the same ground, with their measurement error (σ).'],
@@ -62,6 +64,12 @@ const SHORTCUTS: [string, string][] = [
 
 /** What is simulated, what each kind of data can show, and how to read this app's labels. */
 export function AboutPage() {
+  const replayTour = () => {
+    resetTour()
+    useAppStore.getState().startTour()
+    navigate('monitor')
+  }
+
   return (
     <Page>
       <section aria-labelledby="pipeline" className="rule-section">
@@ -93,6 +101,20 @@ export function AboutPage() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section aria-labelledby="tour" className="rule-section mt-12">
+        <h2 id="tour" className="section-title">
+          The guided tour
+        </h2>
+        <p className="mt-3 max-w-[44rem] text-[15px] leading-7 text-ink-dim">
+          The first-visit tour on the 3D map walks through reading a point, measuring between two
+          points and opening a finding&apos;s evidence. It appears once per browser; replay it
+          whenever you like.
+        </p>
+        <button type="button" className="btn mt-3" onClick={replayTour}>
+          Replay the tour
+        </button>
       </section>
 
       <div className="mt-12 grid gap-x-14 gap-y-12 xl:grid-cols-2">

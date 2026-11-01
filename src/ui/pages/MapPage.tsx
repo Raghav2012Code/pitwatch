@@ -5,6 +5,7 @@ import { toggleFullscreen } from '../fullscreen'
 import { LayerPanel } from '../LayerPanel'
 import { SidePanel } from '../SidePanel'
 import { findingFromHash, ROUTE_HREF } from '../route'
+import { Tour } from '../Tour'
 import { Viewport } from '../Viewport'
 
 /** Full-bleed 3D map with the layer card and the details panel floating above it. */
@@ -101,6 +102,7 @@ export function MapPage() {
       <Viewport />
       <LayerPanel />
       <SidePanel />
+      <Tour />
     </div>
   )
 }

@@ -100,3 +100,13 @@ test('the phone monitor and its open drawer are clean', async ({ page }) => {
 
   expect(await seriousViolations(page)).toEqual([])
 })
+
+test('the map with the first-visit tour is clean at 1440 and 390 px', async ({ page }) => {
+  test.setTimeout(120_000)
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 900 })
+    await page.goto('/#/monitor')
+    await expect(page.getByRole('dialog')).toBeVisible({ timeout: 60_000 })
+    expect(await seriousViolations(page), `tour at ${width}px`).toEqual([])
+  }
+})

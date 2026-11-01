@@ -50,6 +50,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-11-01: first-visit tour on the 3D map (ticket #36)
+
+- Three steps, shown once per browser after the surveys load: read a point (Inspect), measure between two points (Measure), open a finding's evidence (a pin or Details → Findings). Each names the control it describes; the tour never moves the tools or the panels, so dismissing it leaves the map exactly as it was.
+- It is non-modal: a small card above the timeline whose body lets pointer events through, so the model and its pins stay clickable underneath. It is remembered in `localStorage` (`pitwatch.tour.v1`) when finished or skipped; About the data gains a **Replay the tour** button that clears the memory, opens the tour and lands on the map.
+- Keyboard and screen reader: the card is a named, non-modal `dialog`, takes focus when it opens, Tab reaches Skip / Back / Next, Enter advances and Escape dismisses without falling through to the map's clear-picks shortcut; focus returns to where it came from (or the page main when that element is gone). No animation is added, so reduced motion needs no special case. axe scans with the tour open at 1440 and 390 px are clean.
+- Tests: new `e2e/tour.spec.ts` (three-step keyboard flow, persistence across reload, Escape dismissal leaving panels/tools unchanged, replay from About) and a stored-memory unit test covering a denied or missing `localStorage`. README's "no first-visit tour" line replaced.
+- Checks: `npm run verify` (188 unit tests in 25 files) and `npm run test:e2e` (80 checks) pass.
+
 ### 2026-11-01: the map card folds at tablet widths (ticket #35)
 
 - Below 1024 px the floating Map card used to sit over the western part of the 3D block, leaving the model the leftover stage. It now starts folded the same way the details panel does: the stage takes the full width, and the header's **Map panel** button (or `[`) brings the card back with its layers, key and exaggeration. `layersUserSet` records a deliberate choice, so opening the card and resizing does not fold it again.

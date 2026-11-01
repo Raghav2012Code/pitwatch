@@ -36,6 +36,15 @@ describe('app store', () => {
     expect([s().layersHidden, s().layersUserSet]).toEqual([true, false])
     s().setLayersHidden(false)
   })
+
+  it('opens and closes the first-visit tour', () => {
+    const s = useAppStore.getState
+    expect(s().tourOpen).toBe(false)
+    s().startTour()
+    expect(s().tourOpen).toBe(true)
+    s().endTour()
+    expect(s().tourOpen).toBe(false)
+  })
 })
 
 describe('view settings', () => {

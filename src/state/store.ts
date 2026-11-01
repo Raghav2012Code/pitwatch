@@ -30,6 +30,8 @@ interface AppState {
   layersUserSet: boolean
   /** True once the details panel's visibility was decided on purpose, so the width rule stops. */
   detailsUserSet: boolean
+  /** The first-visit tour is showing on the map. */
+  tourOpen: boolean
   layers: Record<LayerId, boolean>
   exaggeration: number
   tool: Tool
@@ -54,6 +56,9 @@ interface AppState {
   setLayersHidden: (hidden: boolean) => void
   /** Sets the details panel's visibility without claiming the visitor asked for it. */
   setDetailsHidden: (hidden: boolean) => void
+  /** Opens the first-visit tour (also used by the replay control on About the data). */
+  startTour: () => void
+  endTour: () => void
   toggleLayer: (id: LayerId) => void
   setExaggeration: (v: number) => void
   requestView: (kind: ViewRequest) => void
@@ -77,6 +82,7 @@ export const useAppStore = create<AppState>((set) => ({
   detailsHidden: false,
   layersUserSet: false,
   detailsUserSet: false,
+  tourOpen: false,
   // Natural look by default: aerial image, no tint or contours; the lease line and the
   // engine's findings are on because they are what the monitor is for.
   layers: {
@@ -106,6 +112,8 @@ export const useAppStore = create<AppState>((set) => ({
   toggleDetails: () => set((s) => ({ detailsHidden: !s.detailsHidden, detailsUserSet: true })),
   setLayersHidden: (layersHidden) => set({ layersHidden }),
   setDetailsHidden: (detailsHidden) => set({ detailsHidden }),
+  startTour: () => set({ tourOpen: true }),
+  endTour: () => set({ tourOpen: false }),
   toggleLayer: (id) => set((s) => ({ layers: { ...s.layers, [id]: !s.layers[id] } })),
   setExaggeration: (v) =>
     set({ exaggeration: Math.min(EXAGGERATION.max, Math.max(EXAGGERATION.min, v)) }),
