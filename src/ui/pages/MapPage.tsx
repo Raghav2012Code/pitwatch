@@ -11,6 +11,7 @@ import { Viewport } from '../Viewport'
 export function MapPage() {
   const layersHidden = useAppStore((s) => s.layersHidden)
   const detailsHidden = useAppStore((s) => s.detailsHidden)
+  const layersUserSet = useAppStore((s) => s.layersUserSet)
   const detailsUserSet = useAppStore((s) => s.detailsUserSet)
   const selectedFinding = useAppStore((s) => s.selectedFinding)
   const ready = useTerrain((s) => s.status === 'ready')
@@ -47,6 +48,15 @@ export function MapPage() {
       useAppStore.getState().setDetailsHidden(true)
     }
   }, [detailsUserSet])
+
+  // Below `lg` the map card leaves the model too little room (at 800 px it floats over the
+  // western part of the block), so it starts folded like the details panel. The header's Map
+  // panel button — or `[` — brings it back, and a visitor's own choice stops this rule.
+  useEffect(() => {
+    if (!layersUserSet && window.innerWidth < 1024) {
+      useAppStore.getState().setLayersHidden(true)
+    }
+  }, [layersUserSet])
 
   // [ and ] collapse the side panels, F toggles full screen, R resets the view.
   // Ignored while typing.

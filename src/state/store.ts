@@ -26,6 +26,8 @@ interface AppState {
   /** Desktop only: panels collapsed to give the map more room. */
   layersHidden: boolean
   detailsHidden: boolean
+  /** True once the map card's visibility was decided on purpose, so the width rule stops. */
+  layersUserSet: boolean
   /** True once the details panel's visibility was decided on purpose, so the width rule stops. */
   detailsUserSet: boolean
   layers: Record<LayerId, boolean>
@@ -48,6 +50,8 @@ interface AppState {
   setMenuOpen: (open: boolean) => void
   toggleLayers: () => void
   toggleDetails: () => void
+  /** Sets the map card's visibility without claiming the visitor asked for it. */
+  setLayersHidden: (hidden: boolean) => void
   /** Sets the details panel's visibility without claiming the visitor asked for it. */
   setDetailsHidden: (hidden: boolean) => void
   toggleLayer: (id: LayerId) => void
@@ -71,6 +75,7 @@ export const useAppStore = create<AppState>((set) => ({
   menuOpen: false,
   layersHidden: false,
   detailsHidden: false,
+  layersUserSet: false,
   detailsUserSet: false,
   // Natural look by default: aerial image, no tint or contours; the lease line and the
   // engine's findings are on because they are what the monitor is for.
@@ -97,8 +102,9 @@ export const useAppStore = create<AppState>((set) => ({
   setDrawerOpen: (drawerOpen) => set({ drawerOpen }),
   setSidebar: (sidebar) => set({ sidebar }),
   setMenuOpen: (menuOpen) => set({ menuOpen }),
-  toggleLayers: () => set((s) => ({ layersHidden: !s.layersHidden })),
+  toggleLayers: () => set((s) => ({ layersHidden: !s.layersHidden, layersUserSet: true })),
   toggleDetails: () => set((s) => ({ detailsHidden: !s.detailsHidden, detailsUserSet: true })),
+  setLayersHidden: (layersHidden) => set({ layersHidden }),
   setDetailsHidden: (detailsHidden) => set({ detailsHidden }),
   toggleLayer: (id) => set((s) => ({ layers: { ...s.layers, [id]: !s.layers[id] } })),
   setExaggeration: (v) =>

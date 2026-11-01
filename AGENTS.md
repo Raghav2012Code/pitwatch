@@ -50,6 +50,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-11-01: the map card folds at tablet widths (ticket #35)
+
+- Below 1024 px the floating Map card used to sit over the western part of the 3D block, leaving the model the leftover stage. It now starts folded the same way the details panel does: the stage takes the full width, and the header's **Map panel** button (or `[`) brings the card back with its layers, key and exaggeration. `layersUserSet` records a deliberate choice, so opening the card and resizing does not fold it again.
+- Measured at 800 px: the stage grows from 496 px (card open) to 736 px (folded); the card starts hidden, and the header control is visible at that width. At 1100 and 1440 px nothing changes.
+- Tests: new browser check at 800 px (folded on arrival, stage width gain ≥ 200 px, switches and slider reachable after one press, folding restores the width, a resize keeps the visitor's choice); the 800 px row of the mobile-layer check now opens the card first. Store test covers `layersUserSet` and `setLayersHidden`. README's 800 px sentence replaced.
+- Checks: `npm run verify` (185 unit tests) and `npm run test:e2e` (76 checks) pass.
+
 ### 2026-11-01: a long finding's text paginates (ticket #34)
 
 - The report used to break pages per finding block: a block taller than the room left either jumped to the next page or overflowed the estimate. `paginateBlock` now plans line-aware pages: heading and figures stay with the first lines, the remainder continues on later pages, and a block taller than a page spreads across as many as it needs. The helper is pure and unit-tested for a block that fits, one that must move whole, one that splits and one taller than a page (5 new tests; 184 total).

@@ -21,11 +21,20 @@ describe('app store', () => {
 
   it('collapses and restores each side panel independently', () => {
     const s = useAppStore.getState
+    expect(s().layersUserSet).toBe(false)
     s().toggleLayers()
-    expect([s().layersHidden, s().detailsHidden]).toEqual([true, false])
+    expect([s().layersHidden, s().detailsHidden, s().layersUserSet]).toEqual([true, false, true])
     s().toggleDetails()
     s().toggleLayers()
     expect([s().layersHidden, s().detailsHidden]).toEqual([false, true])
+  })
+
+  it('sets the map card visibility without claiming the visitor chose it', () => {
+    const s = useAppStore.getState
+    useAppStore.setState({ layersHidden: false, layersUserSet: false })
+    s().setLayersHidden(true)
+    expect([s().layersHidden, s().layersUserSet]).toEqual([true, false])
+    s().setLayersHidden(false)
   })
 })
 

@@ -185,7 +185,7 @@ Vite, React 19, TypeScript (strict), three.js with @react-three/fiber and drei, 
 
 - This is a frontend demonstration using a fictional permit and synthetic surveys. There is no backend, real survey ingestion or regulatory certification.
 - Vertical survey uncertainty is modelled; horizontal position error is not (ticket #37). A coordinate outside the survey grid can still be inspected for position and lease status, but has no elevation or change reading.
-- Below 1280 px the details panel starts closed so the model keeps the room; the header's Details button or `]` brings it back, and `[` toggles the Map card. At 800 px the Map card still covers part of the model (ticket #35).
+- Below 1280 px the details panel starts closed so the model keeps the room; the header's Details button or `]` brings it back, and `[` toggles the Map card. Below 1024 px the Map card starts folded as well, giving the model the full stage; the header's Map panel button or `[` restores it, and a visitor's choice sticks.
 - There is no first-visit tour (ticket #36). The map explains itself with contextual hints (click or tap to read a point, then A and B to measure), the icon rail labels each icon on hover and keyboard focus, and the landing model carries a "Drag to turn" label.
 
 See the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md) for how the interface work was planned (all of it delivered), [STATUS.md](STATUS.md) for the current handoff, and [AGENTS.md](AGENTS.md) for the detailed update log and contributor workflow.

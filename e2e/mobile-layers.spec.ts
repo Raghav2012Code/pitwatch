@@ -78,8 +78,12 @@ test('no width shows two sets of layer controls', async ({ page }) => {
   await page.goto('/#/monitor')
   await page.getByRole('group', { name: 'Camera view' }).waitFor({ timeout: 60_000 })
 
-  // Tablet: the floating card carries them, the drawer must not.
-  await expect(page.getByRole('navigation', { name: 'Map' })).toBeVisible()
+  // Tablet: the floating card carries them, folded away by default at this width, and the
+  // header's Map panel button brings it back. The drawer must never carry them.
+  const card = page.getByRole('navigation', { name: 'Map' })
+  await expect(card).toBeHidden()
+  await page.getByRole('button', { name: 'Map panel' }).click()
+  await expect(card).toBeVisible()
   await page.getByRole('button', { name: 'Details' }).click()
   const drawer = page.getByRole('complementary', { name: 'Details' })
   await expect(drawer).toBeVisible()

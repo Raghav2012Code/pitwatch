@@ -37,11 +37,15 @@ test('the landing model survives the map Terrain switch', async ({ page }) => {
   await page.goto('/#/monitor')
   const camera = page.getByRole('group', { name: 'Camera view' })
   await expect(camera).toBeVisible({ timeout: 60_000 })
+  // At 800 px the Map card starts folded, so open it before reaching for its switches.
+  await page.getByRole('button', { name: 'Map panel' }).click()
+  const card = page.getByRole('navigation', { name: 'Map' })
+  await expect(card.getByLabel('Vertical exaggeration')).toBeVisible({ timeout: 60_000 })
   // A fixed pose, so only the terrain changes between the two map shots.
   await camera.getByRole('button', { name: 'Top' }).click()
   const withTerrain = await settle(page, '.scene-wrap canvas')
 
-  await page.getByRole('switch', { name: 'Terrain' }).click()
+  await card.getByRole('switch', { name: 'Terrain' }).click()
   const withoutTerrain = await settle(page, '.scene-wrap canvas', 1200)
   // The switch still works, and the probe can tell a hidden terrain from a drawn one.
   expect(relativeChange(withTerrain, withoutTerrain)).toBeGreaterThan(0.2)
