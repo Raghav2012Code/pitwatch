@@ -155,22 +155,61 @@ test('the findings can be downloaded as a PDF that says it is simulated', async 
   expect(bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-')
   expect(bytes.length).toBeGreaterThan(5_000)
 
-  // The built-in font only draws Latin-1, and jsPDF mangles a whole string when one character is
-  // outside it (the engine writes "± … (2σ)"). Read the drawn text back: ASCII only, units spelled.
+  // The report now embeds Noto Sans with Identity-H encoding, so the drawn strings are glyph ids.
+  // Read them back through the document's own /ToUnicode CMaps, the way a PDF reader does.
   const zlib = await import('node:zlib')
   const raw = bytes.toString('latin1')
-  let content = ''
+  const streams: string[] = []
   for (const m of raw.matchAll(/[^d]stream\r?\n/g)) {
     const start = m.index + m[0].length
     const slice = bytes.subarray(start, raw.indexOf('endstream', start))
     try {
-      content += zlib.inflateSync(slice).toString('latin1')
+      const out = zlib.inflateSync(slice).toString('latin1')
+      if (out.includes('BT') || out.includes('beginbfchar')) streams.push(out)
     } catch {
-      content += slice.toString('latin1')
+      const out = slice.toString('latin1')
+      if (out.includes('BT') || out.includes('beginbfchar')) streams.push(out)
     }
   }
-  const drawn = [...content.matchAll(/\((.*?)\)\s*Tj/gs)].map((m) => m[1]!)
+  const cmapText = streams.filter((s) => s.includes('beginbfchar')).join('')
+  const contentText = streams.filter((s) => s.includes('BT')).join('')
+  expect(cmapText.length).toBeGreaterThan(0)
+
+  const glyphs = new Map<string, string>()
+  for (const block of cmapText.matchAll(/beginbfchar([\s\S]*?)endbfchar/g)) {
+    for (const pair of block[1]!.matchAll(/<([0-9a-fA-F]{4})>\s*<([0-9a-fA-F]{4})>/g)) {
+      glyphs.set(pair[1]!.toLowerCase(), String.fromCharCode(Number.parseInt(pair[2]!, 16)))
+    }
+  }
+  expect(glyphs.size).toBeGreaterThan(0)
+
+  const drawn: string[] = []
+  for (const m of contentText.matchAll(/<([0-9a-fA-F]+)>\s*Tj/g)) {
+    const hex = m[1]!
+    let text = ''
+    for (let i = 0; i < hex.length; i += 4) {
+      text += glyphs.get(hex.slice(i, i + 4).toLowerCase()) ?? '\uFFFD'
+    }
+    drawn.push(text)
+  }
   expect(drawn.length).toBeGreaterThan(10)
-  expect(drawn.filter((s) => [...s].some((c) => c.codePointAt(0)! > 0x7e))).toEqual([])
-  expect(drawn.some((s) => s.includes('2 sigma'))).toBe(true)
+
+  // The real glyphs, not the old spelled-out "+/- m2 (2 sigma)".
+  const all = drawn.join(' ')
+  expect(all).toContain('±')
+  expect(all).toContain('m²')
+  expect(all).toContain('m³')
+  expect(all).toContain('(2σ)')
+  expect(all).not.toContain('?')
+  expect(all).not.toContain('sigma')
+  expect(all).not.toContain('\uFFFD')
+
+  // The drawn explanation must equal what the page shows, so one dropped character fails the test.
+  const shown = await page
+    .locator('li.frow', { hasText: 'R1-1' })
+    .locator('details p')
+    .first()
+    .textContent()
+  expect(shown).toBeTruthy()
+  expect(all.replace(/\s+/g, ' ')).toContain(shown!.replace(/\s+/g, ' '))
 })

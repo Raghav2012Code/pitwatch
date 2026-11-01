@@ -1,7 +1,8 @@
 import type { ComplianceFinding, Mine, PermittedLimits, Polygon } from '../domain/types'
-import { pdfSafeText } from '../compliance/report'
+import { pdfText } from '../compliance/pdfCharset'
 import { OVERLAY, PRINT_INK, TONE_COLOR } from '../scene/palette'
 import { RULE_NAMES, toneOf } from './findings'
+import { registerPdfFonts } from './pdfFont'
 
 /** What the PDF describes: the findings on screen and the permit they were checked against. */
 export interface PdfReportInput {
@@ -24,50 +25,51 @@ const FAINT = PRINT_INK.faint
 export async function savePdfReport(input: PdfReportInput): Promise<void> {
   const { jsPDF } = await import('jspdf')
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  await registerPdfFonts(doc)
   const { findings, limits, mine, baselineDate, currentDate } = input
   const inner = PAGE.w - PAGE.margin * 2
 
   doc.setProperties({ title: 'PitWatch 3D findings report (simulated data)' })
   doc.setTextColor(INK)
-  doc.setFont('helvetica', 'bold').setFontSize(20)
+  doc.setFont('NotoSans', 'bold').setFontSize(20)
   doc.text('Findings report', PAGE.margin, 24)
-  doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(FAINT)
+  doc.setFont('NotoSans', 'normal').setFontSize(10).setTextColor(FAINT)
   doc.text(
-    pdfSafeText(
+    pdfText(
       `${mine.name}, ${mine.operator}. Baseline survey ${baselineDate}, current survey ${currentDate}.`,
     ),
     PAGE.margin,
     31,
   )
-  doc.setFont('helvetica', 'bold').setTextColor(INK)
+  doc.setFont('NotoSans', 'bold').setTextColor(INK)
   doc.text('SIMULATED DATA. Not a real survey and not a legal determination.', PAGE.margin, 37)
 
   // Plan of the lease: local metres, east to the right, north up.
   const plan = { x: PAGE.margin, y: 44, size: 100 }
   drawPlan(doc, plan, limits, findings)
-  doc.setFont('helvetica', 'normal').setFontSize(9).setTextColor(FAINT)
+  doc.setFont('NotoSans', 'normal').setFontSize(9).setTextColor(FAINT)
   const key = [
     'Solid line: lease boundary',
     'Dashed: pit zone',
     'Dotted: waste dump zone',
     `${findings.length} finding${findings.length === 1 ? '' : 's'} marked by id`,
   ]
-  key.forEach((line, i) => doc.text(pdfSafeText(line), plan.x + plan.size + 8, plan.y + 8 + i * 6))
+  key.forEach((line, i) => doc.text(pdfText(line), plan.x + plan.size + 8, plan.y + 8 + i * 6))
 
   let y = plan.y + plan.size + 14
   for (const f of findings) {
-    const body = doc.splitTextToSize(pdfSafeText(f.explanation), inner) as string[]
+    const body = doc.splitTextToSize(pdfText(f.explanation), inner) as string[]
     // What the block actually needs: title, figure line, then one line per explanation line.
     const height = 13.4 + body.length * 4.6
     if (y + height > PAGE.h - 16) {
       doc.addPage()
       y = PAGE.margin + 4
     }
-    doc.setFont('helvetica', 'bold').setFontSize(12).setTextColor(INK)
-    doc.text(pdfSafeText(`${f.id}  ${RULE_NAMES[f.ruleId]}`), PAGE.margin, y)
-    doc.setFont('helvetica', 'normal').setFontSize(10).setTextColor(FAINT)
+    doc.setFont('NotoSans', 'bold').setFontSize(12).setTextColor(INK)
+    doc.text(pdfText(`${f.id}  ${RULE_NAMES[f.ruleId]}`), PAGE.margin, y)
+    doc.setFont('NotoSans', 'normal').setFontSize(10).setTextColor(FAINT)
     doc.text(
-      pdfSafeText(
+      pdfText(
         `${f.status}, ${f.severity}. Area ${Math.round(f.areaM2).toLocaleString('en-GB')} m2, volume ${Math.round(f.volumeM3).toLocaleString('en-GB')} m3, max excess ${f.maxExceedance.toFixed(2)} m, centre E ${Math.round(f.centroid.x)} N ${Math.round(f.centroid.y)}.`,
       ),
       PAGE.margin,
@@ -84,7 +86,7 @@ export async function savePdfReport(input: PdfReportInput): Promise<void> {
   const pages = doc.getNumberOfPages()
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p)
-    doc.setFont('helvetica', 'normal').setFontSize(8).setTextColor(FAINT)
+    doc.setFont('NotoSans', 'normal').setFontSize(8).setTextColor(FAINT)
     doc.text(
       `PitWatch 3D. Simulated data, every value is synthetic. Page ${p} of ${pages}.`,
       PAGE.margin,
@@ -134,7 +136,7 @@ function drawPlan(
   limits.dumpZones.forEach((z) => outline(z.polygon, 0.3, [0.4, 1]))
   doc.setLineDashPattern([], 0)
 
-  doc.setFont('helvetica', 'bold').setFontSize(7)
+  doc.setFont('NotoSans', 'bold').setFontSize(7)
   const markers = findings.map((f) => ({ f, x: px(f.centroid.x), y: py(f.centroid.y) }))
   for (const m of markers) {
     doc.setFillColor(TONE_COLOR[toneOf(m.f)] ?? OVERLAY.violation)

@@ -50,6 +50,15 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-11-01: PDF report draws the real symbols (ticket #33)
+
+- The findings PDF no longer spells its symbols out. `±`, `²`, `³` and `(2σ)` print exactly as the screen shows them, and so does an accented name: checked by temporarily renaming the fixture to `Venthar Ridge Ünlüt`, downloading a report and reading the subtitle in Chromium's PDF viewer, then reverting (no fixture change is committed).
+- **Typeface: Noto Sans, not Archivo.** The plan named Archivo, but its character map has no Greek sigma (`U+03A3`/`U+03C3` absent, checked with `fontTools` before writing code), and `(2σ)` is the whole point. Noto Sans (OFL-1.1) covers Latin, Latin Extended-A and Greek. Two subsets ship in `src/assets/fonts/pdf/`: Regular 50,796 B and Bold 50,780 B, built from the variable face at `wdth=100` with `fontTools 4.68.0`, restricted to `charset.txt` (329 characters). `OFL.txt` and `SOURCE.md` (source URL, SHA-256, regeneration commands) sit beside them.
+- **Sanitizer, not silence.** `pdfCharset.ts` holds the same character set at runtime and `pdfText` keeps covered characters, normalises decomposed accents, and turns anything outside the subset into a visible `?` — never mojibake. A unit test compares the constant with `charset.txt`, and another runs the real engine findings through it and expects every explanation unchanged.
+- **Lazy delivery.** The two font files are `?url` assets fetched only on the first **Download PDF**; `pdfFont.ts` caches the base64 per page and registers it with each document (jsPDF instances do not share a VFS), and a failed download clears the cache so a retry works. The app's first-screen JS grew by 1,108 B (the font URLs and loader); the report's own download adds 101,576 B of fonts. The PDF itself went from 19,813 B to 49,396 B, still one page with all five findings.
+- **The browser check now reads real text.** Identity-H draws glyph ids, so `e2e/dashboard.spec.ts` inflates the document, parses its `/ToUnicode` CMaps and decodes every `Tj` string. It asserts `±`, `m²`, `m³`, `(2σ)`, no `?` and no `sigma`, and that the decoded R1-1 explanation equals the text the page shows. Proven first: making `pdfText` substitute `σ` fails the check at `(2σ)`.
+- `report.ts` loses `PDF_ASCII`/`pdfSafeText`; the CSV and the screen are untouched. Checks: `npm run verify` (179 unit tests in 24 files), `npm run test:e2e` (75 checks), and the rendered report inspected in the browser.
+
 ### 2026-11-01: site-plan badges return to their evidence
 
 - **Root cause found by measuring the DOM, not by eye:** `placePins` converted pixel offsets back with `top − y·upp`, which yields a _world_ y, but the component drew it as SVG y. Every badge was mirrored vertically about the middle of the plan, so R3-1's sat at the north lease corner while its stray heaps are south-east, and R1-3's sat over the south pit while its scrape is on the north edge. One-line fix (`y: y * unitsPerPixel`); R1-2 keeps a 70 px leader, the rest sit on their centroids.
