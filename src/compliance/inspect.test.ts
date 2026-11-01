@@ -1,9 +1,9 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { SyntheticTerrainProvider } from '../data/SyntheticTerrainProvider'
-import type { ComplianceFinding, PermittedLimits, TerrainSurvey } from '../domain/types'
+import type { ComplianceFinding, PermittedLimits, Polygon, TerrainSurvey } from '../domain/types'
 import { centerOfIndex } from '../geo/grid'
 import { evaluate } from './engine'
-import { readPoint } from './inspect'
+import { leaseVerdict, readPoint } from './inspect'
 import { combinedSigma } from './uncertainty'
 
 let baseline: TerrainSurvey
@@ -57,6 +57,37 @@ describe('point reading', () => {
     const r = readPoint({ x: -50, y: 100 }, baseline, current, limits, [])
     expect([r.elevation, r.dh, r.slopeDeg]).toEqual([null, null, null])
     expect(r.findingIds).toEqual([])
+  })
+
+  it('quotes the survey horizontal error and refuses a side it cannot confirm', () => {
+    const edge = limits.leaseBoundary[0]!
+    const onEdge = readPoint(edge, baseline, current, limits, [])
+    expect(onEdge.horizontalSigma).toBe(current.horizontalUncertainty)
+    expect(onEdge.leaseSide).toBe('unconfirmed')
+    const clearlyInside = readPoint({ x: 400, y: 400 }, baseline, current, limits, [])
+    expect(clearlyInside.leaseSide).toBe('inside')
+    const clearlyOutside = readPoint({ x: 2300, y: 400 }, baseline, current, limits, [])
+    expect(clearlyOutside.leaseSide).toBe('outside')
+  })
+})
+
+describe('lease verdict', () => {
+  const square: Polygon = [
+    { x: 0, y: 0 },
+    { x: 100, y: 0 },
+    { x: 100, y: 100 },
+    { x: 0, y: 100 },
+  ]
+
+  it('confirms a side away from the boundary', () => {
+    expect(leaseVerdict({ x: 50, y: 50 }, square, 0.1)).toBe('inside')
+    expect(leaseVerdict({ x: 150, y: 50 }, square, 0.1)).toBe('outside')
+  })
+
+  it('is unconfirmed while the error band reaches the boundary, either side', () => {
+    expect(leaseVerdict({ x: 100.05, y: 50 }, square, 0.1)).toBe('unconfirmed')
+    expect(leaseVerdict({ x: 99.95, y: 50 }, square, 0.1)).toBe('unconfirmed')
+    expect(leaseVerdict({ x: 100, y: 50 }, square, 0.1)).toBe('unconfirmed')
   })
 })
 

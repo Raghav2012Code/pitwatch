@@ -50,6 +50,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-11-01: point reading models horizontal survey error (ticket #37)
+
+- `TerrainSurvey` carries `horizontalUncertainty` (0.1 m, 1σ per plan axis; simulated, set by the provider beside the 0.05 m vertical one). The point reading returns it and a `leaseSide` of `inside`, `outside` or `unconfirmed`; `leaseVerdict` is pure and says `unconfirmed` whenever the boundary is within the band, so a coordinate a few centimetres either side no longer claims a side.
+- The Inspector quotes it where it belongs: the Position row reads `E … m, N … m ± 0.10 m`, the Lease row repeats the ± (or says "Side cannot be confirmed: … m from the boundary, inside the ±0.10 m horizontal error"), and a note names which figures depend on the horizontal reading and which on the vertical one. Measurement rows now carry their own ± — distance and slope distance from the two endpoints' horizontal error, elevation change from the vertical — and the footer says which is which; the old "horizontal position error is not modelled" text is gone.
+- Tests: unit cases for the straddle rule (clearly inside, clearly outside, on and near the boundary), a reading test for the uncertainty and the unconfirmed side, and a browser check that types a lease vertex (unconfirmed) and a point 150 m outside (Outside, ±0.10 m). The compliance snapshot is untouched: planted findings keep their ids, rules, statuses and areas.
+- README and STATUS now say what is modelled instead of what is not, list no open tickets, and keep the honest limit that the band is not used to shift the derived grid. Checks: `npm run verify` (191 unit tests in 25 files) and `npm run test:e2e` (81 checks) pass.
+
 ### 2026-11-01: first-visit tour on the 3D map (ticket #36)
 
 - Three steps, shown once per browser after the surveys load: read a point (Inspect), measure between two points (Measure), open a finding's evidence (a pin or Details → Findings). Each names the control it describes; the tour never moves the tools or the panels, so dismissing it leaves the map exactly as it was.

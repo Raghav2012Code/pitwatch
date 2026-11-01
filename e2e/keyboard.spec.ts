@@ -81,6 +81,32 @@ test('typed coordinates set measure A and B and produce a distance', async ({ pa
   // A complete measurement now renders the rows the inspector shows after two clicks.
   await expect(page.locator('#details-tabpanel dt', { hasText: 'Horizontal' })).toBeVisible()
   await expect(page.locator('#details-tabpanel dt', { hasText: 'Average grade' })).toBeVisible()
+  // The distance carries the horizontal error of its two endpoints, not the vertical one.
+  await expect(
+    page.locator('#details-tabpanel dd').filter({ hasText: '200.0 m ± 0.14 m' }),
+  ).toBeVisible()
+})
+
+test('a point reading quotes horizontal error and refuses an unconfirmable side', async ({
+  page,
+}) => {
+  await openMonitor(page)
+  await openInspector(page)
+
+  // On a lease vertex: the horizontal band reaches the boundary, so no side can be claimed.
+  await enterCoordinate(page, '1640', '240')
+  await expect(
+    page.locator('#details-tabpanel dd').filter({ hasText: 'E 1,640 m, N 240 m ± 0.10 m' }),
+  ).toBeVisible()
+  await expect(
+    page.locator('#details-tabpanel dd').filter({ hasText: 'Side cannot be confirmed' }),
+  ).toBeVisible()
+
+  // Away from the boundary the same reading does claim a side, with its horizontal ±.
+  await enterCoordinate(page, '1800', '500')
+  await expect(page.locator('#details-tabpanel dd').filter({ hasText: 'Outside, ' })).toContainText(
+    '±0.10 m',
+  )
 })
 
 test('a coordinate outside the grid is applied and reported honestly', async ({ page }) => {

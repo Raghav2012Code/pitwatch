@@ -81,6 +81,7 @@ describe('synthetic terrain provider', async () => {
     expect(current.grid).toEqual(GRID)
     expect((await provider.listSurveys()).map((s) => s.id)).toEqual(['baseline', 'current'])
     expect(baseline.verticalUncertainty).toBeGreaterThan(0)
+    expect(baseline.horizontalUncertainty).toBeGreaterThan(0)
     expect(baseline.provenance).toBe('simulated')
   })
 

@@ -289,6 +289,12 @@ export const ROADS: readonly (readonly [number, number][])[] = [
 ]
 
 export const SURVEY_SIGMA_M = { baseline: 0.05, current: 0.05 } as const
+/**
+ * Horizontal position uncertainty of each survey, metres (1σ, each plan axis). Simulated like the
+ * vertical one: ground-controlled drone photogrammetry is usually a little worse in plan than in
+ * height, and this is what makes a point next to the lease line honestly ambiguous.
+ */
+export const SURVEY_HORIZONTAL_SIGMA_M = 0.1
 
 export const LIMITS: PermittedLimits = {
   leaseBoundary: LEASE,

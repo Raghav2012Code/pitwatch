@@ -98,6 +98,8 @@ export interface TerrainSurvey extends SurveyEpochInfo {
   elevations: Float32Array
   /** 1σ vertical uncertainty of this survey, metres. */
   verticalUncertainty: number
+  /** 1σ horizontal position uncertainty of this survey, metres, in each plan axis. */
+  horizontalUncertainty: number
   orthophoto?: Orthophoto
 }
 

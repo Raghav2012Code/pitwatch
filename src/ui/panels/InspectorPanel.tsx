@@ -62,7 +62,11 @@ function Point() {
   return (
     <Section title="Selected point" provenance="derived">
       <dl>
-        <Row label="Position" value={`E ${n(p.x)} m, N ${n(p.y)} m`} mono />
+        <Row
+          label="Position"
+          value={`E ${n(p.x)} m, N ${n(p.y)} m ± ${n(r.horizontalSigma, 2)} m`}
+          mono
+        />
         <Row label="Lat, lon" value={`${formatLat(ll.lat)}, ${formatLon(ll.lon)}`} mono />
         <Row
           label="Elevation"
@@ -95,10 +99,19 @@ function Point() {
           r.change === 'none' &&
           `No significant change (threshold ±${n(limit, 2)} m).`}
       </p>
+      <p className="mt-1 text-[12px] leading-5 text-ink-faint">
+        Position is the survey&apos;s plan coordinate ±{n(r.horizontalSigma, 2)} m (1σ, simulated
+        survey); the lease side and distance depend on it. Elevation, change and slope carry the
+        vertical ±.
+      </p>
       <dl className="mt-2 border-t border-line pt-2">
         <Row
           label="Lease"
-          value={`${r.insideLease ? 'Inside' : 'Outside'}, ${n(r.leaseDistance)} m from the boundary${r.inBuffer ? ', in the safety buffer' : ''}`}
+          value={
+            r.leaseSide === 'unconfirmed'
+              ? `Side cannot be confirmed: ${n(r.leaseDistance)} m from the boundary, inside the ±${n(r.horizontalSigma, 2)} m horizontal error`
+              : `${r.leaseSide === 'inside' ? 'Inside' : 'Outside'}, ${n(r.leaseDistance)} m from the boundary ±${n(r.horizontalSigma, 2)} m${r.inBuffer ? ', in the safety buffer' : ''}`
+          }
         />
         {r.pit && (
           <Row
@@ -181,7 +194,10 @@ function Measurement() {
   )
   if (!current) return null
   const sigma = current.verticalUncertainty
+  const horizontal = current.horizontalUncertainty
   const dzSigma = Math.SQRT2 * sigma // two independent point readings
+  const distanceSigma = Math.SQRT2 * horizontal
+  const slopeSigma = Math.hypot(distanceSigma, dzSigma)
 
   return (
     <Section title="Measurement" provenance="derived">
@@ -194,8 +210,16 @@ function Measurement() {
       ) : (
         <>
           <dl>
-            <Row label="Horizontal" value={`${n(m.horizontalDistance, 1)} m`} mono />
-            <Row label="Slope distance" value={`${n(m.slopeDistance, 1)} m`} mono />
+            <Row
+              label="Horizontal"
+              value={`${n(m.horizontalDistance, 1)} m ± ${n(distanceSigma, 2)} m`}
+              mono
+            />
+            <Row
+              label="Slope distance"
+              value={`${n(m.slopeDistance, 1)} m ± ${n(slopeSigma, 2)} m`}
+              mono
+            />
             <Row label="Elevation change" value={`${signed(m.dz)} ± ${n(dzSigma, 2)} m`} mono />
             <Row
               label="Average grade"
@@ -222,8 +246,8 @@ function Measurement() {
         </>
       )}
       <p className="mt-2 text-[11.5px] leading-4 text-ink-faint">
-        Measured on the current survey. Elevations carry the survey&apos;s vertical uncertainty;
-        horizontal position error is not modelled.
+        Measured on the current survey. Distances carry the horizontal ±{n(horizontal, 2)} m per
+        endpoint; elevation change carries the vertical ±{n(sigma, 2)} m. The grade combines both.
       </p>
       <button
         type="button"

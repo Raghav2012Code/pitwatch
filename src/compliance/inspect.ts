@@ -1,4 +1,10 @@
-import type { ComplianceFinding, PermittedLimits, TerrainSurvey, Vec2 } from '../domain/types'
+import type {
+  ComplianceFinding,
+  PermittedLimits,
+  Polygon,
+  TerrainSurvey,
+  Vec2,
+} from '../domain/types'
 import { cellAt, indexOf, sampleBilinear } from '../geo/grid'
 import { distanceToBoundary, pointInPolygon } from '../geo/polygon'
 import { changeThreshold } from './change'
@@ -42,15 +48,32 @@ export interface PointReading {
   change: 'excavated' | 'filled' | 'none'
   /** Slope of the current surface, degrees. */
   slopeDeg: number | null
+  /** Which side of the lease the point is on, or unconfirmed when the error band straddles it. */
+  leaseSide: LeaseVerdict
   insideLease: boolean
   /** Distance to the lease boundary, metres (either side). */
   leaseDistance: number
+  /** 1σ horizontal position uncertainty of the current survey, metres. */
+  horizontalSigma: number
   /** Inside the lease but within the safety buffer. */
   inBuffer: boolean
   /** Inside a pit zone: its approved floor and how far the surface sits above it (m). */
   pit: { floor: number; above: number | null } | null
   /** Findings whose cells include the cell under the point. */
   findingIds: string[]
+}
+
+export type LeaseVerdict = 'inside' | 'outside' | 'unconfirmed'
+
+/**
+ * The lease side a point reading can honestly claim. A survey places the point within its
+ * horizontal uncertainty, so when that band reaches the boundary the point may be on either
+ * side and the verdict is `unconfirmed` rather than whichever side the coordinate happens to
+ * fall on. Pure so the three cases are testable without a survey.
+ */
+export function leaseVerdict(p: Vec2, boundary: Polygon, horizontalSigma: number): LeaseVerdict {
+  if (distanceToBoundary(p, boundary) <= horizontalSigma) return 'unconfirmed'
+  return pointInPolygon(p, boundary) ? 'inside' : 'outside'
 }
 
 /** Reads the surveys, permit and findings at a plan position. */
@@ -80,6 +103,7 @@ export function readPoint(
 
   const insideLease = pointInPolygon(p, limits.leaseBoundary)
   const leaseDistance = distanceToBoundary(p, limits.leaseBoundary)
+  const horizontalSigma = current.horizontalUncertainty
   // Overlapping zones: report the zone that governs this point, the same rule the depth rule
   // uses (deepest below its own floor), rather than whichever happens to be first in the list.
   const zone = governingPitZone(limits.pitZones, [{ p, h: elevation ?? NaN }])
@@ -95,8 +119,10 @@ export function readPoint(
     dhSigma,
     change: dh === null ? 'none' : dh < -limit ? 'excavated' : dh > limit ? 'filled' : 'none',
     slopeDeg,
+    leaseSide: leaseVerdict(p, limits.leaseBoundary, horizontalSigma),
     insideLease,
     leaseDistance,
+    horizontalSigma,
     inBuffer: insideLease && leaseDistance < limits.safetyBufferMetres,
     pit: zone
       ? {

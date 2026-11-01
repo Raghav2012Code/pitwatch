@@ -29,7 +29,7 @@ PitWatch supports risk-based inspection planning. It does not replace a site vis
   - On phones the details drawer opens on the findings, with the layer switches and vertical exaggeration under a Map layers disclosure below them. On larger screens, the Map card holds these controls; its key can be folded to leave more room.
 - **Compliance engine** (`src/compliance/`): change detection, rules R1–R3, clustering into findings, severity and plain-English explanations. All of it is pure TypeScript and unit-tested.
 
-The original M1–M8 milestones are complete, and so is every item on the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md): it is kept as the record of how that work was planned, not as a list of open work. The palette lint guard (#32) shipped on 2026-10-29. Five follow-up tickets remain open in this repo, each `ready-for-agent`: #33 the report's real symbols, #34 its page splitting (blocked by #33), #35 the map card at 800 px, #36 a first-visit tour, #37 horizontal survey error on a point reading. The parent it tracks has none.
+The original M1-M8 milestones are complete, and so is every item on the [competition improvement plan](docs/competition-ui-ux-improvement-plan.md): it is kept as the record of how that work was planned, not as a list of open work. All five follow-up tickets (#33–#37) were delivered on 2026-11-01, and the palette lint guard (#32) shipped on 2026-10-29. The parent it tracks has none open.
 
 ## Try the inspection workflow
 
@@ -184,7 +184,7 @@ Vite, React 19, TypeScript (strict), three.js with @react-three/fiber and drei, 
 ## Limits and follow-up work
 
 - This is a frontend demonstration using a fictional permit and synthetic surveys. There is no backend, real survey ingestion or regulatory certification.
-- Vertical survey uncertainty is modelled; horizontal position error is not (ticket #37). A coordinate outside the survey grid can still be inspected for position and lease status, but has no elevation or change reading.
+- Survey uncertainty is modelled in both directions: elevations and the change carry the vertical ± (0.05 m 1σ), and a point reading carries the horizontal ± (0.10 m 1σ) on its position. Where that horizontal band reaches the lease boundary the Inspector says the side cannot be confirmed instead of claiming one. A coordinate outside the survey grid can still be inspected for position and lease status, but has no elevation or change reading.
 - Below 1280 px the details panel starts closed so the model keeps the room; the header's Details button or `]` brings it back, and `[` toggles the Map card. Below 1024 px the Map card starts folded as well, giving the model the full stage; the header's Map panel button or `[` restores it, and a visitor's choice sticks.
 - The 3D map opens a first-visit tour once per browser: three steps on reading a point, measuring A→B and opening a finding's evidence. It is non-modal (map clicks pass through), dismissed with Escape or Skip, and replayed from About the data. The map also explains itself with contextual hints (click or tap to read a point, then A and B to measure), the icon rail labels each icon on hover and keyboard focus, and the landing model carries a "Drag to turn" label.
 

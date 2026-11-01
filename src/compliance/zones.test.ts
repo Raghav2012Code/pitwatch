@@ -55,6 +55,7 @@ function survey(): TerrainSurvey {
     grid: G,
     elevations: new Float32Array(16).fill(100),
     verticalUncertainty: 0.05,
+    horizontalUncertainty: 0.1,
   }
 }
 

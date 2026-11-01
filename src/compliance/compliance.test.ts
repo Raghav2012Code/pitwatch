@@ -63,6 +63,7 @@ function survey(id: 'baseline' | 'current', edits: Record<number, number> = {}):
     grid: G,
     elevations,
     verticalUncertainty: SIGMA,
+    horizontalUncertainty: 0.1,
   }
 }
 

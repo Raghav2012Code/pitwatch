@@ -6,7 +6,14 @@ import type {
   TerrainSurvey,
 } from '../domain/types'
 import { SURVEY_EPOCHS } from './fixtures/mine'
-import { GRID, LIMITS, MINE, SEED, SURVEY_SIGMA_M } from './fixtures/scenario'
+import {
+  GRID,
+  LIMITS,
+  MINE,
+  SEED,
+  SURVEY_HORIZONTAL_SIGMA_M,
+  SURVEY_SIGMA_M,
+} from './fixtures/scenario'
 import { buildOrthophoto } from './orthophoto'
 import { buildSurface, naturalField } from './synthetic'
 
@@ -47,6 +54,7 @@ export class SyntheticTerrainProvider implements TerrainProvider {
       grid: GRID,
       elevations,
       verticalUncertainty: sigma,
+      horizontalUncertainty: SURVEY_HORIZONTAL_SIGMA_M,
       orthophoto: buildOrthophoto(GRID, elevations, this.natural, id, this.seed),
     }
     this.cache.set(id, survey)
