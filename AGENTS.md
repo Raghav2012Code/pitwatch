@@ -50,6 +50,13 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-11-01: site-plan badges return to their evidence
+
+- **Root cause found by measuring the DOM, not by eye:** `placePins` converted pixel offsets back with `top − y·upp`, which yields a _world_ y, but the component drew it as SVG y. Every badge was mirrored vertically about the middle of the plan, so R3-1's sat at the north lease corner while its stray heaps are south-east, and R1-3's sat over the south pit while its scrape is on the north edge. One-line fix (`y: y * unitsPerPixel`); R1-2 keeps a 70 px leader, the rest sit on their centroids.
+- Labels could cover a badge (the fallback drew "In-zone waste fill" over R3-1), ignored each other and the "Lease boundary" text, and one caption claimed blue meant in-zone fill although blue marks every raised cell. Labels are now placed in sequence with pin badges and earlier labels as obstacles, in-zone spots preferred and the nearest clean spot used with a leader when a small zone cannot hold the text; the caption states what colour and labels actually mean.
+- Guards in `e2e/site-plan-redesign.spec.ts`: every badge within 110 px of its origin dot, and no zone label overlapping a badge, another label or the lease label, at 390/800/1100/1440 px. Proven first: the old expression fails with R3-1 at 189.5 px.
+- Geometry was never wrong: lease, two pit zones, two dump zones, change masks, finding areas, 16 contour levels and the 500 m scale bar matched the data exactly before and after. Checks: `npm run verify` and `npm run test:e2e` pass.
+
 ### 2026-10-30: header chip polish
 
 - The dashboard header's right cluster read as two unrelated islands: the status chip and the SIMULATED DATA stamp had different heights, paddings, borders and a loud diagonal-hatch fill on the stamp. The stamp loses the hatch; it is now a flat chip like the status chip (warn tint at 5% background, 38% border, same padding and line-height), and the status chip gains the same 3% ink background so the two read as one row of matched chips. Both still say exactly what they said.

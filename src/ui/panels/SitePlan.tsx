@@ -22,6 +22,8 @@ const PIN_CLEARANCE_PX = 4
 const OBSERVED_LABEL_CHAR_PX = 6.5
 const OBSERVED_LABEL_HEIGHT_PX = 24
 const OBSERVED_EXCAVATION_LABEL = 'Pit excavation'
+const OBSERVED_FILL_LABEL = 'In-zone waste fill'
+const LEASE_LABEL_TEXT = 'Lease boundary'
 const LABEL_SEARCH_STEP_PX = 4
 
 interface PlannedPin {
@@ -129,7 +131,9 @@ function placePins(
     placed.push({
       finding,
       x: x0 + x * unitsPerPixel,
-      y: top - y * unitsPerPixel,
+      // y is already measured from the plan's top edge, so it needs no second flip here:
+      // the caller draws it in SVG space, where y increases downwards.
+      y: y * unitsPerPixel,
       dx: choice.dx * unitsPerPixel,
       dy: choice.dy * unitsPerPixel,
       labelOnLeft: choice.labelOnLeft,
@@ -196,59 +200,109 @@ function containsPoint(polygon: Polygon, point: Vec2): boolean {
   return inside
 }
 
+interface ObservedLabel {
+  id: string
+  point: Vec2
+  labelPoint: Vec2
+}
+
+/** A label rectangle in local metres, centred on its point. */
+interface WorldBox {
+  cx: number
+  cy: number
+  width: number
+  height: number
+}
+
+function matchingCellsIn(grid: GridSpec, mask: Uint8Array, polygon: Polygon): Vec2[] {
+  const cells: Vec2[] = []
+  for (let row = 0; row < grid.rows; row++) {
+    for (let col = 0; col < grid.cols; col++) {
+      if (!mask[row * grid.cols + col]) continue
+      const point = {
+        x: grid.originXY.x + col * grid.cellSize,
+        y: grid.originXY.y + row * grid.cellSize,
+      }
+      if (containsPoint(polygon, point)) cells.push(point)
+    }
+  }
+  return cells
+}
+
+function nearestToCentroid(cells: readonly Vec2[]): Vec2 {
+  const centroid = cells.reduce(
+    (sum, point) => ({ x: sum.x + point.x / cells.length, y: sum.y + point.y / cells.length }),
+    { x: 0, y: 0 },
+  )
+  return cells.reduce((nearest, point) =>
+    Math.hypot(point.x - centroid.x, point.y - centroid.y) <
+    Math.hypot(nearest.x - centroid.x, nearest.y - centroid.y)
+      ? point
+      : nearest,
+  )
+}
+
 function observedLabelPoints(
   grid: GridSpec,
   mask: Uint8Array,
   polygons: readonly { id: string; polygon: Polygon }[],
-  avoid?: { pins: readonly PlannedPin[]; svgWidth: number; text: string },
-): { id: string; point: Vec2; labelPoint: Vec2 }[] {
-  return polygons.flatMap(({ id, polygon }) => {
-    let count = 0
-    let x = 0
-    let y = 0
-    const matchingCells: Vec2[] = []
-    for (let row = 0; row < grid.rows; row++) {
-      for (let col = 0; col < grid.cols; col++) {
-        const index = row * grid.cols + col
-        if (!mask[index]) continue
-        const point = {
-          x: grid.originXY.x + col * grid.cellSize,
-          y: grid.originXY.y + row * grid.cellSize,
-        }
-        if (!containsPoint(polygon, point)) continue
-        count++
-        x += point.x
-        y += point.y
-        matchingCells.push(point)
-      }
+  avoid?: {
+    pins: readonly PlannedPin[]
+    svgWidth: number
+    text: string
+    /** Labels already placed by the caller, which this pass must not cover. */
+    keepClear?: readonly WorldBox[]
+  },
+): ObservedLabel[] {
+  if (!avoid || avoid.svgWidth <= 0) {
+    return polygons.flatMap(({ id, polygon }) => {
+      const cells = matchingCellsIn(grid, mask, polygon)
+      if (!cells.length) return []
+      const anchor = nearestToCentroid(cells)
+      return [{ id, point: anchor, labelPoint: anchor }]
+    })
+  }
+
+  const mapWidth = grid.cols * grid.cellSize
+  const unitsPerPixel = mapWidth / avoid.svgWidth
+  const x0 = grid.originXY.x - grid.cellSize / 2
+  const top = grid.originXY.y + (grid.rows - 1) * grid.cellSize + grid.cellSize / 2
+  const labelWidthPx = avoid.text.length * OBSERVED_LABEL_CHAR_PX
+  const toPixelBox = ({ cx, cy, width, height }: WorldBox): Box => {
+    const px = (cx - x0) / unitsPerPixel
+    const py = (top - cy) / unitsPerPixel
+    return {
+      left: px - width / (2 * unitsPerPixel),
+      right: px + width / (2 * unitsPerPixel),
+      top: py - height / (2 * unitsPerPixel),
+      bottom: py + height / (2 * unitsPerPixel),
     }
-    if (!count) return []
-
-    const centroid = { x: x / count, y: y / count }
-    const anchor = matchingCells.reduce((nearest, point) =>
-      Math.hypot(point.x - centroid.x, point.y - centroid.y) <
-      Math.hypot(nearest.x - centroid.x, nearest.y - centroid.y)
-        ? point
-        : nearest,
-    )
-    if (!avoid || avoid.svgWidth <= 0) return [{ id, point: anchor, labelPoint: anchor }]
-
-    const mapWidth = grid.cols * grid.cellSize
-    const unitsPerPixel = mapWidth / avoid.svgWidth
-    const x0 = grid.originXY.x - grid.cellSize / 2
-    const top = grid.originXY.y + (grid.rows - 1) * grid.cellSize + grid.cellSize / 2
-    const labelWidthPx = avoid.text.length * OBSERVED_LABEL_CHAR_PX
-    const obstacles = avoid.pins.map((pin) => {
+  }
+  const obstacles: Box[] = [
+    ...avoid.pins.map((pin) => {
       const px = (pin.x - x0) / unitsPerPixel
       const py = pin.y / unitsPerPixel
       return boundsForPin(px, py, pin.labelWidth / unitsPerPixel, pin.labelOnLeft)
-    })
+    }),
+    ...(avoid.keepClear ?? []).map(toPixelBox),
+  ]
+  const placed: Box[] = []
+  const results: ObservedLabel[] = []
+
+  for (const { id, polygon } of polygons) {
+    const matching = matchingCellsIn(grid, mask, polygon)
+    if (!matching.length) continue
+
+    const anchor = nearestToCentroid(matching)
     const anchorPx = (anchor.x - x0) / unitsPerPixel
     const anchorPy = (top - anchor.y) / unitsPerPixel
-    let labelPoint: Vec2 | undefined
-    let bestDistance = Number.POSITIVE_INFINITY
-    let bestClearance = Number.NEGATIVE_INFINITY
+    // A label over its own zone is preferred; a small zone can be too crowded by a finding
+    // badge or another label to hold the text, and then the nearest clean spot still points
+    // at the zone with its leader rather than being drawn over what it must not cover.
+    let insideBest: { point: Vec2; distance: number } | null = null
+    let clearBest: { point: Vec2; distance: number } | null = null
     const mapHeightPx = mapWidth / unitsPerPixel
+    const blocked = [...obstacles, ...placed]
     for (
       let py = 2 + OBSERVED_LABEL_HEIGHT_PX / 2;
       py < mapHeightPx - OBSERVED_LABEL_HEIGHT_PX / 2;
@@ -273,7 +327,7 @@ function observedLabelPoints(
         ) {
           continue
         }
-        const clearance = obstacles.reduce((minimum, obstacle) => {
+        const clearance = blocked.reduce((minimum, obstacle) => {
           const overlapX =
             Math.min(labelBox.right, obstacle.right) - Math.max(labelBox.left, obstacle.left)
           const overlapY =
@@ -284,19 +338,33 @@ function observedLabelPoints(
               : Math.hypot(Math.max(0, -overlapX), Math.max(0, -overlapY))
           return Math.min(minimum, separation)
         }, Number.POSITIVE_INFINITY)
+        if (clearance < PIN_CLEARANCE_PX) continue
         const distance = Math.hypot(px - anchorPx, py - anchorPy)
-        if (
-          clearance >= PIN_CLEARANCE_PX &&
-          (distance < bestDistance || (distance === bestDistance && clearance > bestClearance))
-        ) {
-          bestDistance = distance
-          bestClearance = clearance
-          labelPoint = { x: x0 + px * unitsPerPixel, y: top - py * unitsPerPixel }
+        const candidate = {
+          point: { x: x0 + px * unitsPerPixel, y: top - py * unitsPerPixel },
+          distance,
+        }
+        const inside = containsPoint(polygon, candidate.point)
+        const best = inside ? insideBest : clearBest
+        if (!best || distance < best.distance) {
+          if (inside) insideBest = candidate
+          else clearBest = candidate
         }
       }
     }
-    return [{ id, point: anchor, labelPoint: labelPoint ?? anchor }]
-  })
+    const labelPoint = insideBest?.point ?? clearBest?.point ?? anchor
+    const labelPx = (labelPoint.x - x0) / unitsPerPixel
+    const labelPy = (top - labelPoint.y) / unitsPerPixel
+    placed.push({
+      left: labelPx - labelWidthPx / 2,
+      right: labelPx + labelWidthPx / 2,
+      top: labelPy - OBSERVED_LABEL_HEIGHT_PX / 2,
+      bottom: labelPy + OBSERVED_LABEL_HEIGHT_PX / 2,
+    })
+    results.push({ id, point: anchor, labelPoint })
+  }
+
+  return results
 }
 
 /**
@@ -349,28 +417,51 @@ export function SitePlan() {
     () => (grid ? placePins(findings, grid, svgWidth) : []),
     [findings, grid, svgWidth],
   )
-  const observedExcavationLabels = useMemo(
-    () =>
-      grid && limits
-        ? observedLabelPoints(grid, change?.excavated ?? new Uint8Array(), limits.pitZones, {
-            pins,
-            svgWidth,
-            text: OBSERVED_EXCAVATION_LABEL,
-          })
-        : [],
-    [change, grid, limits, pins, svgWidth],
+  const leaseLabel = useMemo(
+    () => (limits ? leaseLabelPoint(limits.leaseBoundary) : null),
+    [limits],
   )
-  const observedFillLabels = useMemo(
-    () =>
-      grid && limits
-        ? observedLabelPoints(grid, change?.filled ?? new Uint8Array(), limits.dumpZones, {
-            pins,
-            svgWidth,
-            text: 'In-zone waste fill',
-          })
-        : [],
-    [change, grid, limits, pins, svgWidth],
-  )
+  const observedLabels = useMemo(() => {
+    if (!grid || !limits) return { cut: [] as ObservedLabel[], fill: [] as ObservedLabel[] }
+    const unitsPerPixel = svgWidth ? (grid.cols * grid.cellSize) / svgWidth : 1
+    const toWorldBox = (labelPoint: Vec2, text: string): WorldBox => ({
+      cx: labelPoint.x,
+      cy: labelPoint.y,
+      width: text.length * OBSERVED_LABEL_CHAR_PX * unitsPerPixel,
+      height: OBSERVED_LABEL_HEIGHT_PX * unitsPerPixel,
+    })
+    const leaseWidth = leaseLabel
+      ? LEASE_LABEL_TEXT.length * OBSERVED_LABEL_CHAR_PX * unitsPerPixel
+      : 0
+    const keepClear: WorldBox[] =
+      leaseLabel === null
+        ? []
+        : [
+            {
+              // The lease label is start-anchored, so its box begins at the anchor point.
+              cx: leaseLabel.x + leaseWidth / 2,
+              cy: leaseLabel.y,
+              width: leaseWidth,
+              height: OBSERVED_LABEL_HEIGHT_PX * unitsPerPixel,
+            },
+          ]
+    const cut = observedLabelPoints(grid, change?.excavated ?? new Uint8Array(), limits.pitZones, {
+      pins,
+      svgWidth,
+      text: OBSERVED_EXCAVATION_LABEL,
+      keepClear,
+    })
+    const fill = observedLabelPoints(grid, change?.filled ?? new Uint8Array(), limits.dumpZones, {
+      pins,
+      svgWidth,
+      text: OBSERVED_FILL_LABEL,
+      keepClear: [
+        ...keepClear,
+        ...cut.map(({ labelPoint }) => toWorldBox(labelPoint, OBSERVED_EXCAVATION_LABEL)),
+      ],
+    })
+    return { cut, fill }
+  }, [change, grid, leaseLabel, limits, pins, svgWidth])
   const contours = useMemo(
     () =>
       current
@@ -480,7 +571,7 @@ export function SitePlan() {
             )
           })}
 
-          {observedExcavationLabels.map(({ id, point, labelPoint }) => (
+          {observedLabels.cut.map(({ id, point, labelPoint }) => (
             <g key={`observed-cut-${id}`}>
               {Math.hypot(labelPoint.x - point.x, labelPoint.y - point.y) > grid.cellSize / 100 && (
                 <line
@@ -504,7 +595,7 @@ export function SitePlan() {
               </text>
             </g>
           ))}
-          {observedFillLabels.map(({ id, point, labelPoint }) => (
+          {observedLabels.fill.map(({ id, point, labelPoint }) => (
             <g key={`observed-fill-${id}`}>
               {Math.hypot(labelPoint.x - point.x, labelPoint.y - point.y) > grid.cellSize / 100 && (
                 <line
@@ -521,28 +612,25 @@ export function SitePlan() {
                 fontSize={10 * unitsPerCssPixel}
                 strokeWidth={4 * unitsPerCssPixel}
                 className="plan-observed-label plan-observed-fill-label"
-                aria-label="In-zone waste fill, derived from the simulated surveys"
+                aria-label={`${OBSERVED_FILL_LABEL}, derived from the simulated surveys`}
               >
-                <title>In-zone waste fill, derived from the simulated surveys</title>
-                In-zone waste fill
+                <title>{`${OBSERVED_FILL_LABEL}, derived from the simulated surveys`}</title>
+                {OBSERVED_FILL_LABEL}
               </text>
             </g>
           ))}
 
-          {(() => {
-            const point = leaseLabelPoint(limits.leaseBoundary)
-            return (
-              <text
-                x={point.x}
-                y={svgY(point.y)}
-                fontSize={10 * unitsPerCssPixel}
-                strokeWidth={4 * unitsPerCssPixel}
-                className="plan-lease-label"
-              >
-                Lease boundary
-              </text>
-            )
-          })()}
+          {leaseLabel && (
+            <text
+              x={leaseLabel.x}
+              y={svgY(leaseLabel.y)}
+              fontSize={10 * unitsPerCssPixel}
+              strokeWidth={4 * unitsPerCssPixel}
+              className="plan-lease-label"
+            >
+              {LEASE_LABEL_TEXT}
+            </text>
+          )}
 
           {pins.map(({ finding, x, y, dx, dy, labelOnLeft, labelWidth: chipWidth }) => {
             const tone = toneOf(finding)
@@ -654,9 +742,10 @@ export function SitePlan() {
           </div>
           <p className="plan-note">
             Outlined areas are the engine&apos;s findings; select a labelled glyph to open its
-            evidence on the 3D map. Pit excavation marks cells classified as lowered between the
-            simulated surveys; in-zone waste fill marks cells classified as raised. Contours follow
-            the current elevation survey. The loaded survey has no separate road layer.
+            evidence on the 3D map. The labels mark classified change inside a permitted pit or dump
+            zone; colour marks every changed cell, so the stray heaps outside a dump zone are shown
+            as well. Contours follow the current elevation survey. The loaded survey has no separate
+            road layer.
           </p>
         </div>
       </figure>

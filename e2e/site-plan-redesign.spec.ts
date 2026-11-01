@@ -55,6 +55,26 @@ test('the site plan is a labelled, data-backed vector map at supported widths', 
       sizes.push({ x: 0, y: 0, width: hitBox!.width, height: hitBox!.height })
       hitSizes.set(id, sizes)
 
+      const displacement = await button.evaluate((group) => {
+        const origin = group.parentElement?.querySelector('.plan-finding-origin')
+        const disc = group.querySelector('.plan-pin-disc')
+        if (!origin || !disc) return null
+        const a = origin.getBoundingClientRect()
+        const b = disc.getBoundingClientRect()
+        return Math.hypot(
+          a.x + a.width / 2 - (b.x + b.width / 2),
+          a.y + a.height / 2 - (b.y + b.height / 2),
+        )
+      })
+      expect(
+        displacement,
+        `${id} badge and origin should be measurable at ${width}px`,
+      ).not.toBeNull()
+      expect(
+        displacement!,
+        `${id} badge is drawn on its evidence at ${width}px (leaders may move it at most 108px)`,
+      ).toBeLessThanOrEqual(110)
+
       const markerBox = await button.boundingBox()
       expect(markerBox, `${id} marker and ID should have a box at ${width}px`).not.toBeNull()
       markerBoxes.push(markerBox!)
@@ -95,6 +115,7 @@ test('the site plan is a labelled, data-backed vector map at supported widths', 
     )
     expect(hasHorizontalOverflow, `document overflows at ${width}px`).toBe(false)
 
+    const observedBoxes: Box[] = []
     for (const selector of ['.plan-observed-cut-label', '.plan-observed-fill-label']) {
       const labels = await plan.locator(selector).all()
       expect(labels.length, `${selector} should exist at ${width}px`).toBeGreaterThan(0)
@@ -102,6 +123,7 @@ test('the site plan is a labelled, data-backed vector map at supported widths', 
         await expect(label).toBeVisible()
         const labelBox = await label.boundingBox()
         expect(labelBox, `${selector} should have a box at ${width}px`).not.toBeNull()
+        observedBoxes.push(labelBox!)
         for (const [index, markerBox] of markerBoxes.entries()) {
           expect(
             boxesOverlap(labelBox!, markerBox),
@@ -109,6 +131,23 @@ test('the site plan is a labelled, data-backed vector map at supported widths', 
           ).toBe(false)
         }
       }
+    }
+
+    for (let i = 0; i < observedBoxes.length; i++) {
+      for (let j = i + 1; j < observedBoxes.length; j++) {
+        expect(
+          boxesOverlap(observedBoxes[i]!, observedBoxes[j]!),
+          `zone labels ${i} and ${j} overlap at ${width}px`,
+        ).toBe(false)
+      }
+    }
+    const leaseLabelBox = await plan.locator('.plan-lease-label').boundingBox()
+    expect(leaseLabelBox, 'lease label should have a box').not.toBeNull()
+    for (const [index, labelBox] of observedBoxes.entries()) {
+      expect(
+        boxesOverlap(labelBox, leaseLabelBox!),
+        `zone label ${index} overlaps the lease label at ${width}px`,
+      ).toBe(false)
     }
 
     const transitionDuration = await plan
