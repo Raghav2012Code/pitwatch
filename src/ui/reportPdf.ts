@@ -16,6 +16,68 @@ export interface PdfReportInput {
 const PAGE = { w: 210, h: 297, margin: 16 }
 const INK = PRINT_INK.ink
 const FAINT = PRINT_INK.faint
+/** Body line spacing on the page, and how far below a heading's baseline the body starts. */
+const LINE_HEIGHT = 4.6
+const BODY_OFFSET = 11
+/** Space kept under the last line of a finding before the next heading may start. */
+const BLOCK_TAIL = 2.4
+
+export interface BlockPagination {
+  /** The current page has no room even for the heading, so the block starts on a fresh one. */
+  startNewPage: boolean
+  /** Body lines drawn on each page in order; the heading and figures go with the first entry. */
+  pages: number[]
+}
+
+/**
+ * Decide where a finding's block breaks. Line-aware rather than all-or-nothing: a block that
+ * cannot fit keeps its heading and figures with as many lines as the page holds, and the rest
+ * continues on later pages. Pure so the break rules are tested without building a PDF.
+ */
+export function paginateBlock(options: {
+  /** Baseline of the heading on the current page, mm from the top. */
+  y: number
+  lines: number
+  /** First baseline on a continuation page, mm from the top. */
+  pageTop: number
+  /** Text must not be drawn below this baseline. */
+  pageBottom: number
+  bodyOffset?: number
+  lineHeight?: number
+  /** Room the heading, figures and trailing space need, before body lines. */
+  blockOverhead?: number
+}): BlockPagination {
+  const {
+    y,
+    lines,
+    pageTop,
+    pageBottom,
+    bodyOffset = BODY_OFFSET,
+    lineHeight = LINE_HEIGHT,
+    blockOverhead = BODY_OFFSET + BLOCK_TAIL,
+  } = options
+  if (!Number.isInteger(lines) || lines < 0)
+    throw new RangeError('Line count must be a whole number')
+  const capacityFrom = (start: number) => Math.floor((pageBottom - start - bodyOffset) / lineHeight)
+  const capacityOnFreshPage = capacityFrom(pageTop)
+  if (capacityOnFreshPage < 1) throw new RangeError('Page is too short for one line of text')
+
+  if (y + blockOverhead + lines * lineHeight <= pageBottom) {
+    return { startNewPage: false, pages: [lines] }
+  }
+
+  const capacityHere = capacityFrom(y)
+  const startNewPage = capacityHere < 1
+  const firstCapacity = startNewPage ? capacityOnFreshPage : capacityHere
+  const pages: number[] = [Math.min(lines, firstCapacity)]
+  let remaining = lines - pages[0]!
+  while (remaining > 0) {
+    const count = Math.min(remaining, capacityOnFreshPage)
+    pages.push(count)
+    remaining -= count
+  }
+  return { startNewPage, pages }
+}
 
 /**
  * Builds and saves a one-click PDF of the findings: a plan of the lease with every finding
@@ -57,27 +119,39 @@ export async function savePdfReport(input: PdfReportInput): Promise<void> {
   key.forEach((line, i) => doc.text(pdfText(line), plan.x + plan.size + 8, plan.y + 8 + i * 6))
 
   let y = plan.y + plan.size + 14
+  const pageTop = PAGE.margin + 4
+  const pageBottom = PAGE.h - 16
   for (const f of findings) {
     const body = doc.splitTextToSize(pdfText(f.explanation), inner) as string[]
-    // What the block actually needs: title, figure line, then one line per explanation line.
-    const height = 13.4 + body.length * 4.6
-    if (y + height > PAGE.h - 16) {
+    const pagination = paginateBlock({ y, lines: body.length, pageTop, pageBottom })
+    if (pagination.startNewPage) {
       doc.addPage()
-      y = PAGE.margin + 4
+      y = pageTop
     }
     doc.setFont('NotoSans', 'bold').setFontSize(12).setTextColor(INK)
     doc.text(pdfText(`${f.id}  ${RULE_NAMES[f.ruleId]}`), PAGE.margin, y)
     doc.setFont('NotoSans', 'normal').setFontSize(10).setTextColor(FAINT)
     doc.text(
       pdfText(
-        `${f.status}, ${f.severity}. Area ${Math.round(f.areaM2).toLocaleString('en-GB')} m2, volume ${Math.round(f.volumeM3).toLocaleString('en-GB')} m3, max excess ${f.maxExceedance.toFixed(2)} m, centre E ${Math.round(f.centroid.x)} N ${Math.round(f.centroid.y)}.`,
+        `${f.status}, ${f.severity}. Area ${Math.round(f.areaM2).toLocaleString('en-GB')} m², volume ${Math.round(f.volumeM3).toLocaleString('en-GB')} m³, max excess ${f.maxExceedance.toFixed(2)} m, centre E ${Math.round(f.centroid.x)} N ${Math.round(f.centroid.y)}.`,
       ),
       PAGE.margin,
       y + 5.5,
     )
     doc.setTextColor(INK).setFontSize(10)
-    doc.text(body, PAGE.margin, y + 11)
-    y += height
+    let drawn = 0
+    let bodyY = y + BODY_OFFSET
+    for (const [pageIndex, count] of pagination.pages.entries()) {
+      if (pageIndex > 0) {
+        doc.addPage()
+        bodyY = pageTop
+      }
+      for (let line = 0; line < count; line++) {
+        doc.text(body[drawn + line]!, PAGE.margin, bodyY + line * LINE_HEIGHT)
+      }
+      drawn += count
+      y = bodyY + count * LINE_HEIGHT + BLOCK_TAIL
+    }
   }
   if (findings.length === 0) {
     doc.setFontSize(11).text('No finding matches the filters used for this report.', PAGE.margin, y)

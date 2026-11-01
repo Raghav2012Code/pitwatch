@@ -50,6 +50,14 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-11-01: a long finding's text paginates (ticket #34)
+
+- The report used to break pages per finding block: a block taller than the room left either jumped to the next page or overflowed the estimate. `paginateBlock` now plans line-aware pages: heading and figures stay with the first lines, the remainder continues on later pages, and a block taller than a page spreads across as many as it needs. The helper is pure and unit-tested for a block that fits, one that must move whole, one that splits and one taller than a page (5 new tests; 184 total).
+- Line placement is now explicit: each body line is drawn at `BODY_OFFSET + i × 4.6 mm`. jsPDF's own array rendering used ~4.06 mm, so the old estimate reserved more room than the text used; drawing line by line makes the maths and the page agree.
+- Verified with a temporary long R1-1 explanation (90 repeated sentences, not committed): 2 pages, page 1 ends above the 16 mm margin (lowest line box 21 mm from the bottom), page 2 starts mid-explanation with no repeated heading, and the footers report "Page 1 of 2" / "Page 2 of 2". The normal report is unchanged: one page, all five findings.
+- The figures line now prints `m²` and `m³` instead of `m2`/`m3`, matching the embedded font and the screen. The browser check also asserts the footer's "Page 1 of 1".
+- Checks: `npm run verify` (184 unit tests in 24 files) and `npm run test:e2e` (75 checks) pass.
+
 ### 2026-11-01: PDF report draws the real symbols (ticket #33)
 
 - The findings PDF no longer spells its symbols out. `±`, `²`, `³` and `(2σ)` print exactly as the screen shows them, and so does an accented name: checked by temporarily renaming the fixture to `Venthar Ridge Ünlüt`, downloading a report and reading the subtitle in Chromium's PDF viewer, then reverting (no fixture change is committed).

@@ -200,6 +200,7 @@ test('the findings can be downloaded as a PDF that says it is simulated', async 
   expect(all).toContain('m²')
   expect(all).toContain('m³')
   expect(all).toContain('(2σ)')
+  expect(all).toContain('Page 1 of 1')
   expect(all).not.toContain('?')
   expect(all).not.toContain('sigma')
   expect(all).not.toContain('\uFFFD')
