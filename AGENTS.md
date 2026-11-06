@@ -50,6 +50,12 @@ Vite 8, React 19, TypeScript strict, Tailwind v4 (tokens in `@theme` in `src/ind
 
 Newest first.
 
+### 2026-11-06: fork synced to the parent (merge of `1135459`)
+
+- `git merge upstream/main`: one commit, `1135459`, the parent's merge of PR #50 from this fork at `8880001`. Every commit inside it — the header-chip polish, the palette lint rule and its docs — was already on this fork's `main`, and the merge commit changed no file (`git diff 8880001 1135459` is empty), so the merge recorded the relationship with no content change. `upstream/main` is now an ancestor of `main`; `main` is 7 commits ahead, ready to push or send as the next PR.
+- The parent's other branches were checked and left alone: `improvements` and `ui-redesign` are already contained in `main`; `codex/issue-21-homepage` is an abandoned pre-redesign branch, 4,723 lines behind `main` with nothing to take.
+- Checks: `npm run verify` (191 unit tests in 25 files) and `npm run test:e2e` (81 checks) pass; the tree is unchanged by the merge, so the compliance snapshot and fixtures are as they were.
+
 ### 2026-11-01: point reading models horizontal survey error (ticket #37)
 
 - `TerrainSurvey` carries `horizontalUncertainty` (0.1 m, 1σ per plan axis; simulated, set by the provider beside the 0.05 m vertical one). The point reading returns it and a `leaseSide` of `inside`, `outside` or `unconfirmed`; `leaseVerdict` is pure and says `unconfirmed` whenever the boundary is within the band, so a coordinate a few centimetres either side no longer claims a side.
